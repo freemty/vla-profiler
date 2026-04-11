@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.2.1 — 2026-04-11
+
+### 修复
+- Dashboard: denoising chart inline styles 替换为 CSS classes
+- Dashboard: 删除 canvas glow 死代码 (无效 hex→rgba)
+- Dashboard: resize handler 加 rAF 节流
+- Dashboard: IntersectionObserver 加 unobserve()
+- Dashboard: header "8 Research Gaps" → "6 Research Entry Points" (与实际渲染一致)
+- CLAUDE.md: Domain papers 路径从 `docs/papers/` 改为 `survey/papers/`
+
 ## v0.2.0 — 2026-04-11
 
 ### 新增
