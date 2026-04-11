@@ -560,8 +560,8 @@ body {
       <span class="stat-label">Paradigms</span>
     </div>
     <div class="stat">
-      <span class="stat-value">8</span>
-      <span class="stat-label">Research Gaps</span>
+      <span class="stat-value">6</span>
+      <span class="stat-label">Research Entry Points</span>
     </div>
     <div class="stat">
       <span class="stat-value">350x</span>
@@ -639,30 +639,26 @@ body {
   <div class="fade-in">
     <div class="section-title">Diffusion Policy Latency Compression</div>
     <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.5rem;">Action generation 延迟: 200ms &rarr; 0.56ms (350x compression)</p>
-    <div style="position:relative;height:250px;display:flex;align-items:flex-end;gap:0;padding:0 0.5rem 3rem;">
-      <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
-        <div style="font-family:var(--font-mono);font-size:0.6rem;color:var(--wam);margin-bottom:4px;">200ms</div>
-        <div class="denoise-bar" style="width:40px;height:0;background:linear-gradient(to top,var(--wam-dim),var(--wam));" data-h="180"></div>
-        <div style="font-family:var(--font-mono);font-size:0.55rem;color:var(--text-muted);margin-top:6px;">2023</div>
-        <div style="font-size:0.55rem;color:var(--text-muted);text-align:center;line-height:1.2;">DDPM<br>100 steps</div>
+    <div class="denoise-chart">
+      <div class="denoise-bar-group">
+        <div class="denoise-bar" style="background:linear-gradient(to top,var(--wam-dim),var(--wam));" data-h="180"><span class="tip" style="color:var(--wam);">200ms</span></div>
+        <div class="denoise-year">2023</div>
+        <div class="denoise-model">DDPM<br>100 steps</div>
       </div>
-      <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
-        <div style="font-family:var(--font-mono);font-size:0.6rem;color:var(--vla);margin-bottom:4px;">30ms</div>
-        <div class="denoise-bar" style="width:40px;height:0;background:linear-gradient(to top,var(--vla-dim),var(--vla));" data-h="28"></div>
-        <div style="font-family:var(--font-mono);font-size:0.55rem;color:var(--text-muted);margin-top:6px;">2024</div>
-        <div style="font-size:0.55rem;color:var(--text-muted);text-align:center;line-height:1.2;">DDIM/FM<br>10 steps</div>
+      <div class="denoise-bar-group">
+        <div class="denoise-bar" style="background:linear-gradient(to top,var(--vla-dim),var(--vla));" data-h="28"><span class="tip" style="color:var(--vla);">30ms</span></div>
+        <div class="denoise-year">2024</div>
+        <div class="denoise-model">DDIM/FM<br>10 steps</div>
       </div>
-      <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
-        <div style="font-family:var(--font-mono);font-size:0.6rem;color:var(--lwm);margin-bottom:4px;">5ms</div>
-        <div class="denoise-bar" style="width:40px;height:0;background:linear-gradient(to top,var(--lwm-dim),var(--lwm));" data-h="6"></div>
-        <div style="font-family:var(--font-mono);font-size:0.55rem;color:var(--text-muted);margin-top:6px;">2025</div>
-        <div style="font-size:0.55rem;color:var(--text-muted);text-align:center;line-height:1.2;">Consistency<br>1-2 steps</div>
+      <div class="denoise-bar-group">
+        <div class="denoise-bar" style="background:linear-gradient(to top,var(--lwm-dim),var(--lwm));" data-h="6"><span class="tip" style="color:var(--lwm);">5ms</span></div>
+        <div class="denoise-year">2025</div>
+        <div class="denoise-model">Consistency<br>1-2 steps</div>
       </div>
-      <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
-        <div style="font-family:var(--font-mono);font-size:0.6rem;color:var(--va);margin-bottom:4px;">0.56ms</div>
-        <div class="denoise-bar" style="width:40px;height:0;background:linear-gradient(to top,var(--va-dim),var(--va));min-height:3px;" data-h="3"></div>
-        <div style="font-family:var(--font-mono);font-size:0.55rem;color:var(--text-muted);margin-top:6px;">2026</div>
-        <div style="font-size:0.55rem;color:var(--text-muted);text-align:center;line-height:1.2;">A2A Flow<br>1 step</div>
+      <div class="denoise-bar-group">
+        <div class="denoise-bar" style="background:linear-gradient(to top,var(--va-dim),var(--va));min-height:3px;" data-h="3"><span class="tip" style="color:var(--va);">0.56ms</span></div>
+        <div class="denoise-year">2026</div>
+        <div class="denoise-model">A2A Flow<br>1 step</div>
       </div>
     </div>
   </div>
@@ -1031,7 +1027,6 @@ function drawPareto() {
     // Glow
     ctx.beginPath();
     ctx.arc(px, py, p.r + 4, 0, Math.PI * 2);
-    ctx.fillStyle = p.color.replace(')', ',0.15)').replace('rgb', 'rgba').replace('#', '');
     const grd = ctx.createRadialGradient(px, py, 0, px, py, p.r + 8);
     grd.addColorStop(0, p.color + '30');
     grd.addColorStop(1, 'transparent');
@@ -1074,6 +1069,7 @@ const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => {
     if (e.isIntersecting) {
       e.target.classList.add('visible');
+      observer.unobserve(e.target);
     }
   });
 }, { threshold: 0.1 });
@@ -1085,7 +1081,11 @@ window.addEventListener('load', () => {
   setTimeout(animateBars, 300);
   setTimeout(animateDenoise, 500);
 });
-window.addEventListener('resize', drawPareto);
+let resizeRaf;
+window.addEventListener('resize', () => {
+  cancelAnimationFrame(resizeRaf);
+  resizeRaf = requestAnimationFrame(drawPareto);
+});
 </script>
 </body>
 </html>

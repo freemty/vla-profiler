@@ -73,7 +73,7 @@ slides/                # 演示文稿
 
 - **Skill hub:** .claude/skills/project-skill/SKILL.md
 - **Experiment log:** exp/summary.md
-- **Domain papers:** docs/papers/
+- **Domain papers:** survey/papers/
 
 ## Knowhow
 
