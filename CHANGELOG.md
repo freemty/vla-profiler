@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.2.0 — 2026-04-11
+
+### 新增
+- **survey/papers/va-world-models-web.md** — WAM/Video WM/VA 最新论文 web 调研 (80+ 论文)，覆盖 DreamZero、NVIDIA Cosmos、DuoCore-FS 30Hz VLA、PocketDP3 等
+- **viewer/static/survey-dashboard.html** — 交互式信息图 dashboard (Pareto frontier, pipeline comparison, maturity matrix, research gaps)
+- **.claude/skills/project-skill/SKILL.md** — v0 bootstrap，7 章完整 context 文档 (overview, architecture, cognition, archive, experiments, lessons, reference)
+
+### 修复
+- 删除冗余 `experiments/` 目录，统一使用 `exp/`
+- CLAUDE.md 目录结构描述补全实际目录
+- Session startup 路径从空壳 `docs/papers/landscape.md` 改为 `survey/landscape.md`
+- `.gitignore` 补充 Python/macOS/editor/ML artifacts 规则
+
 ## v0.1.0 — 2026-04-11
 
 ### 新增
