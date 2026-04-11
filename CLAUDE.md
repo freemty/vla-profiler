@@ -19,13 +19,19 @@ PhD 研究方向调研项目：Vision-Language Model (VLM) / Vision-Language-Act
 ## Directory Structure
 
 ```
-survey/           # Survey 文献笔记和综述
-  papers/         # 按主题分类的论文笔记
-  landscape.md    # 领域全景图
-experiments/      # 实验代码和结果
-  benchmarks/     # Benchmark 复现
-  profiling/      # 性能分析
-notes/            # 研究笔记和想法
+survey/                # Survey 文献综述 (核心产出)
+  landscape.md         # VLM/VLA inference 全景图
+  papers/              # 按主题分类的论文调研
+exp/                   # 实验目录 (LabMate 管理)
+  summary.md           # 实验 flight recorder
+notes/                 # 研究笔记和想法
+docs/                  # 文档
+  knowhow/             # 基础设施/工具链/调试笔记
+  specs/               # 实验 spec
+  weekly/              # 周报
+scripts/               # 实验脚本 (launch, monitor, download)
+viewer/                # 实验结果可视化 (Flask)
+slides/                # 演示文稿
 ```
 
 ## Key References
@@ -60,7 +66,7 @@ notes/            # 研究笔记和想法
 | What to do | Read first |
 |-----------|-----------|
 | Catch up on progress | .claude/skills/project-skill/SKILL.md |
-| Check domain literature | docs/papers/landscape.md |
+| Check domain literature | survey/landscape.md |
 | Run current experiment | exp/{current_exp}/README.md |
 
 ## Project knowledge
