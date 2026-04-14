@@ -54,3 +54,8 @@ docs/weekly/
 exp/*/results/*
 !exp/*/results/.gitkeep
 !exp/*/results/runs.log
+
+# Framework outputs
+output/
+outputs/
+logs/

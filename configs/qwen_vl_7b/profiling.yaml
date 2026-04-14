@@ -1,8 +1,9 @@
 # Qwen2.5-VL-7B profiling configuration
+# Server: xdlab23, GPU: single RTX 5880 Ada
 defaults:
   - /base
 
-model_name: "Qwen/Qwen2.5-VL-7B-Instruct"
+model_name: "${HF_PATH}/Qwen/Qwen2.5-VL-7B-Instruct"
 controller_name: "qwen_vl"
 
 controller_config:
@@ -11,9 +12,9 @@ controller_config:
 tasks:
   - "epd_profiling"
 
-num_warmup_runs: 2
-num_benchmark_runs: 5
-max_new_tokens: 256
+num_warmup_runs: 3
+num_benchmark_runs: 10
+max_new_tokens: 128
 
 inputs:
   - name: "text_only"

@@ -2,7 +2,7 @@
 defaults:
   - /base
 
-model_name: "Qwen/Qwen2.5-VL-7B-Instruct"
+model_name: "${HF_PATH}/Qwen/Qwen2.5-VL-7B-Instruct"
 controller_name: "qwen_vl"
 
 controller_config:

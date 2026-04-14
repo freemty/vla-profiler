@@ -1,15 +1,25 @@
 # Base configuration for VLM profiling framework
+# Server: xdlab23 (8x RTX 5880 Ada 48GB)
+
 debug: false
-device: "cuda"
+debug_port: 5679
+device: "cuda:0"
 seed: 42
-base_output_path: "output"
-num_warmup_runs: 1
-num_benchmark_runs: 3
-max_new_tokens: 256
+precision: "bfloat16"
+
+# Paths — use env vars for server portability
+HF_PATH: ${oc.env:HF_HOME,/data1/ybyang/huggingface}
+base_output_path: ./output
+
+# Benchmark settings
+num_warmup_runs: 3
+num_benchmark_runs: 10
+max_new_tokens: 128
 
 # Must be overridden by experiment configs
 model_name: ???
 controller_name: ???
 controller_config: {}
 tasks: []
+task_configs: {}
 inputs: []
