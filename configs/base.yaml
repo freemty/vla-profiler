@@ -1,0 +1,15 @@
+# Base configuration for VLM profiling framework
+debug: false
+device: "cuda"
+seed: 42
+base_output_path: "output"
+num_warmup_runs: 1
+num_benchmark_runs: 3
+max_new_tokens: 256
+
+# Must be overridden by experiment configs
+model_name: ???
+controller_name: ???
+controller_config: {}
+tasks: []
+inputs: []
