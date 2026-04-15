@@ -68,7 +68,7 @@ def task_attention_overlay(
         k = k_tensors[0] if isinstance(k_tensors, list) else k_tensors
 
         attn_probs = _compute_attention_scores(q, k)
-        attn_mean = attn_probs.mean(dim=(0, 1)).numpy()
+        attn_mean = attn_probs.mean(dim=(0, 1)).detach().numpy()
 
         layer_indices = [*layer_indices, layer_idx]
 
@@ -79,20 +79,22 @@ def task_attention_overlay(
             image = original_images[img_idx]
             heatmap = controller.map_attention_to_image(attn_mean, mapping)
 
-            layer_name = f"layer_{layer_idx}"
-            all_layer_attn_maps[layer_name] = heatmap
+            map_key = (
+                f"layer_{layer_idx}"
+                if len(mappings) == 1
+                else f"layer_{layer_idx}_{mapping.image_key}"
+            )
+            all_layer_attn_maps[map_key] = heatmap
 
             overlay = renderer.render_overlay(image, heatmap)
 
             if output_format in ("frames", "both"):
-                frame_name = f"{layer_name}_overlay"
-                if len(mappings) > 1:
-                    frame_name = f"{layer_name}_{mapping.image_key}_overlay"
+                frame_name = f"{map_key}_overlay"
                 renderer.save_frames(
                     [(frame_name, overlay)], output_dir
                 )
 
-            attention_data[layer_name] = {
+            attention_data[map_key] = {
                 "mean": float(heatmap.mean()),
                 "max": float(heatmap.max()),
                 "min": float(heatmap.min()),
