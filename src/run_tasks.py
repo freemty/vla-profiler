@@ -172,9 +172,17 @@ def _execute_tasks(controller: Any, cfg: DictConfig) -> None:
 
 
 @hydra.main(version_base=None, config_path="../configs", config_name="base")
-def main(cfg: DictConfig) -> None:
+def main(raw_cfg: DictConfig) -> None:
     """Hydra entry point."""
-    OmegaConf.set_struct(cfg, False)
+    # Hydra may nest config under a group key (e.g., qwen_vl_7b) when using
+    # --config-name subdir/file. Unwrap if needed.
+    OmegaConf.set_struct(raw_cfg, False)
+    keys = list(raw_cfg.keys())
+    if len(keys) == 1 and isinstance(raw_cfg[keys[0]], DictConfig):
+        cfg = raw_cfg[keys[0]]
+    else:
+        cfg = raw_cfg
+    OmegaConf.resolve(cfg)
     _setup_logging(cfg.get("debug", False))
 
     logger.info("Config:\n%s", OmegaConf.to_yaml(cfg))
