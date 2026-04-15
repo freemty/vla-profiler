@@ -1,5 +1,40 @@
 # Changelog
 
+## v0.3.0 — 2026-04-15
+
+### 新增
+- **VLM Profiling Framework** (`src/`) — 完整的 VLM inference profiling + attention analysis 框架
+  - `model-probe-core` 共享核心 package (git submodule at `src/core/`)，从 rope2sink 提取
+  - BaseController → BaseVLMController → QwenVLController 三层继承链
+  - PhaseTimer: CUDA event-based E/P/D timing (CPU fallback)
+  - 4 个 analysis tasks: `epd_profiling`, `visual_text_attention`, `sink_detection`, `per_layer_stats`
+  - Hydra 配置驱动 (`configs/base.yaml`, `qwen_vl_7b/profiling.yaml`, `qwen_vl_7b/attention.yaml`)
+- **xdlab23 服务器部署**
+  - `scripts/sync_to_remote.sh` — git bundle 同步 (绕过 GitHub firewall)
+  - `scripts/launch_exp.sh` — GPU-pinned 实验启动
+  - `scripts/download-results.sh` — rsync 结果下载
+  - `docs/knowhow/runbooks/deploy-to-xdlab23.md` — 部署 runbook
+- **exp01a: Qwen2.5-VL-7B E/P/D Profiling** — 首个实验完成
+  - Per-input profiling: text_only / single_image / multi_image
+  - 10 benchmark runs + 3 warmup，CUDA event sub-ms 精度
+  - 关键发现: Encode 随 image 线性增长，decode per-token 稳定 ~18-21ms
+- **Framework Design Spec** (`docs/superpowers/specs/2026-04-14-vlm-profiling-framework-design.md`)
+- **Implementation Plan** (`docs/superpowers/plans/2026-04-14-vlm-profiling-framework.md`) — 12 tasks, 44 steps
+
+### 修复
+- PhaseTimer: decode timing 改为累加模式 (原 dict 覆盖只保留最后一个 step)
+- PhaseTimer: CPU backend `record_end()` 改为立即记录时间 (原为 no-op)
+- run_tasks.py: per-input profiling 隔离 (原混跑所有 inputs)
+- run_tasks.py: Hydra struct mode + nested config unwrap
+- QwenVLController: model path 修正 (`.model.language_model.layers`)
+- QwenVLController: OmegaConf → plain dict 转换 for qwen_vl_utils
+- probe_core hooks.py: extractor hook 错误改为 log 而非静默吞没
+
+### 更新
+- CLAUDE.md: 新增 framework 目录结构、server 信息、quick commands、current state
+- project-skill SKILL.md: v0 → v1，新增 framework 架构、exp01a 数据、prediction calibration、7 条 engineering lessons
+- .pipeline-state.json: stage dev → experiment, compute_env → xdlab23
+
 ## v0.2.1 — 2026-04-11
 
 ### 修复
