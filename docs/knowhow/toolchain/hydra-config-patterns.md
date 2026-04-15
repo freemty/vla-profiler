@@ -62,6 +62,42 @@ base.yaml 定义 `HF_PATH: ${oc.env:HF_HOME,...}`，子 config 引用 `${HF_PATH
 model_name: "${oc.env:HF_HOME,/data1/ybyang/huggingface}/Qwen/..."
 ```
 
+## Problem 6: ListConfig not JSON serializable in save_results
+
+`json.dump()` 对包含 OmegaConf ListConfig/DictConfig 的 dict 报 `TypeError: Object of type ListConfig is not JSON serializable`。
+
+## Cause
+
+`cfg.inputs` 从 Hydra config 读出来后仍是 OmegaConf 容器类型，传到 `save_results()` 时没有转换。
+
+## Solution
+
+在 JSON 序列化前检查并转换：
+```python
+from omegaconf import OmegaConf
+
+raw_messages = inputs.get("messages", [])
+messages_plain = (
+    OmegaConf.to_container(raw_messages, resolve=True)
+    if hasattr(raw_messages, "_iter_ex")
+    else raw_messages
+)
+```
+
+`_iter_ex` 属性是 OmegaConf 容器的可靠检测方式（`isinstance` 需要额外 import）。
+
+## Problem 7: launch_exp.sh device override rejected by struct mode
+
+`device=cuda:0` 作为 CLI override 被 Hydra struct mode 拒绝：`ConfigAttributeError: Key 'device' is not in struct`。
+
+## Cause
+
+`launch_exp.sh` 在命令行传 `device=cuda:0`，但子 config (如 `attention_overlay.yaml`) 经 defaults 合并后启用了 struct mode，`device` key 不在合并后的 struct 中。
+
+## Solution
+
+删除 launch script 中的 `device=cuda:0` override — `base.yaml` 已定义 `device: "cuda:0"`，所有子 config 通过 defaults merge 继承。
+
 ## Notes
 - Date: 2026-04-15
 - Environment: hydra-core 1.3.2, omegaconf 2.3.0
