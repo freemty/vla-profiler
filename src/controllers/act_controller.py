@@ -159,11 +159,12 @@ class ACTController(BaseVLAController):
             state_dim = entry.get("state_dim", 14)
             device = getattr(cfg, "device", "cuda:0")
 
-            # Create synthetic observation
+            # Create synthetic observation matching ACT's expected format
+            # observation.images is a list of camera tensors, one per camera
             observation = {
-                "observation.images.top": torch.randn(
-                    1, *image_shape, device=device, dtype=torch.float32
-                ),
+                "observation.images": [
+                    torch.randn(1, *image_shape, device=device, dtype=torch.float32),
+                ],
                 "observation.state": torch.randn(
                     1, state_dim, device=device, dtype=torch.float32
                 ),
