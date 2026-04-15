@@ -203,7 +203,9 @@ class QwenVLController(BaseVLMController, VLMInterpretabilityMixin):
     ) -> str:
         """Save inference results to JSON file."""
         name = inputs.get("name", "unnamed")
-        save_dir = os.path.join(cfg.output_path, name)
+        base_output = cfg.get("base_output_path", cfg.get("output_path", "output"))
+        model_short = cfg.model_name.split("/")[-1]
+        save_dir = os.path.join(base_output, model_short, name)
         os.makedirs(save_dir, exist_ok=True)
 
         output_data = {
