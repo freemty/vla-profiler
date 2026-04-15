@@ -1,5 +1,17 @@
 # Project Skill Changelog
 
+## 2026-04-15 — v2 Attention Overlay + exp01b/exp02a + VLA Controller
+
+Incremental update: attention overlay visualization, VLA controller hierarchy, 3 experiments done.
+
+- **Updated:** Section 1 — current_exp → exp02a, 3 experiments completed, core data summary table
+- **Updated:** Section 2 — new modules (interpretability/, viz/, validation_task, attention_overlay_task), VLA controller branch (BaseVLAController → ACTController), 9 knowhow files, 2 new specs/plans
+- **Updated:** Section 3 — 3 hypotheses verified (sink, sparsity, VA latency), 4 new active hypotheses, exp01b/exp02a findings
+- **Updated:** Section 4 — ACT first-party baseline in Pareto table, Rejected Alternatives table
+- **Updated:** Section 5 — exp01b + exp02a rows, prediction calibration 5.2/5.3, meta-learning trends
+- **Added:** Engineering Lessons #12-#21 (GQA, head_dim check, ACT action queue, multi-image key collision, OmegaConf, vision token ID, timing cross-validation, detach before numpy)
+- **Added:** Section 8 Knowhow Index table, 3 new launch commands, expanded registries
+
 ## 2026-04-15 — v1 Framework + exp01a
 
 Major update: profiling framework built, first experiment completed.
