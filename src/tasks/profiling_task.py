@@ -70,18 +70,18 @@ def task_epd_profiling(
         summary = timer.summary()
         single_run: Dict[str, Any] = {}
 
-        for phase in ("encode", "prefill", "decode"):
-            if phase in summary:
-                single_run[phase] = {
-                    "elapsed_ms": summary[phase],
-                }
-
         decode_steps = timer.decode_step_count
-        if decode_steps > 0 and "decode" in summary:
-            single_run["decode"]["step_count"] = decode_steps
-            single_run["decode"]["ms_per_token"] = (
-                summary["decode"] / decode_steps
-            )
+        for phase in ("encode", "prefill", "decode"):
+            if phase not in summary:
+                continue
+            phase_entry: Dict[str, Any] = {"elapsed_ms": summary[phase]}
+            if phase == "decode" and decode_steps > 0:
+                phase_entry = {
+                    **phase_entry,
+                    "step_count": decode_steps,
+                    "ms_per_token": summary["decode"] / decode_steps,
+                }
+            single_run[phase] = phase_entry
 
         # Total latency
         total_ms = sum(summary.values())

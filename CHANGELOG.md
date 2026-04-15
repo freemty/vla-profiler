@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.3.1 — 2026-04-15
+
+### 新增
+- **ML Profiling 系统综合调研** — 8 个系统 (vLLM/SGLang/FastVideo/TensorRT-LLM/DeepSpeed/Triton/llama.cpp/MLC LLM) 的 profiling 实现对比 + CUDA timing 最佳实践
+  - `survey/papers/ml-profiling-systems-comprehensive-survey.md` — 综合报告
+  - `survey/papers/profiling-systems-survey.md` — 8 系统横向对比
+  - `notes/sglang-profiling-deep-survey.md` — SGLang 深度调研
+- **Profiling 统计增强** — median, P10/P90/P99, CV (变异系数)，CV>5% 自动警告 `[UNSTABLE]`
+
+### 修复
+- **PhaseTimer CPU backend bug** — `record_end()` 被 `if self._use_cuda:` 包裹导致 CPU backend 永远不会被调用
+- **profiling_task.py mutation** — `single_run["decode"]` dict mutation 改为 immutable spread pattern
+
 ## v0.3.0 — 2026-04-15
 
 ### 新增
