@@ -162,5 +162,9 @@ Pipeline state tracked in .pipeline-state.json.
 - **current_exp:** exp01a (Qwen2.5-VL-7B E/P/D profiling — done)
 - **stage:** experiment
 - **skill_updated_at:** 2026-04-15
-- **key finding:** Vision Encode (534ms, 60%) >> Prefill (354ms, 40%) >> Decode (19ms, 2%) on RTX 5880 Ada
+- **key finding (per-input):**
+  - text_only: P=20ms, D=18ms/tok (no encode)
+  - single_image: E=253ms, P=156ms, D=18.6ms/tok
+  - multi_image: E=541ms, P=332ms, D=21ms/tok
+  - Encode scales linearly with images; decode per-token stable ~18-21ms
 - **next:** Run attention analysis (sink detection, visual-text attention patterns), then extend to more input variants
