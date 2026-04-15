@@ -109,12 +109,10 @@ def task_attention_overlay(
         logger.info("Saved multi-layer strip to %s", strip_path)
 
     if output_format in ("gif", "both") and all_layer_attn_maps and original_images:
+        from src.utils import layer_sort_key
         gif_frames = []
-        def _layer_sort_key(name: str) -> int:
-            parts = name.split("_")
-            return int(parts[-1]) if parts[-1].isdigit() else 0
 
-        for layer_name in sorted(all_layer_attn_maps.keys(), key=_layer_sort_key):
+        for layer_name in sorted(all_layer_attn_maps.keys(), key=layer_sort_key):
             heatmap = all_layer_attn_maps[layer_name]
             overlay = renderer.render_overlay(original_images[0], heatmap)
             gif_frames = [*gif_frames, overlay]

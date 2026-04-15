@@ -66,17 +66,17 @@ class VLMInterpretabilityMixin(BaseInterpretabilityMixin):
         meta = self._model_inputs_meta
         ranges = meta["vision_token_ranges"]
 
-        types = [TokenType.TEXT] * seq_len
+        # Build vision token index set
+        visual_indices = frozenset(
+            i for start, end in ranges for i in range(start, min(end, seq_len))
+        )
+        first_start = ranges[0][0] if ranges else seq_len
+        special_indices = frozenset(range(min(first_start, seq_len)))
 
-        # Mark special tokens before first vision range
-        if ranges:
-            first_start = ranges[0][0]
-            for i in range(min(first_start, seq_len)):
-                types[i] = TokenType.SPECIAL
-
-        # Mark visual tokens
-        for start, end in ranges:
-            for i in range(start, min(end, seq_len)):
-                types[i] = TokenType.VISUAL
-
-        return types
+        # Functional construction — no list mutation
+        return [
+            TokenType.VISUAL if i in visual_indices
+            else TokenType.SPECIAL if i in special_indices
+            else TokenType.TEXT
+            for i in range(seq_len)
+        ]

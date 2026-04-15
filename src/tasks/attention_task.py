@@ -59,6 +59,7 @@ def _find_qk_keys(global_store: Dict[str, Any]) -> List[Tuple[int, str, str]]:
 def _compute_attention_scores(
     q_tensor: torch.Tensor,
     k_tensor: torch.Tensor,
+    head_dim: int = 128,
 ) -> torch.Tensor:
     """
     Compute attention scores from Q and K tensors.
@@ -66,13 +67,14 @@ def _compute_attention_scores(
     Args:
         q_tensor: Query tensor [batch, seq_len, hidden] or [batch, heads, seq_len, head_dim]
         k_tensor: Key tensor [batch, seq_len, hidden] or [batch, heads, seq_len, head_dim]
+        head_dim: Attention head dimension (used when reshaping 3D tensors).
+                  Default 128 works for Qwen2.5-VL-7B and Llama-2-7B.
 
     Returns:
         Attention scores [batch, heads, seq_len, seq_len] after softmax
     """
     # If 3D (batch, seq, hidden), reshape assuming multi-head
     if q_tensor.dim() == 3:
-        head_dim = 128  # common default
         num_heads = q_tensor.shape[-1] // head_dim
         batch, seq_q, _ = q_tensor.shape
         _, seq_k, _ = k_tensor.shape
