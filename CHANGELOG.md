@@ -8,9 +8,25 @@
   - 对比报告：每 phase 的 deviation %，PASS (<5%) / WARN (5-15%) / FAIL (>15%) verdict
   - Gap 分析：`sum(E+P+D)` vs end-to-end wall clock，量化 projection/sampling 等漏测时间
   - 自动集成：profiling config 加 `timing_validation` 即启用，无需改动其他代码
-- **Knowhow 归档**
-  - `docs/knowhow/toolchain/cuda-profiling-patterns.md` — CUDA Event vs sync+perf_counter vs torch.profiler 三种模式对比、warmup 要求、统计方法、GPU clock 锁定
-  - `docs/knowhow/debug-solutions/phasetimer-cpu-backend-bug.md` — CPU backend record_end bug 根因与修复
+
+### 实验结果
+- **exp01b: Qwen2.5-VL-7B attention analysis** (5 layers) — Pos 2 (first visual patch) 是 universal attention sink (12K-18K received, 12-28x vs #2)。Text→Visual Gini >0.91 (extreme sparsity, supports token pruning)。Layer 21 entropy 最低 (3.44)
+- **exp02a: ACT (LeRobot) profiling** — Total ~3ms (850x faster than VLM)。Encode ~2.5-2.8ms (80%)，Action ~0.4-0.8ms。VLA latency 下界
+
+### 修复
+- 消除 controller 双重注册 (\_\_init\_\_.py + run_tasks.py 重复 import)
+- `_aggregated_timing` 从动态属性改为 BaseVLM/VLAController 显式声明
+- `head_dim` divisibility check — 防止非 128 head_dim 模型的静默错误
+- Multi-image heatmap key collision + defensive detach before numpy
+
+### 文档
+- Knowhow 归档 (7 个文件):
+  - `docs/knowhow/toolchain/cuda-profiling-patterns.md` — CUDA Event vs torch.profiler 对比
+  - `docs/knowhow/debug-solutions/phasetimer-cpu-backend-bug.md` — CPU backend bug
+  - `docs/knowhow/debug-solutions/act-action-queue-hooks.md` — ACT action queue 缓存
+  - `docs/knowhow/debug-solutions/gqa-attention-analysis.md` — GQA Q/K head mismatch
+  - `docs/knowhow/infrastructure/xdlab23-model-weights.md` — 更新 OpenVLA ModelScope 404
+  - vision token mapping、Hydra ListConfig/device gotchas
 
 ## v0.4.0 — 2026-04-15
 
