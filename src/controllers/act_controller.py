@@ -178,19 +178,22 @@ class ACTController(BaseVLAController):
         self, pipeline: Any, cfg: Any, inputs: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        Run ACT inference — single forward pass.
+        Run ACT inference — single forward pass through the model.
 
-        Returns action chunk (chunk_size x action_dim).
+        Calls model.forward() directly instead of select_action() to avoid
+        the action queue caching (which skips forward on subsequent calls).
         """
         policy = pipeline.model
         observation = inputs.get("observation", {})
 
-        # ACT select_action expects observation dict
-        action = policy.select_action(observation)
+        # Call model.forward() directly to ensure hooks fire every time.
+        # select_action() has an action queue that caches chunk_size steps,
+        # meaning only 1 in N calls actually runs the model.
+        actions, _ = policy.model(observation)
 
         return {
-            "action": action.cpu() if torch.is_tensor(action) else action,
-            "action_shape": list(action.shape) if torch.is_tensor(action) else [],
+            "action": actions.cpu(),
+            "action_shape": list(actions.shape),
         }
 
     def save_results(
