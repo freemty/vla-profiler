@@ -75,17 +75,25 @@ def _compute_attention_scores(
     """
     # If 3D (batch, seq, hidden), reshape assuming multi-head
     if q_tensor.dim() == 3:
-        num_heads = q_tensor.shape[-1] // head_dim
+        num_q_heads = q_tensor.shape[-1] // head_dim
+        num_k_heads = k_tensor.shape[-1] // head_dim
         batch, seq_q, _ = q_tensor.shape
         _, seq_k, _ = k_tensor.shape
-        q = q_tensor.view(batch, seq_q, num_heads, head_dim).transpose(1, 2)
-        k = k_tensor.view(batch, seq_k, num_heads, head_dim).transpose(1, 2)
+        q = q_tensor.view(batch, seq_q, num_q_heads, head_dim).transpose(1, 2)
+        k = k_tensor.view(batch, seq_k, num_k_heads, head_dim).transpose(1, 2)
     elif q_tensor.dim() == 4:
         q = q_tensor
         k = k_tensor
         head_dim = q.shape[-1]
+        num_q_heads = q.shape[1]
+        num_k_heads = k.shape[1]
     else:
         raise ValueError(f"Unexpected Q tensor dim: {q_tensor.dim()}")
+
+    # Handle GQA: repeat K heads to match Q head count
+    if num_k_heads != num_q_heads:
+        repeat_factor = num_q_heads // num_k_heads
+        k = k.repeat_interleave(repeat_factor, dim=1)
 
     scale = 1.0 / math.sqrt(head_dim)
     # [batch, heads, seq_q, seq_k]
