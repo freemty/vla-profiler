@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.4.1 — 2026-04-15
+
+### 新增
+- **Timing Cross-Validation Task** (`timing_validation`) — 用 torch.profiler 独立测量 E/P/D phase 时长，与 PhaseTimer CUDA Events 对比验证
+  - `src/tasks/validation_task.py` — `_ProfilerPhaseTracker` 在相同 phase boundary 注册 `record_function` hooks，同时运行两套测量
+  - 对比报告：每 phase 的 deviation %，PASS (<5%) / WARN (5-15%) / FAIL (>15%) verdict
+  - Gap 分析：`sum(E+P+D)` vs end-to-end wall clock，量化 projection/sampling 等漏测时间
+  - 自动集成：profiling config 加 `timing_validation` 即启用，无需改动其他代码
+- **Knowhow 归档**
+  - `docs/knowhow/toolchain/cuda-profiling-patterns.md` — CUDA Event vs sync+perf_counter vs torch.profiler 三种模式对比、warmup 要求、统计方法、GPU clock 锁定
+  - `docs/knowhow/debug-solutions/phasetimer-cpu-backend-bug.md` — CPU backend record_end bug 根因与修复
+
 ## v0.4.0 — 2026-04-15
 
 ### 新增
