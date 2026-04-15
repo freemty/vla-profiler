@@ -122,7 +122,11 @@ class OverlayRenderer:
             Horizontal strip (H, W * num_layers, 3) uint8.
         """
         panels = []
-        for layer_name in sorted(attn_maps_by_layer.keys()):
+        def _layer_sort_key(name: str) -> int:
+            parts = name.split("_")
+            return int(parts[-1]) if parts[-1].isdigit() else 0
+
+        for layer_name in sorted(attn_maps_by_layer.keys(), key=_layer_sort_key):
             attn_map = attn_maps_by_layer[layer_name]
             overlay = self.render_overlay(image, attn_map)
 

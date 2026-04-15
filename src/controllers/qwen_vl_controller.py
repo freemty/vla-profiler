@@ -309,7 +309,12 @@ class QwenVLController(BaseVLMController, VLMInterpretabilityMixin):
                 meta["image_sizes"] = [*meta["image_sizes"], (0, 0)]
 
         input_ids = model_inputs.input_ids[0].tolist()
-        vision_token_id = 151655
+        # Qwen2.5-VL <|image_pad|> token — resolve dynamically, fallback to known ID
+        vision_token_id = (
+            processor.tokenizer.convert_tokens_to_ids("<|image_pad|>")
+            if hasattr(processor, "tokenizer")
+            else 151655
+        )
         ranges = []
         in_vision = False
         start = 0
