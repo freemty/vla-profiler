@@ -61,11 +61,11 @@ class QwenVLController(BaseVLMController):
 
     def get_language_model(self) -> nn.Module:
         """Return the Qwen2.5-VL language model backbone."""
-        return self.pipeline.model.model
+        return self.pipeline.model.model.language_model
 
     def get_layer_blocks(self) -> List[nn.Module]:
         """Return ordered list of LLM transformer layers."""
-        return list(self.pipeline.model.model.layers)
+        return list(self.pipeline.model.model.language_model.layers)
 
     @staticmethod
     def init_pipeline(cfg: Any) -> Any:
