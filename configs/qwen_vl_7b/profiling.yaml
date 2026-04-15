@@ -2,6 +2,7 @@
 # Server: xdlab23, GPU: single RTX 5880 Ada
 defaults:
   - /base
+  - _self_
 
 model_name: "${HF_PATH}/Qwen/Qwen2.5-VL-7B-Instruct"
 controller_name: "qwen_vl"

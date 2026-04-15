@@ -1,6 +1,7 @@
 # Qwen2.5-VL-7B attention analysis configuration
 defaults:
   - /base
+  - _self_
 
 model_name: "${HF_PATH}/Qwen/Qwen2.5-VL-7B-Instruct"
 controller_name: "qwen_vl"

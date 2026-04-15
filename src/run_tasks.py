@@ -174,6 +174,7 @@ def _execute_tasks(controller: Any, cfg: DictConfig) -> None:
 @hydra.main(version_base=None, config_path="../configs", config_name="base")
 def main(cfg: DictConfig) -> None:
     """Hydra entry point."""
+    OmegaConf.set_struct(cfg, False)
     _setup_logging(cfg.get("debug", False))
 
     logger.info("Config:\n%s", OmegaConf.to_yaml(cfg))
