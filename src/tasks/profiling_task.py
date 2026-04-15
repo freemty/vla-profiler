@@ -45,24 +45,18 @@ def task_epd_profiling(
         timing_data["aggregated"] = aggregated
         num_runs = aggregated.get("num_runs", 0)
         logger.info("Using aggregated timing from %d runs", num_runs)
-        for phase in ("encode", "prefill", "decode"):
-            phase_stats = aggregated.get(phase)
-            if phase_stats is None:
-                continue
-            cv = phase_stats.get("cv", 0.0)
-            cv_warn = " [UNSTABLE cv>5%%]" if cv > 0.05 else ""
-            logger.info(
-                "  %s: median=%.2fms mean=%.2fms std=%.2fms "
-                "p10=%.2f p90=%.2f cv=%.3f%s",
-                phase,
-                phase_stats.get("median_ms", 0.0),
-                phase_stats.get("mean_ms", 0.0),
-                phase_stats.get("std_ms", 0.0),
-                phase_stats.get("p10_ms", 0.0),
-                phase_stats.get("p90_ms", 0.0),
-                cv,
-                cv_warn,
-            )
+        # Log all phase stats dynamically (not hardcoded to E/P/D)
+        for key, val in aggregated.items():
+            if isinstance(val, dict) and "mean_ms" in val:
+                cv = val.get("cv", 0.0)
+                cv_warn = " [UNSTABLE cv>5%%]" if cv > 0.05 else ""
+                logger.info(
+                    "  %s: mean=%.2fms std=%.2fms%s",
+                    key,
+                    val.get("mean_ms", 0.0),
+                    val.get("std_ms", 0.0),
+                    cv_warn,
+                )
 
     # Single-run timing from PhaseTimer
     timer = getattr(controller, "timer", None)
@@ -71,19 +65,17 @@ def task_epd_profiling(
         single_run: Dict[str, Any] = {}
 
         decode_steps = timer.decode_step_count
-        for phase in ("encode", "prefill", "decode"):
-            if phase not in summary:
-                continue
-            phase_entry: Dict[str, Any] = {"elapsed_ms": summary[phase]}
+        # Dynamically iterate all recorded phases
+        for phase, elapsed in summary.items():
+            phase_entry: Dict[str, Any] = {"elapsed_ms": elapsed}
             if phase == "decode" and decode_steps > 0:
                 phase_entry = {
                     **phase_entry,
                     "step_count": decode_steps,
-                    "ms_per_token": summary["decode"] / decode_steps,
+                    "ms_per_token": elapsed / decode_steps,
                 }
             single_run[phase] = phase_entry
 
-        # Total latency
         total_ms = sum(summary.values())
         single_run["total_ms"] = total_ms
 
