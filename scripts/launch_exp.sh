@@ -20,6 +20,5 @@ echo "[$(date)] Starting experiment: ${CONFIG_NAME} on GPU ${GPU_ID}"
 CUDA_VISIBLE_DEVICES=$GPU_ID python -m src.run_tasks \
     --config-path ../configs \
     --config-name $CONFIG_NAME \
-    device=cuda:0 \
     2>&1 | tee "logs/${CONFIG_NAME//\//_}.log"
 echo "[$(date)] Experiment complete"
