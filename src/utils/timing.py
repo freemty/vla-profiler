@@ -28,21 +28,20 @@ def _cuda_available() -> bool:
 class _CpuTimerBackend:
     """CPU timing backend using time.perf_counter."""
 
-    __slots__ = ("_start_ns",)
+    __slots__ = ("_start_ns", "_end_ns")
 
     def __init__(self) -> None:
         self._start_ns: float = 0.0
+        self._end_ns: float = 0.0
 
     def record_start(self) -> None:
         self._start_ns = time.perf_counter()
 
     def record_end(self) -> None:
-        # end time captured at elapsed_ms call
-        pass
+        self._end_ns = time.perf_counter()
 
     def elapsed_ms(self) -> float:
-        end = time.perf_counter()
-        return (end - self._start_ns) * 1000.0
+        return (self._end_ns - self._start_ns) * 1000.0
 
 
 class _CudaTimerBackend:
@@ -118,7 +117,8 @@ class PhaseTimer:
         """
         Record the end of a named phase.
 
-        Increments decode_step_count when phase is "decode".
+        For phases that repeat (e.g., "decode" runs N times), elapsed times
+        are accumulated. Increments decode_step_count when phase is "decode".
         """
         if phase not in self._active:
             raise KeyError(
@@ -129,8 +129,9 @@ class PhaseTimer:
         if self._use_cuda:
             backend.record_end()
 
-        # Move from active to completed
-        self._completed = {**self._completed, phase: backend}
+        # Accumulate: store list of completed backends per phase
+        existing = self._completed.get(phase, [])
+        self._completed = {**self._completed, phase: [*existing, backend]}
         self._active = {k: v for k, v in self._active.items() if k != phase}
 
         if phase == "decode":
@@ -138,19 +139,21 @@ class PhaseTimer:
 
     def elapsed_ms(self, phase: str) -> float:
         """
-        Return elapsed time in milliseconds for a completed phase.
+        Return total elapsed time in milliseconds for a phase.
 
-        Raises KeyError if the phase was never completed.
+        If the phase was marked multiple times (e.g., decode), returns
+        the sum of all intervals. Raises KeyError if phase was never completed.
         """
         if phase not in self._completed:
             raise KeyError(
                 f"Phase '{phase}' not found in completed timings. "
                 f"Available: {list(self._completed.keys())}"
             )
-        return self._completed[phase].elapsed_ms()
+        backends = self._completed[phase]
+        return sum(b.elapsed_ms() for b in backends)
 
     def summary(self) -> Dict[str, float]:
-        """Return a dict of all completed phase names to elapsed ms."""
+        """Return a dict of all completed phase names to total elapsed ms."""
         return {phase: self.elapsed_ms(phase) for phase in self._completed}
 
     def reset(self) -> None:

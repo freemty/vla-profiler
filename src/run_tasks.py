@@ -82,46 +82,56 @@ def _run_profiling(controller: Any, cfg: DictConfig) -> None:
     # Register profiling hooks
     controller.register_hooks()
 
-    # Warmup runs
-    for i in range(num_warmup):
-        logger.info("Warmup run %d/%d", i + 1, num_warmup)
-        controller.timer.reset()
-        for inp in inputs_list:
-            controller.model_inference(controller.pipeline, cfg, inp)
-        logger.info("Warmup %d complete", i + 1)
+    # Profile each input independently
+    for inp in inputs_list:
+        input_name = inp.get("name", "unnamed")
+        logger.info("Profiling input: %s", input_name)
 
-    # Benchmark runs: collect timing per phase per run
-    all_timings: Dict[str, List[float]] = {}
-
-    for i in range(num_benchmark):
-        logger.info("Benchmark run %d/%d", i + 1, num_benchmark)
-        controller.timer.reset()
-        for inp in inputs_list:
+        # Warmup runs
+        for i in range(num_warmup):
+            logger.info("  Warmup %d/%d", i + 1, num_warmup)
+            controller.timer.reset()
             controller.model_inference(controller.pipeline, cfg, inp)
 
-        summary = controller.timer.summary()
-        for phase, ms in summary.items():
-            if phase not in all_timings:
-                all_timings[phase] = [ms]
-            else:
-                all_timings[phase] = [*all_timings[phase], ms]
+        # Benchmark runs: collect timing per phase per run
+        all_timings: Dict[str, List[float]] = {}
 
-    # Aggregate timing stats
-    aggregated: Dict[str, Any] = {"num_runs": num_benchmark}
-    for phase, timings in all_timings.items():
-        phase_stats = {
-            "mean_ms": statistics.mean(timings),
-            "std_ms": statistics.stdev(timings) if len(timings) > 1 else 0.0,
-            "min_ms": min(timings),
-            "max_ms": max(timings),
-            "all_ms": timings,
+        for i in range(num_benchmark):
+            logger.info("  Benchmark %d/%d", i + 1, num_benchmark)
+            controller.timer.reset()
+            controller.model_inference(controller.pipeline, cfg, inp)
+
+            summary = controller.timer.summary()
+            for phase, ms in summary.items():
+                if phase not in all_timings:
+                    all_timings[phase] = [ms]
+                else:
+                    all_timings[phase] = [*all_timings[phase], ms]
+
+        # Aggregate timing stats for this input
+        aggregated: Dict[str, Any] = {
+            "num_runs": num_benchmark,
+            "input_name": input_name,
         }
-        aggregated[phase] = phase_stats
+        for phase, timings in all_timings.items():
+            aggregated[phase] = {
+                "mean_ms": statistics.mean(timings),
+                "std_ms": statistics.stdev(timings) if len(timings) > 1 else 0.0,
+                "min_ms": min(timings),
+                "max_ms": max(timings),
+                "all_ms": timings,
+            }
 
-    controller._aggregated_timing = aggregated
+        controller._aggregated_timing = aggregated
 
-    # Execute tasks
-    _execute_tasks(controller, cfg)
+        # Execute tasks per input
+        base_output = cfg.get("base_output_path", "output")
+        model_short = cfg.model_name.split("/")[-1]
+        save_dir = os.path.join(base_output, model_short, input_name)
+        os.makedirs(save_dir, exist_ok=True)
+        _execute_tasks_to_dir(controller, cfg, save_dir)
+
+    logger.info("All inputs profiled")
 
 
 def _run_analysis(controller: Any, cfg: DictConfig) -> None:
@@ -151,12 +161,17 @@ def _run_analysis(controller: Any, cfg: DictConfig) -> None:
 
 
 def _execute_tasks(controller: Any, cfg: DictConfig) -> None:
-    """Execute all configured tasks."""
-    task_names = list(cfg.get("tasks", []))
+    """Execute all configured tasks with auto-generated save_dir."""
     base_output = cfg.get("base_output_path", "output")
-    save_dir = os.path.join(base_output, cfg.model_name.replace("/", "_"))
+    model_short = cfg.model_name.split("/")[-1]
+    save_dir = os.path.join(base_output, model_short)
     os.makedirs(save_dir, exist_ok=True)
+    _execute_tasks_to_dir(controller, cfg, save_dir)
 
+
+def _execute_tasks_to_dir(controller: Any, cfg: DictConfig, save_dir: str) -> None:
+    """Execute all configured tasks, writing output to save_dir."""
+    task_names = list(cfg.get("tasks", []))
     task_configs = OmegaConf.to_container(cfg.get("task_configs", {}), resolve=True) \
         if "task_configs" in cfg else {}
 
