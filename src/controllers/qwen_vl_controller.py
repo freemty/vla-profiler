@@ -132,9 +132,17 @@ class QwenVLController(BaseVLMController):
         except ImportError:
             from src.utils.qwen_vl_utils import process_vision_info
 
+        from omegaconf import OmegaConf
+
         processor = pipeline.processor
         model = pipeline.model
         messages = inputs.get("messages", [])
+
+        # Convert OmegaConf DictConfig to plain dicts for qwen_vl_utils
+        if hasattr(messages, '_iter_ex'):
+            messages = OmegaConf.to_container(messages, resolve=True)
+        elif isinstance(messages, list) and messages and hasattr(messages[0], '_iter_ex'):
+            messages = [OmegaConf.to_container(m, resolve=True) for m in messages]
 
         text = processor.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
