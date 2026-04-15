@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.4.0 — 2026-04-15
+
+### 新增
+- **Attention Overlay Visualization** — 将 VLM attention weights 映射回输入图像空间，渲染 heatmap 叠加可视化
+  - `src/interpretability/` — Interpretability Mixin 体系：TokenSpatialMap、TokenType 数据结构，BaseInterpretabilityMixin 抽象接口
+  - `src/interpretability/vlm_mixin.py` — Qwen2.5-VL 专用 token-to-image 空间映射，从 processor 的 `image_grid_thw` 读取 patch grid，扫描 `<|image_pad|>` token 定位 vision token 范围
+  - `src/interpretability/vla_mixin.py` — Pi-Zero VLA placeholder（接口就绪，等模型权重）
+  - `src/viz/overlay_renderer.py` — OverlayRenderer：JET/viridis colormap heatmap 叠加、multi-layer 横向对比 strip、GIF 动画输出
+  - `src/tasks/attention_overlay_task.py` — 新 task：从 global_store 读 QK → 计算 attention → mixin 空间映射 → overlay 渲染
+  - `configs/qwen_vl_7b/attention_overlay.yaml` — Hydra config，5 层 (0/7/14/21/27) attention overlay
+- **E2E 验证通过** — Qwen2.5-VL-7B 单图输入，产出 5 层 overlay PNGs + multi_layer_strip.png + layers_sweep.gif + attention_data.json
+- 灵感来源：[physical-AI-interpretability](https://github.com/villekuosmanen/physical-AI-interpretability) (overlay 渲染) + rope2sink (log-scale normalization, colormap 体系)
+
+### 修复
+- **GQA attention 计算** — `_compute_attention_scores()` 支持 Grouped Query Attention (K heads < Q heads)，通过 `repeat_interleave` 对齐
+- **vision token ID 动态获取** — 从 tokenizer 解析 `<|image_pad|>` 而非硬编码 151655
+- **layer 排序** — multi-layer strip 和 GIF 使用数字排序 (layer_7 在 layer_14 之前)
+- **save_results 路径** — 使用 `base_output_path` 替代不存在的 `output_path`
+- **OmegaConf 序列化** — save_results 中 ListConfig → plain list 再 JSON dump
+- **launch_exp.sh** — 去掉 `device=cuda:0` override (base.yaml 已定义)
+- **profiling_task.py** — 动态遍历所有 phase，不再硬编码 E/P/D
+- **ACT controller** — model.forward() 直接调用 + observation.images 格式修复
+
 ## v0.3.1 — 2026-04-15
 
 ### 新增

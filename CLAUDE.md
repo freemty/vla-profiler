@@ -170,4 +170,5 @@ Pipeline state tracked in .pipeline-state.json.
   - single_image: E=253ms, P=156ms, D=18.6ms/tok
   - multi_image: E=541ms, P=332ms, D=21ms/tok
   - Encode scales linearly with images; decode per-token stable ~18-21ms
-- **next:** Run attention analysis (sink detection, visual-text attention patterns), then extend to more input variants
+- **latest (v0.4.0):** Attention Overlay Visualization — heatmap overlay on original images, multi-layer strip, GIF. Interpretability Mixin 体系 (VLM + VLA placeholder). GQA attention fix.
+- **next:** Gradient Saliency (Integrated Gradients), SAE Feature Extraction + OOD detection. Pi-Zero controller 实现 (等权重).
