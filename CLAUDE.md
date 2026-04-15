@@ -162,13 +162,12 @@ Pipeline state tracked in .pipeline-state.json.
 
 ## Current state
 
-- **current_exp:** exp01a (Qwen2.5-VL-7B E/P/D profiling — done)
+- **current_exp:** exp01b (Qwen2.5-VL-7B attention analysis — done)
 - **stage:** experiment
 - **skill_updated_at:** 2026-04-15
-- **key finding (per-input):**
-  - text_only: P=20ms, D=18ms/tok (no encode)
-  - single_image: E=253ms, P=156ms, D=18.6ms/tok
-  - multi_image: E=541ms, P=332ms, D=21ms/tok
-  - Encode scales linearly with images; decode per-token stable ~18-21ms
-- **latest (v0.4.0):** Attention Overlay Visualization — heatmap overlay on original images, multi-layer strip, GIF. Interpretability Mixin 体系 (VLM + VLA placeholder). GQA attention fix.
-- **next:** Gradient Saliency (Integrated Gradients), SAE Feature Extraction + OOD detection. Pi-Zero controller 实现 (等权重).
+- **key findings:**
+  - **exp01a (profiling):** text P=20ms/D=18ms; single_img E=253ms/P=156ms/D=18.6ms; multi_img E=541ms/P=332ms/D=21ms. Encode scales linearly.
+  - **exp01b (attention):** Pos 2 (first visual patch) is universal attention sink (12K-18K received, 12-28x vs #2). Text→Visual Gini >0.91 (extreme sparsity → token pruning viable). Layer 21 entropy lowest (3.44).
+  - **exp02a (ACT):** Total ~3ms (850x faster than VLM). Encode 80%, action 20%. VLA latency lower bound.
+- **latest (v0.4.0):** Attention Overlay Visualization, Interpretability Mixin, GQA fix, BaseVLAController, ACTController.
+- **next:** Run attention overlay on server. OpenVLA (need HF download). Pi-Zero controller. Gradient saliency.
