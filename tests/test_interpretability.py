@@ -64,3 +64,62 @@ def test_map_attention_to_image():
 
     assert result.shape == (4, 5)
     assert result.dtype == np.float32
+
+
+def test_vlm_mixin_get_token_spatial_mappings():
+    from src.interpretability.vlm_mixin import VLMInterpretabilityMixin
+
+    mixin = VLMInterpretabilityMixin()
+    mixin._model_inputs_meta = {
+        "image_grid_thw": [[1, 15, 20]],
+        "vision_token_ranges": [(2, 302)],
+        "image_sizes": [(480, 640)],
+    }
+
+    mappings = mixin.get_token_spatial_mappings({})
+    assert len(mappings) == 1
+    m = mappings[0]
+    assert m.patch_height == 15
+    assert m.patch_width == 20
+    assert m.token_start_idx == 2
+    assert m.token_end_idx == 302
+    assert m.image_height == 480
+    assert m.image_width == 640
+    assert m.image_key == "image_0"
+
+
+def test_vlm_mixin_classify_token_types():
+    from src.interpretability.vlm_mixin import VLMInterpretabilityMixin
+    from src.interpretability.base_mixin import TokenType
+
+    mixin = VLMInterpretabilityMixin()
+    mixin._model_inputs_meta = {
+        "vision_token_ranges": [(2, 12)],
+    }
+
+    types = mixin.classify_token_types(seq_len=20, inputs={})
+    assert len(types) == 20
+    assert types[0] == TokenType.SPECIAL
+    assert types[1] == TokenType.SPECIAL
+    assert types[2] == TokenType.VISUAL
+    assert types[11] == TokenType.VISUAL
+    assert types[12] == TokenType.TEXT
+    assert types[19] == TokenType.TEXT
+
+
+def test_vlm_mixin_multi_image():
+    from src.interpretability.vlm_mixin import VLMInterpretabilityMixin
+
+    mixin = VLMInterpretabilityMixin()
+    mixin._model_inputs_meta = {
+        "image_grid_thw": [[1, 10, 10], [1, 8, 12]],
+        "vision_token_ranges": [(2, 102), (105, 201)],
+        "image_sizes": [(320, 320), (256, 384)],
+    }
+
+    mappings = mixin.get_token_spatial_mappings({})
+    assert len(mappings) == 2
+    assert mappings[0].image_key == "image_0"
+    assert mappings[1].image_key == "image_1"
+    assert mappings[1].patch_height == 8
+    assert mappings[1].patch_width == 12
