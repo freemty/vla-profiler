@@ -29,6 +29,7 @@ import src.controllers.act_controller  # noqa: F401 — register controller
 from src.tasks import TASK_REGISTRY
 import src.tasks.profiling_task  # noqa: F401 — register task
 import src.tasks.attention_task  # noqa: F401 — register task
+import src.tasks.attention_overlay_task  # noqa: F401 — register task
 
 
 logger = logging.getLogger(__name__)
