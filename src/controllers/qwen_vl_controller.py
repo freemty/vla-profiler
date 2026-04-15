@@ -208,9 +208,18 @@ class QwenVLController(BaseVLMController, VLMInterpretabilityMixin):
         save_dir = os.path.join(base_output, model_short, name)
         os.makedirs(save_dir, exist_ok=True)
 
+        from omegaconf import OmegaConf
+
+        raw_messages = inputs.get("messages", [])
+        messages_plain = (
+            OmegaConf.to_container(raw_messages, resolve=True)
+            if hasattr(raw_messages, "_iter_ex")
+            else raw_messages
+        )
+
         output_data = {
             "name": name,
-            "messages": inputs.get("messages", []),
+            "messages": messages_plain,
             "output_text": results,
         }
 
