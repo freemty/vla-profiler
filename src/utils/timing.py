@@ -126,8 +126,7 @@ class PhaseTimer:
             )
 
         backend = self._active[phase]
-        if self._use_cuda:
-            backend.record_end()
+        backend.record_end()
 
         # Accumulate: store list of completed backends per phase
         existing = self._completed.get(phase, [])

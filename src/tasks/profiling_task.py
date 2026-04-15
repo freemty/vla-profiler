@@ -43,7 +43,26 @@ def task_epd_profiling(
     aggregated = getattr(controller, "_aggregated_timing", None)
     if aggregated is not None:
         timing_data["aggregated"] = aggregated
-        logger.info("Using aggregated timing from %d runs", aggregated.get("num_runs", 0))
+        num_runs = aggregated.get("num_runs", 0)
+        logger.info("Using aggregated timing from %d runs", num_runs)
+        for phase in ("encode", "prefill", "decode"):
+            phase_stats = aggregated.get(phase)
+            if phase_stats is None:
+                continue
+            cv = phase_stats.get("cv", 0.0)
+            cv_warn = " [UNSTABLE cv>5%%]" if cv > 0.05 else ""
+            logger.info(
+                "  %s: median=%.2fms mean=%.2fms std=%.2fms "
+                "p10=%.2f p90=%.2f cv=%.3f%s",
+                phase,
+                phase_stats.get("median_ms", 0.0),
+                phase_stats.get("mean_ms", 0.0),
+                phase_stats.get("std_ms", 0.0),
+                phase_stats.get("p10_ms", 0.0),
+                phase_stats.get("p90_ms", 0.0),
+                cv,
+                cv_warn,
+            )
 
     # Single-run timing from PhaseTimer
     timer = getattr(controller, "timer", None)

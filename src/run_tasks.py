@@ -13,6 +13,7 @@ Usage:
 from __future__ import annotations
 
 import logging
+import math
 import os
 import statistics
 from typing import Any, Dict, List
@@ -23,6 +24,7 @@ from omegaconf import DictConfig, OmegaConf
 # Import registries (triggers module-level registration)
 from src.controllers import CONTROLLER_REGISTRY
 import src.controllers.qwen_vl_controller  # noqa: F401 — register controller
+import src.controllers.openvla_controller  # noqa: F401 — register controller
 from src.tasks import TASK_REGISTRY
 import src.tasks.profiling_task  # noqa: F401 — register task
 import src.tasks.attention_task  # noqa: F401 — register task
@@ -64,6 +66,20 @@ def _init_pipeline(controller: Any, cfg: DictConfig) -> None:
     pipeline = controller.init_pipeline(cfg)
     controller.pipeline = pipeline
     controller._resolve_store_layers()
+
+
+def _percentile(sorted_data: List[float], pct: float) -> float:
+    """Compute percentile from pre-sorted data using linear interpolation."""
+    if not sorted_data:
+        return 0.0
+    n = len(sorted_data)
+    if n == 1:
+        return sorted_data[0]
+    k = (pct / 100.0) * (n - 1)
+    lo = int(math.floor(k))
+    hi = min(lo + 1, n - 1)
+    frac = k - lo
+    return sorted_data[lo] + frac * (sorted_data[hi] - sorted_data[lo])
 
 
 def _run_profiling(controller: Any, cfg: DictConfig) -> None:
@@ -114,11 +130,19 @@ def _run_profiling(controller: Any, cfg: DictConfig) -> None:
             "input_name": input_name,
         }
         for phase, timings in all_timings.items():
+            sorted_t = sorted(timings)
+            mean_val = statistics.mean(sorted_t)
+            std_val = statistics.stdev(sorted_t) if len(sorted_t) > 1 else 0.0
             aggregated[phase] = {
-                "mean_ms": statistics.mean(timings),
-                "std_ms": statistics.stdev(timings) if len(timings) > 1 else 0.0,
-                "min_ms": min(timings),
-                "max_ms": max(timings),
+                "median_ms": statistics.median(sorted_t),
+                "mean_ms": mean_val,
+                "std_ms": std_val,
+                "cv": std_val / mean_val if mean_val > 0 else 0.0,
+                "p10_ms": _percentile(sorted_t, 10),
+                "p90_ms": _percentile(sorted_t, 90),
+                "p99_ms": _percentile(sorted_t, 99),
+                "min_ms": sorted_t[0],
+                "max_ms": sorted_t[-1],
                 "all_ms": timings,
             }
 

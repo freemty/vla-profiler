@@ -1,0 +1,43 @@
+# OpenVLA-7B attention analysis configuration
+# Llama-2 has 32 layers — sample 5 evenly
+defaults:
+  - /base
+  - _self_
+
+model_name: "${oc.env:HF_HOME,/data1/ybyang/huggingface}/openvla/openvla-7b"
+controller_name: "openvla"
+
+controller_config:
+  mode: "analysis"
+  store_layers:
+    - 0
+    - 8
+    - 16
+    - 24
+    - 31
+  store_type:
+    - "self_q"
+    - "self_k"
+
+tasks:
+  - "visual_text_attention"
+  - "sink_detection"
+  - "per_layer_stats"
+
+task_configs:
+  visual_text_attention:
+    top_k: 5
+  sink_detection:
+    sink_k: 10
+
+max_new_tokens: 512
+
+inputs:
+  - name: "robot_analysis"
+    messages:
+      - role: "user"
+        content:
+          - type: "image"
+            image: "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"
+          - type: "text"
+            text: "pick up the red cup"

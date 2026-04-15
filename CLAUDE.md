@@ -55,6 +55,9 @@ slides/                # 演示文稿
 - **Framework design spec**: `docs/superpowers/specs/2026-04-14-vlm-profiling-framework-design.md`
 - **Implementation plan**: `docs/superpowers/plans/2026-04-14-vlm-profiling-framework.md`
 - **Shared core (model-probe-core)**: `src/core/` — submodule, also used by rope2sink
+- **SGLang profiling 深度调研**: `notes/sglang-profiling-deep-survey.md` — SGLang 的 torch.profiler 集成、Prometheus metrics、benchmark 套件、prefill/decode 分离 profiling、内存追踪的实现级分析
+- **ML Inference Profiling Systems 横向调研**: `survey/papers/profiling-systems-survey.md` — FastVideo/TensorRT-LLM/DeepSpeed/Triton/vLLM/SGLang/llama.cpp/MLC LLM 8大系统的 profiling 实现对比，timing 机制、phase 定义、warmup 策略、统计方法、memory tracking 全面分析
+- **ML Profiling 综合调研报告**: `survey/papers/ml-profiling-systems-comprehensive-survey.md` — 4 agent 并行调研的综合报告，含 PhaseTimer 代码审查、CUDA timing 最佳实践、三层 profiling 架构建议
 
 ## Survey Dimensions
 

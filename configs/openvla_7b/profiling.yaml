@@ -1,0 +1,29 @@
+# OpenVLA-7B profiling configuration
+# AR VLA: DINOv2+SigLIP -> Llama-2 7B -> 7 action tokens (256 bins)
+defaults:
+  - /base
+  - _self_
+
+model_name: "${oc.env:HF_HOME,/data1/ybyang/huggingface}/openvla/openvla-7b"
+controller_name: "openvla"
+
+controller_config:
+  mode: "profiling"
+
+tasks:
+  - "epd_profiling"
+
+# OpenVLA decode is only 7 tokens (7-DoF), so fewer benchmark runs needed
+num_warmup_runs: 3
+num_benchmark_runs: 10
+max_new_tokens: 512
+
+inputs:
+  - name: "robot_manipulation"
+    messages:
+      - role: "user"
+        content:
+          - type: "image"
+            image: "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"
+          - type: "text"
+            text: "pick up the red cup"
