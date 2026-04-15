@@ -12,18 +12,20 @@ import logging
 import os
 from typing import Any, Dict, List, Optional, Union
 
+import numpy as np
 import torch
 import torch.nn as nn
 
 from src.controllers import CONTROLLER_REGISTRY
 from src.controllers.base_vlm_controller import BaseVLMController
 from src.core.probe_core import HookManager
+from src.interpretability.vlm_mixin import VLMInterpretabilityMixin
 
 
 logger = logging.getLogger(__name__)
 
 
-class QwenVLController(BaseVLMController):
+class QwenVLController(BaseVLMController, VLMInterpretabilityMixin):
     """
     Hook controller for Qwen2.5-VL vision-language model.
 
@@ -50,6 +52,8 @@ class QwenVLController(BaseVLMController):
             store_phases=store_phases,
             hook_mode=hook_mode,
         )
+        self._model_inputs_meta: Dict[str, Any] = {}
+        self._original_images: list = []
 
     # ------------------------------------------------------------------
     # Abstract method implementations
@@ -149,6 +153,16 @@ class QwenVLController(BaseVLMController):
         )
         image_inputs, video_inputs = process_vision_info(messages)
 
+        # Store original images for overlay rendering
+        self._original_images = []
+        if image_inputs:
+            for img in image_inputs:
+                if hasattr(img, "size"):
+                    img_array = np.array(img)
+                    if img_array.ndim == 2:
+                        img_array = np.stack([img_array] * 3, axis=-1)
+                    self._original_images = [*self._original_images, img_array]
+
         model_inputs = processor(
             text=[text],
             images=image_inputs,
@@ -157,6 +171,11 @@ class QwenVLController(BaseVLMController):
             return_tensors="pt",
         )
         model_inputs = model_inputs.to(model.device)
+
+        # Store metadata for interpretability mixin
+        self._model_inputs_meta = self._extract_model_inputs_meta(
+            model_inputs, processor, messages, image_inputs
+        )
 
         max_new_tokens = getattr(cfg, "max_new_tokens", 256)
         generated_ids = model.generate(
@@ -257,6 +276,55 @@ class QwenVLController(BaseVLMController):
         hook = proj_module.register_forward_hook(_capture_hook)
         hook_key = f"analysis:layer{layer_idx}_{qkv_type}"
         self.analysis_hooks[hook_key] = hook
+
+
+    def _extract_model_inputs_meta(
+        self,
+        model_inputs: Any,
+        processor: Any,
+        messages: Any,
+        image_inputs: Any,
+    ) -> Dict[str, Any]:
+        """Extract token mapping metadata from processor output."""
+        meta: Dict[str, Any] = {
+            "image_grid_thw": [],
+            "vision_token_ranges": [],
+            "image_sizes": [],
+        }
+
+        if image_inputs is None or len(image_inputs) == 0:
+            return meta
+
+        if hasattr(model_inputs, "image_grid_thw") and model_inputs.image_grid_thw is not None:
+            grid_thw = model_inputs.image_grid_thw.tolist()
+            meta["image_grid_thw"] = grid_thw
+        else:
+            return meta
+
+        for img in image_inputs:
+            if hasattr(img, "size"):
+                w, h = img.size
+                meta["image_sizes"] = [*meta["image_sizes"], (h, w)]
+            else:
+                meta["image_sizes"] = [*meta["image_sizes"], (0, 0)]
+
+        input_ids = model_inputs.input_ids[0].tolist()
+        vision_token_id = 151655
+        ranges = []
+        in_vision = False
+        start = 0
+        for idx, tid in enumerate(input_ids):
+            if tid == vision_token_id and not in_vision:
+                start = idx
+                in_vision = True
+            elif tid != vision_token_id and in_vision:
+                ranges = [*ranges, (start, idx)]
+                in_vision = False
+        if in_vision:
+            ranges = [*ranges, (start, len(input_ids))]
+
+        meta["vision_token_ranges"] = ranges
+        return meta
 
 
 CONTROLLER_REGISTRY.register("qwen_vl", QwenVLController)

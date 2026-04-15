@@ -17,7 +17,7 @@ def test_controller_registry_has_qwen():
 
 def test_task_registry_has_all_tasks():
     from src.tasks import TASK_REGISTRY
-    expected = ["epd_profiling", "visual_text_attention", "sink_detection", "per_layer_stats"]
+    expected = ["epd_profiling", "visual_text_attention", "sink_detection", "per_layer_stats", "attention_overlay"]
     for task_name in expected:
         assert task_name in TASK_REGISTRY, f"Missing task: {task_name}"
 
@@ -53,3 +53,10 @@ def test_registry_duplicate_raises():
         assert False, "Should have raised ValueError"
     except ValueError:
         pass
+
+
+def test_qwen_controller_has_interpretability_mixin():
+    from src.controllers.qwen_vl_controller import QwenVLController
+    from src.interpretability.base_mixin import BaseInterpretabilityMixin
+
+    assert issubclass(QwenVLController, BaseInterpretabilityMixin)
