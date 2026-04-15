@@ -19,6 +19,15 @@ PhD 研究方向调研项目：Vision-Language Model (VLM) / Vision-Language-Act
 ## Directory Structure
 
 ```
+src/                   # Profiling & analysis framework
+  core/                # Git submodule → model-probe-core (shared with rope2sink)
+  controllers/         # BaseVLMController, QwenVLController
+  tasks/               # profiling_task, attention_task
+  utils/               # PhaseTimer
+  run_tasks.py         # Hydra entry point
+configs/               # Hydra experiment configs
+  base.yaml            # Shared defaults
+  qwen_vl_7b/          # Qwen2.5-VL-7B specific configs
 survey/                # Survey 文献综述 (核心产出)
   landscape.md         # VLM/VLA inference 全景图
   papers/              # 按主题分类的论文调研
@@ -27,9 +36,9 @@ exp/                   # 实验目录 (LabMate 管理)
 notes/                 # 研究笔记和想法
 docs/                  # 文档
   knowhow/             # 基础设施/工具链/调试笔记
-  specs/               # 实验 spec
+  specs/               # 实验 spec + framework design
   weekly/              # 周报
-scripts/               # 实验脚本 (launch, monitor, download)
+scripts/               # 实验脚本 (launch, sync, download)
 viewer/                # 实验结果可视化 (Flask)
 slides/                # 演示文稿
 ```
@@ -43,6 +52,9 @@ slides/                # 演示文稿
 - **2025-2026 最新论文综述**: `survey/papers/recent-papers.md` — VLM/VLA inference efficiency 领域 40+ 篇论文/项目
 - **VA + World Action Model 深度 Survey**: `survey/papers/va-world-models.md` — VA 五大架构族谱、World Model 五层分类 (L0-L4)、WAM efficiency 分析、ERA disaggregation 概念、speculative rollout
 - **WAM/Video WM/VA 最新论文 Web 调研**: `survey/papers/va-world-models-web.md` — 2025-2026 年 80+ 篇论文，覆盖 WAM、Video World Model、单步推理加速、WM+VLA 融合、NVIDIA Cosmos/Pi0 工业进展
+- **Framework design spec**: `docs/superpowers/specs/2026-04-14-vlm-profiling-framework-design.md`
+- **Implementation plan**: `docs/superpowers/plans/2026-04-14-vlm-profiling-framework.md`
+- **Shared core (model-probe-core)**: `src/core/` — submodule, also used by rope2sink
 
 ## Survey Dimensions
 
@@ -56,10 +68,24 @@ slides/                # 演示文稿
 
 | Command | Purpose |
 |---------|---------|
+| `bash scripts/sync_to_remote.sh` | Sync code to xdlab23 |
+| `bash scripts/launch_exp.sh 0 qwen_vl_7b/profiling` | Run profiling on GPU 0 |
+| `bash scripts/launch_exp.sh 1 qwen_vl_7b/attention` | Run attention analysis on GPU 1 |
+| `bash scripts/download-results.sh` | Download results from server |
 | /labmate:new-experiment | Scaffold new experiment |
 | /labmate:analyze-experiment | Analyze results |
-| /labmate:update-project-skill | Refresh project knowledge |
-| python scripts/launch_exp.py --exp <id> | Launch experiment |
+
+## Server (xdlab23)
+
+| Item | Value |
+|------|-------|
+| SSH | `ssh xdlab23_yang` (port 66) |
+| Path | `/data1/ybyang/vlla` |
+| Conda | `vit-probe` (shared with rope2sink) |
+| GPUs | 8x RTX 5880 Ada 48GB |
+| Model cache | `/data1/ybyang/huggingface` |
+| Code sync | Git bundle (GitHub blocked by firewall) |
+| Runbook | `docs/knowhow/runbooks/deploy-to-xdlab23.md` |
 
 ## Session startup
 
@@ -133,6 +159,8 @@ Pipeline state tracked in .pipeline-state.json.
 
 ## Current state
 
-- **current_exp:** null
-- **stage:** dev
-- **skill_updated_at:** 2026-04-11
+- **current_exp:** exp01a (Qwen2.5-VL-7B E/P/D profiling — done)
+- **stage:** experiment
+- **skill_updated_at:** 2026-04-15
+- **key finding:** Vision Encode (534ms, 60%) >> Prefill (354ms, 40%) >> Decode (19ms, 2%) on RTX 5880 Ada
+- **next:** Run attention analysis (sink detection, visual-text attention patterns), then extend to more input variants
