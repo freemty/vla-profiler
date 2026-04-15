@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import logging
 from abc import abstractmethod
-from typing import Any, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import torch.nn as nn
 
@@ -66,6 +66,7 @@ class BaseVLAController(BaseController):
             hook_mode=hook_mode,
         )
         self.timer = PhaseTimer()
+        self._aggregated_timing: Optional[Dict[str, Any]] = None
         self._resolve_store_layers()
 
     # ---- Subclass MUST implement ----

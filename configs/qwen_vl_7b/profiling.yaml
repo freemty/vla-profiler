@@ -12,6 +12,7 @@ controller_config:
 
 tasks:
   - "epd_profiling"
+  - "timing_validation"
 
 num_warmup_runs: 3
 num_benchmark_runs: 10

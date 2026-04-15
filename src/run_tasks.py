@@ -21,15 +21,14 @@ from typing import Any, Dict, List
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
-# Import registries (triggers module-level registration)
+# Import registries — controllers auto-register via __init__.py imports
 from src.controllers import CONTROLLER_REGISTRY
-import src.controllers.qwen_vl_controller  # noqa: F401 — register controller
-import src.controllers.openvla_controller  # noqa: F401 — register controller
-import src.controllers.act_controller  # noqa: F401 — register controller
+# Tasks need explicit imports to trigger registration
 from src.tasks import TASK_REGISTRY
 import src.tasks.profiling_task  # noqa: F401 — register task
 import src.tasks.attention_task  # noqa: F401 — register task
 import src.tasks.attention_overlay_task  # noqa: F401 — register task
+import src.tasks.validation_task  # noqa: F401 — register task
 
 
 logger = logging.getLogger(__name__)
@@ -149,6 +148,15 @@ def _run_profiling(controller: Any, cfg: DictConfig) -> None:
             }
 
         controller._aggregated_timing = aggregated
+
+        # Cross-validation run (if timing_validation task is configured)
+        task_names = list(cfg.get("tasks", []))
+        if "timing_validation" in task_names:
+            logger.info("  Validation run (torch.profiler cross-check)")
+            from src.tasks.validation_task import run_validation_inference
+            controller._validation_report = run_validation_inference(
+                controller, cfg, inp,
+            )
 
         # Execute tasks per input
         base_output = cfg.get("base_output_path", "output")

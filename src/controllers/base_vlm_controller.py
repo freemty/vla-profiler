@@ -59,6 +59,7 @@ class BaseVLMController(BaseController):
             hook_mode=hook_mode,
         )
         self.timer = PhaseTimer()
+        self._aggregated_timing: Optional[Dict[str, Any]] = None
         self._resolve_store_layers()
 
     # ------------------------------------------------------------------

@@ -75,6 +75,16 @@ def _compute_attention_scores(
     """
     # If 3D (batch, seq, hidden), reshape assuming multi-head
     if q_tensor.dim() == 3:
+        if q_tensor.shape[-1] % head_dim != 0:
+            raise ValueError(
+                f"Q hidden dim {q_tensor.shape[-1]} not divisible by head_dim {head_dim}. "
+                f"Pass head_dim explicitly for this model."
+            )
+        if k_tensor.shape[-1] % head_dim != 0:
+            raise ValueError(
+                f"K hidden dim {k_tensor.shape[-1]} not divisible by head_dim {head_dim}. "
+                f"Pass head_dim explicitly for this model."
+            )
         num_q_heads = q_tensor.shape[-1] // head_dim
         num_k_heads = k_tensor.shape[-1] // head_dim
         batch, seq_q, _ = q_tensor.shape
