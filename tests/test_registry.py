@@ -17,6 +17,10 @@ def test_controller_registry_has_qwen():
 
 def test_task_registry_has_all_tasks():
     from src.tasks import TASK_REGISTRY
+    import src.tasks.profiling_task  # noqa: F401
+    import src.tasks.attention_task  # noqa: F401
+    import src.tasks.attention_overlay_task  # noqa: F401
+
     expected = ["epd_profiling", "visual_text_attention", "sink_detection", "per_layer_stats", "attention_overlay"]
     for task_name in expected:
         assert task_name in TASK_REGISTRY, f"Missing task: {task_name}"
