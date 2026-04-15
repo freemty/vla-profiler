@@ -25,6 +25,7 @@ from omegaconf import DictConfig, OmegaConf
 from src.controllers import CONTROLLER_REGISTRY
 import src.controllers.qwen_vl_controller  # noqa: F401 — register controller
 import src.controllers.openvla_controller  # noqa: F401 — register controller
+import src.controllers.act_controller  # noqa: F401 — register controller
 from src.tasks import TASK_REGISTRY
 import src.tasks.profiling_task  # noqa: F401 — register task
 import src.tasks.attention_task  # noqa: F401 — register task

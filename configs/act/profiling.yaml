@@ -1,0 +1,42 @@
+# ACT (Action Chunking Transformer) profiling configuration
+# Single-forward VLA: ResNet18 → Encoder → Decoder → action chunk
+# No pretrained model needed — uses default random weights for profiling
+defaults:
+  - /base
+  - _self_
+
+model_name: "act-default"
+controller_name: "act"
+
+controller_config:
+  mode: "profiling"
+
+tasks:
+  - "epd_profiling"
+
+# ACT is single-forward, very fast — more runs for stable timing
+num_warmup_runs: 5
+num_benchmark_runs: 20
+
+# ACT config overrides
+dim_model: 512
+n_heads: 8
+n_encoder_layers: 4
+n_decoder_layers: 1
+chunk_size: 100
+image_shape: [3, 480, 640]
+state_dim: 14
+action_dim: 14
+
+inputs:
+  - name: "single_camera"
+    image_shape: [3, 480, 640]
+    state_dim: 14
+
+  - name: "high_res_camera"
+    image_shape: [3, 720, 1280]
+    state_dim: 14
+
+  - name: "low_res_camera"
+    image_shape: [3, 240, 320]
+    state_dim: 14

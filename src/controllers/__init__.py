@@ -7,3 +7,4 @@ CONTROLLER_REGISTRY = Registry("controller")
 # Import triggers registration — add new controllers here
 from src.controllers.qwen_vl_controller import QwenVLController  # noqa: F401
 from src.controllers.openvla_controller import OpenVLAController  # noqa: F401
+from src.controllers.act_controller import ACTController  # noqa: F401
