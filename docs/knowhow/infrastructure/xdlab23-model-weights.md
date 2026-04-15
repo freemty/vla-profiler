@@ -28,12 +28,20 @@ ln -sf /data1/ybyang/modelscope/Qwen/Qwen2.5-VL-7B-Instruct \
        /data1/ybyang/huggingface/Qwen/Qwen2.5-VL-7B-Instruct
 ```
 
+### ModelScope 没有的模型 — 需要其他方式
+
+部分模型在 ModelScope 上返回 404（如 `openvla/openvla-7b`）。备选方案：
+1. 通过代理从 HuggingFace 下载
+2. 在有网络的机器上下载后 scp 到 server
+3. 用 `huggingface-cli download` + proxy
+
 ### 已有模型清单 (2026-04-15)
 
-| 模型 | HF 路径 | 实际位置 | 大小 |
-|------|---------|---------|------|
-| Qwen2.5-VL-7B-Instruct | `/data1/ybyang/huggingface/Qwen/Qwen2.5-VL-7B-Instruct` | symlink → modelscope | ~16GB (5 shards) |
-| Qwen3-VL-4B-Instruct | `/data1/ybyang/huggingface/Qwen/Qwen3-VL-4B-Instruct` | direct | incomplete (missing shard 1) |
+| 模型 | HF 路径 | 实际位置 | 大小 | 状态 |
+|------|---------|---------|------|------|
+| Qwen2.5-VL-7B-Instruct | `/data1/ybyang/huggingface/Qwen/Qwen2.5-VL-7B-Instruct` | symlink → modelscope | ~16GB | OK |
+| Qwen3-VL-4B-Instruct | `/data1/ybyang/huggingface/Qwen/Qwen3-VL-4B-Instruct` | direct | ? | incomplete (missing shard 1) |
+| OpenVLA-7B | — | — | ~16GB | ModelScope 404, 需其他方式 |
 
 ### 在 Hydra config 中引用
 ```yaml
