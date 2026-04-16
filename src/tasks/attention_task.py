@@ -185,6 +185,7 @@ def task_visual_text_attn(
     # Config
     top_k = task_config.get("top_k", 5)
     visual_token_count = task_config.get("visual_token_count", None)
+    head_dim = task_config.get("head_dim", 128)
 
     results: Dict[str, Any] = {}
 
@@ -196,7 +197,7 @@ def task_visual_text_attn(
         q = q_tensors[0] if isinstance(q_tensors, list) else q_tensors
         k = k_tensors[0] if isinstance(k_tensors, list) else k_tensors
 
-        attn_probs = _compute_attention_scores(q, k)
+        attn_probs = _compute_attention_scores(q, k, head_dim=head_dim)
         # Average over batch and heads: [seq_q, seq_k]
         attn_mean = attn_probs.mean(dim=(0, 1))
 
@@ -258,6 +259,7 @@ def task_sink_detection(
 
     sink_k = task_config.get("sink_k", 10)
     visual_token_count = task_config.get("visual_token_count", None)
+    head_dim = task_config.get("head_dim", 128)
 
     results: Dict[str, Any] = {}
 
@@ -268,7 +270,7 @@ def task_sink_detection(
         q = q_tensors[0] if isinstance(q_tensors, list) else q_tensors
         k = k_tensors[0] if isinstance(k_tensors, list) else k_tensors
 
-        attn_probs = _compute_attention_scores(q, k)
+        attn_probs = _compute_attention_scores(q, k, head_dim=head_dim)
         # Attention received per key token: sum over query dim
         # [batch, heads, seq_q, seq_k] -> [seq_k]
         attn_received = attn_probs.sum(dim=(0, 1, 2))
@@ -337,6 +339,7 @@ def task_per_layer_stats(
         logger.warning("No QK pairs found for per-layer stats")
         return {}
 
+    head_dim = task_config.get("head_dim", 128)
     results: Dict[str, Any] = {}
 
     for layer_idx, q_key, k_key in qk_pairs:
@@ -346,7 +349,7 @@ def task_per_layer_stats(
         q = q_tensors[0] if isinstance(q_tensors, list) else q_tensors
         k = k_tensors[0] if isinstance(k_tensors, list) else k_tensors
 
-        attn_probs = _compute_attention_scores(q, k)
+        attn_probs = _compute_attention_scores(q, k, head_dim=head_dim)
         # [batch, heads, seq_q, seq_k]
         attn_mean = attn_probs.mean(dim=(0, 1))  # [seq_q, seq_k]
 
