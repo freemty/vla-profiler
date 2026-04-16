@@ -1,11 +1,12 @@
 ---
 name: Survey Project Status
-description: Status of VLM/VLA/VA/WAM inference efficiency landscape survey, updated 2026-04-11 with VA+World Model deep dive
+description: Status of VLM/VLA/VA/WAM inference efficiency landscape survey, updated 2026-04-11 with VA+World Model deep dive; OpenPI profiling feasibility assessed 2026-04-13
 type: project
 ---
 
 Completed comprehensive landscape survey at `survey/landscape.md` on 2026-04-11.
 Added VA + World Action Model deep dive at `survey/papers/va-world-models.md` on 2026-04-11.
+Added OpenPI PyTorch profiling feasibility report at `docs/papers/openpi-pytorch-profiling-feasibility.md` on 2026-04-13.
 
 **Coverage:**
 1. VLM Inference (architectures, visual token explosion, KV-cache, vision encoder bottleneck)
@@ -34,6 +35,15 @@ Added VA + World Action Model deep dive at `survey/papers/va-world-models.md` on
 - ERA (Encode-Rollout-Action) disaggregation is a natural extension of EPD for WAM serving
 - Speculative rollout for world models is an unexplored but promising systems concept
 - Algorithm-System co-design is the biggest white space
+
+**OpenPI profiling assessment (2026-04-13):**
+- PyTorch path available since Sept 2025 (torch==2.7.1, transformers==4.53.2 required, pinned)
+- Architecture: SigLIP ViT-So400m/14 (E) + PaliGemma Gemma 2B LM (C) + Gemma 300M Action Expert (A)
+- Dual-stream Transformer: PaliGemma + Action Expert run in parallel per layer, sharing KV attention
+- Default: num_steps=10 Euler denoising, KV cache built once per prefix (C), reused across A steps
+- Key module paths: paligemma_with_expert.paligemma (E+C) / paligemma_with_expert.gemma_expert (A)
+- BLOCKER: requires isolated conda env (conflicts with PyTorch 2.9 and transformers 5.0)
+- BLOCKER: checkpoint only available on GCS in JAX format, needs conversion script
 
 **Why:** User needs comprehensive field overview before starting PhD research.
 **How to apply:** Use this survey as foundation for experiment design and paper archival. Update landscape.md and va-world-models.md as new papers are discovered.
