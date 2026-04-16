@@ -141,14 +141,13 @@ class PiZeroController(BaseVLAController):
         Pi-Zero expects: image(s), language instruction, robot state.
         For profiling, we can use synthetic data if no real data provided.
         """
-        from omegaconf import OmegaConf
+        from src.utils import to_plain
 
         raw_inputs = getattr(cfg, "inputs", [])
         inputs = []
 
         for entry in raw_inputs:
-            if hasattr(entry, "_iter_ex"):
-                entry = OmegaConf.to_container(entry, resolve=True)
+            entry = to_plain(entry)
 
             name = entry.get("name", "unnamed")
             image_shape = entry.get("image_shape", [3, 224, 224])

@@ -353,12 +353,10 @@ def task_per_layer_stats(
         # [batch, heads, seq_q, seq_k]
         attn_mean = attn_probs.mean(dim=(0, 1))  # [seq_q, seq_k]
 
-        # Compute entropy for each query position, then average
-        entropies = []
-        for row_idx in range(attn_mean.shape[0]):
-            entropies = [*entropies, _attention_entropy(attn_mean[row_idx])]
-
-        mean_entropy = sum(entropies) / len(entropies) if entropies else 0.0
+        # Vectorized entropy: -(p * log(p)).sum(dim=-1).mean()
+        probs = attn_mean.float().clamp(min=1e-12)
+        row_entropies = -(probs * probs.log()).sum(dim=-1)
+        mean_entropy = row_entropies.mean().item() if row_entropies.numel() > 0 else 0.0
         mean_attn = attn_mean.mean().item()
         max_attn = attn_mean.max().item()
 

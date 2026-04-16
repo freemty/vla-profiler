@@ -212,6 +212,31 @@ class BaseVLMController(BaseController):
         Default is a no-op.
         """
 
+    def _register_capture_hook(
+        self,
+        proj_module: nn.Module,
+        layer_idx: int,
+        qkv_type: str,
+    ) -> None:
+        """Register a forward hook to capture Q/K/V projection output.
+
+        Shared by all VLM controllers — avoids duplicating the closure
+        in each subclass. Uses process_log_dict for step_store insertion.
+        """
+        store_key = f"{layer_idx}_{qkv_type}_states"
+        controller = self
+
+        def _capture(module: nn.Module, inputs: Any, output: Any) -> Any:
+            if controller.should_store(store_key):
+                controller.process_log_dict(
+                    {f"{qkv_type}_states": output.detach().to("cpu", non_blocking=True)},
+                    layer_idx=layer_idx,
+                )
+            return output
+
+        hook = proj_module.register_forward_hook(_capture)
+        self.analysis_hooks[f"analysis:layer{layer_idx}_{qkv_type}"] = hook
+
     # ------------------------------------------------------------------
     # Postprocess
     # ------------------------------------------------------------------

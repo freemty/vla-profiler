@@ -237,56 +237,17 @@ class QwenVLController(BaseVLMController, VLMInterpretabilityMixin):
     def _register_layer_analysis_hooks(
         self, block: nn.Module, layer_idx: int
     ) -> None:
-        """
-        Register QKV capture hooks on self_attn for a given layer.
-
-        Captures Q and K projections based on store_type config.
-        """
+        """Register QKV capture hooks on Qwen2.5-VL self_attn."""
         self_attn = block.self_attn
 
         if "self_q" in self.store_type:
-            self._register_qk_hook(
-                self_attn.q_proj, layer_idx, "q", "self_q"
-            )
+            self._register_capture_hook(self_attn.q_proj, layer_idx, "q")
 
         if "self_k" in self.store_type:
-            self._register_qk_hook(
-                self_attn.k_proj, layer_idx, "k", "self_k"
-            )
+            self._register_capture_hook(self_attn.k_proj, layer_idx, "k")
 
         if "self_v" in self.store_type:
-            self._register_qk_hook(
-                self_attn.v_proj, layer_idx, "v", "self_v"
-            )
-
-    def _register_qk_hook(
-        self,
-        proj_module: nn.Module,
-        layer_idx: int,
-        qkv_type: str,
-        store_type_key: str,
-    ) -> None:
-        """Register a forward hook to capture Q/K/V projection output."""
-        store_key = f"{layer_idx}_{qkv_type}_states"
-        controller = self
-
-        def _capture_hook(
-            module: nn.Module, inputs: Any, output: torch.Tensor
-        ) -> torch.Tensor:
-            if controller.should_store(store_key):
-                detached = output.detach().to("cpu", non_blocking=True)
-                if store_key not in controller.step_store:
-                    controller.step_store[store_key] = [detached]
-                else:
-                    controller.step_store[store_key] = [
-                        *controller.step_store[store_key],
-                        detached,
-                    ]
-            return output
-
-        hook = proj_module.register_forward_hook(_capture_hook)
-        hook_key = f"analysis:layer{layer_idx}_{qkv_type}"
-        self.analysis_hooks[hook_key] = hook
+            self._register_capture_hook(self_attn.v_proj, layer_idx, "v")
 
 
     def _extract_model_inputs_meta(

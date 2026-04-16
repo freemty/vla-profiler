@@ -216,37 +216,13 @@ class OpenVLAController(BaseVLMController):
         self_attn = block.self_attn
 
         if "self_q" in self.store_type:
-            self._register_proj_hook(self_attn.q_proj, layer_idx, "q")
+            self._register_capture_hook(self_attn.q_proj, layer_idx, "q")
 
         if "self_k" in self.store_type:
-            self._register_proj_hook(self_attn.k_proj, layer_idx, "k")
+            self._register_capture_hook(self_attn.k_proj, layer_idx, "k")
 
         if "self_v" in self.store_type:
-            self._register_proj_hook(self_attn.v_proj, layer_idx, "v")
-
-    def _register_proj_hook(
-        self, proj_module: nn.Module, layer_idx: int, qkv_type: str
-    ) -> None:
-        """Register a forward hook to capture Q/K/V projection output."""
-        store_key = f"{layer_idx}_{qkv_type}_states"
-        controller = self
-
-        def _capture_hook(
-            module: nn.Module, inputs: Any, output: torch.Tensor
-        ) -> torch.Tensor:
-            if controller.should_store(store_key):
-                detached = output.detach().to("cpu", non_blocking=True)
-                if store_key not in controller.step_store:
-                    controller.step_store[store_key] = [detached]
-                else:
-                    controller.step_store[store_key] = [
-                        *controller.step_store[store_key],
-                        detached,
-                    ]
-            return output
-
-        hook = proj_module.register_forward_hook(_capture_hook)
-        self.analysis_hooks[f"analysis:layer{layer_idx}_{qkv_type}"] = hook
+            self._register_capture_hook(self_attn.v_proj, layer_idx, "v")
 
 
 CONTROLLER_REGISTRY.register("openvla", OpenVLAController)

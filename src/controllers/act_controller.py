@@ -145,14 +145,13 @@ class ACTController(BaseVLAController):
         ACT takes observation dict {images, state}, not text prompts.
         For profiling, we generate random tensors matching expected shapes.
         """
-        from omegaconf import OmegaConf
+        from src.utils import to_plain
 
         raw_inputs = getattr(cfg, "inputs", [])
         inputs = []
 
         for entry in raw_inputs:
-            if hasattr(entry, "_iter_ex"):
-                entry = OmegaConf.to_container(entry, resolve=True)
+            entry = to_plain(entry)
 
             name = entry.get("name", "unnamed")
             image_shape = entry.get("image_shape", [3, 480, 640])
