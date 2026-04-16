@@ -1,2 +1,3 @@
 - [User Profile](user_profile.md) — UCSD PhD under Hao Zhang, VLM/VLA real-time systems research
 - [Survey Status](project_survey_status.md) — Landscape survey + VA/WAM deep dive completed 2026-04-11
+- [StarVLA Paper](paper_starvla.md) — Modular VLA framework (4 architectures); bridge to vlla profiling; WM4A connects to FastVideo
