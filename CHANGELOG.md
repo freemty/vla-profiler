@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.4.2 — 2026-04-17
+
+### 文档
+- **README.md 全面重写** — 新增 Status Overview (Done/TODO 表格)、3 个实验结果汇总、完整 Architecture 图、7 个 Hydra config 索引、Scripts 索引表、Adding New Models 指南
+- TODO 清单覆盖 8 个待完成项（Attention overlay server run, OpenVLA, Pi-Zero, Gradient saliency 等），标注优先级和阻塞原因
+
+### 构建与工具链
+- `scripts/run_remote.sh` — 一键 SSH 到 xdlab23 启动实验（封装 launch_exp.sh）
+- `scripts/run_local.sh` — 本地 GPU 实验启动（带 logs 输出）
+- `scripts/run_viewer.sh` — Flask viewer 启动
+- `scripts/run_tests.sh` — pytest 测试套件启动
+
 ## v0.4.1 — 2026-04-15
 
 ### 新增
