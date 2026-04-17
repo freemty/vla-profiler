@@ -59,3 +59,4 @@ exp/*/results/*
 output/
 outputs/
 logs/
+.gstack/

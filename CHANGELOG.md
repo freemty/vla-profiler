@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.4.3 — 2026-04-17
+
+### 新增
+- **Research Presentation Viewer** — 3 个新 HTML 页面，用于 advisor meeting 展示
+  - `viewer/static/index.html` — 导航 hub，4 张卡片链接所有子页面
+  - `viewer/static/presentation.html` — 5 section 汇报页 (hero, motivation, approach, experiments, roadmap)，含 timing bar chart、attention heatmap 可视化、architecture tree
+  - `viewer/static/experiments.html` — 可展开的实验详情页，含数据表格和 prediction calibration
+  - FARS dark slate 设计系统 (Instrument Serif + DM Sans + DM Mono, gold accent)
+- `viewer/app.py` 新增 catch-all static file 路由
+
+### 修复
+- Flask catch-all 路由加 `api/` 前缀防护，避免未注册 API 路径被遮蔽
+- multi_image total 数据修正 (`~1.1s` → `~3.6s` at 128 tokens)
+- `index.html` body `overflow:hidden` → `overflow-x:hidden; overflow-y:auto` (移动端可滚动)
+- Attention heatmap 添加 "illustrative pattern" 标注，避免与实际数据混淆
+
 ## v0.4.2 — 2026-04-17
 
 ### 文档
