@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="zh" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VLLA — Research Presentation</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #13161b;
+  --bg-alt: #171c24;
+  --surface: #212833;
+  --surface-hover: #2a3140;
+  --border: #2e3546;
+  --border-accent: #3d4758;
+  --text: #eaecf2;
+  --text-secondary: #a8b0c2;
+  --text-muted: #5e6a7e;
+  --gold: #d4a853;
+  --gold-dim: rgba(212,168,83,0.12);
+  --gold-glow: rgba(212,168,83,0.25);
+  --lavender: #a5aecc;
+  --green: #4ade80;
+  --green-dim: rgba(74,222,128,0.1);
+  --cyan: #22d3ee;
+  --cyan-dim: rgba(34,211,238,0.1);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245,158,11,0.1);
+  --pink: #e879f9;
+  --pink-dim: rgba(232,121,249,0.1);
+  --red: #ef4444;
+  --red-dim: rgba(239,68,68,0.1);
+  --radius: 10px;
+  --font-display: 'Instrument Serif', serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
+}
+
+.noise {
+  position: fixed; inset: 0; opacity: 0.025; pointer-events: none; z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat; background-size: 256px;
+}
+
+/* --- NAV BAR --- */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.8rem 2.5rem;
+  background: rgba(19,22,27,0.85);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-left {
+  display: flex; align-items: center; gap: 1rem;
+}
+.topbar-logo {
+  font-family: var(--font-display); font-size: 1.1rem;
+  color: var(--text); text-decoration: none; letter-spacing: -0.02em;
+}
+.topbar-logo em { color: var(--gold); font-style: italic; }
+.topbar-sep { color: var(--border); font-size: 0.8rem; }
+.topbar-page {
+  font-family: var(--font-mono); font-size: 0.6rem;
+  text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted);
+}
+.topbar-right { display: flex; gap: 0.6rem; }
+.topbar-link {
+  font-family: var(--font-mono); font-size: 0.6rem;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-muted); text-decoration: none;
+  padding: 0.3rem 0.7rem; border-radius: 4px;
+  transition: all 0.2s;
+}
+.topbar-link:hover { color: var(--text); background: var(--surface); }
+.topbar-link.active { color: var(--gold); background: var(--gold-dim); }
+
+/* --- SECTIONS --- */
+.content { position: relative; z-index: 1; padding-top: 4rem; }
+
+section {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 4rem 3rem;
+  border-bottom: 1px solid var(--border);
+}
+section:last-of-type { border-bottom: none; }
+
+.section-label {
+  font-family: var(--font-mono); font-size: 0.6rem;
+  text-transform: uppercase; letter-spacing: 0.15em;
+  color: var(--gold); margin-bottom: 0.6rem;
+  display: flex; align-items: center; gap: 0.6rem;
+}
+.section-label::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+  font-weight: 400; color: var(--text); letter-spacing: -0.02em;
+  line-height: 1.15; margin-bottom: 1rem;
+}
+.section-title em { font-style: italic; color: var(--gold); }
+
+.section-desc {
+  font-size: 0.95rem; color: var(--text-muted);
+  max-width: 700px; line-height: 1.7; margin-bottom: 2rem;
+}
+
+/* --- HERO SECTION --- */
+.hero {
+  position: relative; overflow: hidden; padding: 6rem 3rem 4rem;
+}
+.hero-glow {
+  position: absolute; top: -200px; right: -100px; width: 600px; height: 600px;
+  background: radial-gradient(circle, var(--gold-glow) 0%, transparent 65%);
+  pointer-events: none; opacity: 0.5;
+}
+.hero .section-title { font-size: clamp(2.2rem, 4.5vw, 3.2rem); margin-bottom: 1.2rem; }
+.hero-sub {
+  font-size: 1.05rem; color: var(--text-secondary);
+  max-width: 680px; line-height: 1.7; margin-bottom: 2.5rem;
+}
+.hero-stats {
+  display: flex; gap: 3rem; flex-wrap: wrap;
+}
+.h-stat { display: flex; flex-direction: column; }
+.h-stat-value {
+  font-family: var(--font-display); font-size: 2.4rem;
+  color: var(--text); line-height: 1;
+}
+.h-stat-label {
+  font-family: var(--font-mono); font-size: 0.58rem;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-muted); margin-top: 0.3rem;
+}
+
+/* --- MOTIVATION CARDS --- */
+.motivation-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+}
+.m-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.6rem;
+  position: relative; overflow: hidden;
+  transition: all 0.3s;
+}
+.m-card:hover {
+  border-color: var(--border-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+}
+.m-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.m-card:nth-child(1)::before { background: var(--cyan); }
+.m-card:nth-child(2)::before { background: var(--amber); }
+.m-card:nth-child(3)::before { background: var(--pink); }
+.m-card:nth-child(4)::before { background: var(--green); }
+
+.m-card-icon { font-size: 1.5rem; margin-bottom: 0.8rem; }
+.m-card-title {
+  font-size: 0.95rem; font-weight: 600; color: var(--text);
+  margin-bottom: 0.4rem;
+}
+.m-card-body {
+  font-size: 0.78rem; color: var(--text-muted); line-height: 1.6;
+}
+.m-card-metric {
+  display: inline-block; font-family: var(--font-mono); font-size: 0.65rem;
+  padding: 0.15rem 0.5rem; border-radius: 3px; margin-top: 0.6rem;
+}
+
+/* --- APPROACH DIAGRAM --- */
+.approach-flow {
+  display: flex; align-items: stretch; gap: 0; margin: 1.5rem 0;
+}
+.flow-block {
+  flex: 1; padding: 1.4rem 1.2rem;
+  display: flex; flex-direction: column; gap: 0.5rem;
+  position: relative;
+}
+.flow-block:not(:last-child)::after {
+  content: ''; position: absolute; right: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 0; height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 10px solid var(--border);
+  z-index: 2;
+}
+.flow-block:nth-child(1) {
+  background: linear-gradient(135deg, rgba(34,211,238,0.08), rgba(34,211,238,0.02));
+  border: 1px solid rgba(34,211,238,0.15); border-radius: var(--radius) 0 0 var(--radius);
+}
+.flow-block:nth-child(2) {
+  background: linear-gradient(135deg, rgba(212,168,83,0.08), rgba(212,168,83,0.02));
+  border-top: 1px solid rgba(212,168,83,0.15); border-bottom: 1px solid rgba(212,168,83,0.15);
+}
+.flow-block:nth-child(3) {
+  background: linear-gradient(135deg, rgba(74,222,128,0.08), rgba(74,222,128,0.02));
+  border: 1px solid rgba(74,222,128,0.15); border-radius: 0 var(--radius) var(--radius) 0;
+}
+.flow-label {
+  font-family: var(--font-mono); font-size: 0.55rem;
+  text-transform: uppercase; letter-spacing: 0.12em;
+}
+.flow-block:nth-child(1) .flow-label { color: var(--cyan); }
+.flow-block:nth-child(2) .flow-label { color: var(--gold); }
+.flow-block:nth-child(3) .flow-label { color: var(--green); }
+.flow-title { font-size: 0.88rem; font-weight: 600; color: var(--text); }
+.flow-items {
+  font-size: 0.72rem; color: var(--text-muted); line-height: 1.7;
+}
+
+/* --- ARCHITECTURE TREE --- */
+.arch-tree {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.8rem; margin: 1.5rem 0;
+  font-family: var(--font-mono); font-size: 0.75rem;
+  line-height: 1.8; color: var(--text-secondary);
+  overflow-x: auto;
+}
+.arch-tree .node-core { color: var(--lavender); }
+.arch-tree .node-vlm { color: var(--amber); }
+.arch-tree .node-vla { color: var(--cyan); }
+.arch-tree .node-done { color: var(--green); }
+.arch-tree .node-todo { color: var(--text-muted); }
+
+/* --- EXPERIMENT RESULTS --- */
+.exp-grid { display: flex; flex-direction: column; gap: 1.5rem; }
+
+.exp-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.exp-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.2rem 1.6rem;
+  border-bottom: 1px solid var(--border);
+}
+.exp-id {
+  font-family: var(--font-mono); font-size: 0.7rem;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.exp-model {
+  font-size: 0.9rem; font-weight: 600; color: var(--text); margin-left: 0.8rem;
+}
+.exp-status {
+  font-family: var(--font-mono); font-size: 0.6rem;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 0.2rem 0.6rem; border-radius: 4px;
+}
+.status-done { background: var(--green-dim); color: var(--green); }
+
+.exp-body { padding: 1.4rem 1.6rem; }
+
+.exp-metrics {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem; margin-bottom: 1.2rem;
+}
+.metric-box {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem;
+}
+.metric-label {
+  font-family: var(--font-mono); font-size: 0.55rem;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-muted); margin-bottom: 0.3rem;
+}
+.metric-value {
+  font-family: var(--font-display); font-size: 1.6rem;
+  color: var(--text); line-height: 1;
+}
+.metric-unit {
+  font-family: var(--font-mono); font-size: 0.6rem;
+  color: var(--text-muted); margin-left: 0.2rem;
+}
+.metric-note {
+  font-size: 0.68rem; color: var(--text-muted); margin-top: 0.3rem;
+}
+
+.exp-insight {
+  background: var(--bg-alt); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  font-size: 0.78rem; color: var(--text-secondary); line-height: 1.6;
+}
+.exp-insight strong { color: var(--gold); font-weight: 500; }
+
+/* --- TIMING BAR CHART --- */
+.timing-bars { display: flex; flex-direction: column; gap: 0.8rem; margin: 1rem 0; }
+.timing-row { display: flex; align-items: center; gap: 1rem; }
+.timing-label {
+  width: 100px; text-align: right; font-size: 0.75rem; color: var(--text-muted);
+  flex-shrink: 0;
+}
+.timing-track {
+  flex: 1; height: 28px; background: rgba(28,32,48,0.5);
+  border-radius: 4px; overflow: hidden; display: flex;
+}
+.timing-seg {
+  height: 100%; display: flex; align-items: center;
+  padding: 0 6px; font-family: var(--font-mono); font-size: 0.6rem;
+  color: rgba(255,255,255,0.9);
+  transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 0;
+}
+.seg-encode { background: linear-gradient(90deg, #1a3540, var(--cyan)); }
+.seg-prefill { background: linear-gradient(90deg, #3a2500, var(--amber)); }
+.seg-decode { background: linear-gradient(90deg, #1a4030, var(--green)); }
+.seg-action { background: linear-gradient(90deg, #2d1a4a, var(--pink)); }
+.timing-total {
+  font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted);
+  width: 70px; text-align: right; flex-shrink: 0;
+}
+
+/* --- ATTENTION HEATMAP --- */
+.attn-visual {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.8rem;
+  margin: 1rem 0;
+}
+.attn-layer {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 0.8rem; text-align: center;
+}
+.attn-layer-id {
+  font-family: var(--font-mono); font-size: 0.6rem;
+  color: var(--text-muted); margin-bottom: 0.5rem;
+}
+.attn-heatrow {
+  display: flex; gap: 2px; justify-content: center; margin-bottom: 2px;
+}
+.attn-cell {
+  width: 8px; height: 8px; border-radius: 1px;
+}
+.attn-metric-row {
+  display: flex; justify-content: space-between; margin-top: 0.5rem;
+  font-family: var(--font-mono); font-size: 0.55rem; color: var(--text-muted);
+}
+
+/* --- ROADMAP --- */
+.roadmap-items { display: flex; flex-direction: column; gap: 0; }
+.rm-item {
+  display: grid; grid-template-columns: 80px 1fr auto;
+  gap: 1.5rem; padding: 1.2rem 0; align-items: start;
+  border-bottom: 1px solid var(--border);
+}
+.rm-item:last-child { border-bottom: none; }
+.rm-priority {
+  font-family: var(--font-mono); font-size: 0.6rem;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 0.2rem 0.5rem; border-radius: 4px; text-align: center;
+}
+.pri-high { background: var(--red-dim); color: var(--red); }
+.pri-med { background: var(--amber-dim); color: var(--amber); }
+.pri-low { background: rgba(165,174,204,0.1); color: var(--lavender); }
+.rm-content {}
+.rm-title { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+.rm-desc { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; }
+.rm-status {
+  font-family: var(--font-mono); font-size: 0.58rem;
+  padding: 0.15rem 0.5rem; border-radius: 3px;
+  white-space: nowrap;
+}
+.st-ready { background: var(--green-dim); color: var(--green); }
+.st-blocked { background: var(--amber-dim); color: var(--amber); }
+.st-planned { background: rgba(165,174,204,0.1); color: var(--lavender); }
+
+/* --- FOOTER --- */
+.pres-footer {
+  max-width: 1100px; margin: 0 auto; padding: 2rem 3rem;
+  border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-muted);
+}
+.pres-footer a { color: var(--lavender); text-decoration: none; }
+.pres-footer a:hover { color: var(--text); }
+
+/* --- ANIMATIONS --- */
+.reveal {
+  opacity: 0; transform: translateY(20px);
+  transition: opacity 0.7s, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-d1 { transition-delay: 0.1s; }
+.reveal-d2 { transition-delay: 0.2s; }
+.reveal-d3 { transition-delay: 0.3s; }
+
+@media (max-width: 768px) {
+  section { padding: 2.5rem 1.5rem; }
+  .motivation-grid { grid-template-columns: 1fr; }
+  .approach-flow { flex-direction: column; }
+  .flow-block { border-radius: var(--radius) !important; }
+  .flow-block:not(:last-child)::after { display: none; }
+  .exp-metrics { grid-template-columns: 1fr 1fr; }
+  .attn-visual { grid-template-columns: repeat(3, 1fr); }
+  .rm-item { grid-template-columns: 70px 1fr; }
+  .rm-status { grid-column: 2; }
+}
+</style>
+</head>
+<body>
+
+<div class="noise"></div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a class="topbar-logo" href="index.html">V<em>LLA</em></a>
+    <span class="topbar-sep">/</span>
+    <span class="topbar-page">Research Presentation</span>
+  </div>
+  <div class="topbar-right">
+    <a class="topbar-link active" href="presentation.html">Presentation</a>
+    <a class="topbar-link" href="survey-dashboard.html">Survey</a>
+    <a class="topbar-link" href="experiments.html">Experiments</a>
+    <a class="topbar-link" href="index.html">Hub</a>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="section-label">Research Direction &mdash; April 2026</div>
+  <h2 class="section-title">How to Make VLM/VLA Run<br>Under <em>Real-Time</em> Constraints?</h2>
+  <p class="hero-sub">
+    VLM serving is at its "pre-vLLM" moment. VLA inference has no unified framework.
+    We profile, analyze, and characterize the bottlenecks &mdash; then design systems to fix them.
+  </p>
+  <div class="hero-stats">
+    <div class="h-stat"><span class="h-stat-value">200+</span><span class="h-stat-label">Papers Surveyed</span></div>
+    <div class="h-stat"><span class="h-stat-value">3</span><span class="h-stat-label">Experiments Done</span></div>
+    <div class="h-stat"><span class="h-stat-value">850x</span><span class="h-stat-label">VLM vs VLA Gap</span></div>
+    <div class="h-stat"><span class="h-stat-value">4</span><span class="h-stat-label">Controllers Built</span></div>
+  </div>
+</section>
+
+<!-- ═══ MOTIVATION ═══ -->
+<section>
+  <div class="section-label reveal">01 &mdash; Motivation</div>
+  <h2 class="section-title reveal">Why This <em>Matters</em></h2>
+  <p class="section-desc reveal">
+    张昊的技术路线: Parameter Server &rarr; Alpa &rarr; vLLM &rarr; FastVideo &rarr; <strong>VLM/VLA real-time systems</strong>.
+    每一步都是 ML Systems 前沿的下一个自然问题。
+  </p>
+
+  <div class="motivation-grid">
+    <div class="m-card reveal">
+      <div class="m-card-icon">&#128916;</div>
+      <div class="m-card-title">Robotics Control Loop</div>
+      <div class="m-card-body">
+        VLA needs to output actions at 10-100ms for real-time control.
+        Current 7B VLA takes 200-500ms per action &mdash; too slow for dynamic tasks.
+      </div>
+      <span class="m-card-metric" style="background:var(--cyan-dim);color:var(--cyan);">Target: &lt;50ms</span>
+    </div>
+    <div class="m-card reveal">
+      <div class="m-card-icon">&#128663;</div>
+      <div class="m-card-title">Autonomous Driving</div>
+      <div class="m-card-body">
+        End-to-end VLM perception-decision pipeline must run in real-time.
+        Vision encoding alone takes 253ms on a single image.
+      </div>
+      <span class="m-card-metric" style="background:var(--amber-dim);color:var(--amber);">Encode = 58% of total</span>
+    </div>
+    <div class="m-card reveal">
+      <div class="m-card-icon">&#127760;</div>
+      <div class="m-card-title">No Unified Serving System</div>
+      <div class="m-card-body">
+        LLM has vLLM. VLM serving is fragmented &mdash; no EPD disaggregation,
+        no modality-aware scheduling, no visual KV-cache optimization.
+      </div>
+      <span class="m-card-metric" style="background:var(--pink-dim);color:var(--pink);">Pre-vLLM era</span>
+    </div>
+    <div class="m-card reveal">
+      <div class="m-card-icon">&#9889;</div>
+      <div class="m-card-title">Algorithm-System Gap</div>
+      <div class="m-card-body">
+        Token pruning (97.2% reduction possible), quantization, and speculative decoding
+        exist in isolation &mdash; no system co-designs them.
+      </div>
+      <span class="m-card-metric" style="background:var(--green-dim);color:var(--green);">Biggest blank spot</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ APPROACH ═══ -->
+<section>
+  <div class="section-label reveal">02 &mdash; Our Approach</div>
+  <h2 class="section-title reveal">Measure First, <em>Then</em> Optimize</h2>
+  <p class="section-desc reveal">
+    Build a hook-based profiling framework that characterizes bottlenecks across VLM/VLA architectures.
+    Shared core (<code>model-probe-core</code>), pluggable controllers, Hydra-driven experiments.
+  </p>
+
+  <div class="approach-flow reveal">
+    <div class="flow-block">
+      <div class="flow-label">Phase 1 &mdash; Survey</div>
+      <div class="flow-title">Literature Landscape</div>
+      <div class="flow-items">
+        200+ papers surveyed<br>
+        4 paradigms mapped (VA/VLA/WAM/LWM)<br>
+        6 research entry points identified<br>
+        Pareto frontier + maturity matrix
+      </div>
+    </div>
+    <div class="flow-block">
+      <div class="flow-label">Phase 2 &mdash; Profiling</div>
+      <div class="flow-title">Framework + Experiments</div>
+      <div class="flow-items">
+        E/P/D + E/C/A phase timing<br>
+        Attention analysis (sink, sparsity)<br>
+        Interpretability overlay<br>
+        Cross-model comparison
+      </div>
+    </div>
+    <div class="flow-block">
+      <div class="flow-label">Phase 3 &mdash; Systems</div>
+      <div class="flow-title">Optimization & Serving</div>
+      <div class="flow-items">
+        Token pruning (Gini-guided)<br>
+        EPD disaggregation<br>
+        VLA action scheduling<br>
+        Co-design prototype
+      </div>
+    </div>
+  </div>
+
+  <div class="arch-tree reveal">
+    <span class="node-core">probe_core.BaseController</span>           <span style="color:var(--text-muted)">  # shared with rope2sink</span><br>
+    &nbsp;&nbsp;|<br>
+    &nbsp;&nbsp;+&rarr; <span class="node-vlm">BaseVLMController</span>            <span style="color:var(--text-muted)">  # E/P/D phases</span><br>
+    &nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;+&rarr; <span class="node-done">QwenVLController</span>      <span style="color:var(--green)">  &#10003; done</span><br>
+    &nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;+&rarr; <span class="node-done">OpenVLAController</span>     <span style="color:var(--green)">  &#10003; done</span> <span style="color:var(--text-muted)"> (needs weights)</span><br>
+    &nbsp;&nbsp;|<br>
+    &nbsp;&nbsp;+&rarr; <span class="node-vla">BaseVLAController</span>            <span style="color:var(--text-muted)">  # E/C/A phases</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+&rarr; <span class="node-done">ACTController</span>          <span style="color:var(--green)">  &#10003; done</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+&rarr; <span class="node-done">PiZeroController</span>       <span style="color:var(--green)">  &#10003; done</span> <span style="color:var(--text-muted)"> (needs openpi env)</span>
+  </div>
+</section>
+
+<!-- ═══ EXPERIMENT RESULTS ═══ -->
+<section>
+  <div class="section-label reveal">03 &mdash; Experiment Results</div>
+  <h2 class="section-title reveal">Three <em>Baselines</em> Established</h2>
+  <p class="section-desc reveal">
+    All experiments on RTX 5880 Ada (48GB), 10 benchmark runs + 3 warmup, CUDA event sub-ms precision.
+  </p>
+
+  <div class="exp-grid">
+
+    <!-- EXP01A -->
+    <div class="exp-card reveal">
+      <div class="exp-header">
+        <div>
+          <span class="exp-id" style="color:var(--amber);">exp01a</span>
+          <span class="exp-model">Qwen2.5-VL-7B &mdash; E/P/D Profiling</span>
+        </div>
+        <span class="exp-status status-done">Done</span>
+      </div>
+      <div class="exp-body">
+        <div class="timing-bars" id="timing01a">
+          <div class="timing-row">
+            <span class="timing-label">text only</span>
+            <div class="timing-track">
+              <div class="timing-seg seg-prefill" data-w="52">P 20ms</div>
+              <div class="timing-seg seg-decode" data-w="48">D 18ms/tok</div>
+            </div>
+            <span class="timing-total">~146ms</span>
+          </div>
+          <div class="timing-row">
+            <span class="timing-label">single image</span>
+            <div class="timing-track">
+              <div class="timing-seg seg-encode" data-w="35">E 253ms</div>
+              <div class="timing-seg seg-prefill" data-w="22">P 156ms</div>
+              <div class="timing-seg seg-decode" data-w="43">D 18.6ms/tok</div>
+            </div>
+            <span class="timing-total">~2.8s</span>
+          </div>
+          <div class="timing-row">
+            <span class="timing-label">2 images</span>
+            <div class="timing-track">
+              <div class="timing-seg seg-encode" data-w="40">E 541ms</div>
+              <div class="timing-seg seg-prefill" data-w="25">P 332ms</div>
+              <div class="timing-seg seg-decode" data-w="35">D 21ms/tok</div>
+            </div>
+            <span class="timing-total">~1.1s</span>
+          </div>
+        </div>
+        <div class="exp-insight">
+          <strong>Key insight:</strong> Vision encoding scales linearly with image count (2 images = 2.14x).
+          Decode per-token is stable ~18-21ms across modalities &mdash; visual tokens don't slow down decoding.
+        </div>
+      </div>
+    </div>
+
+    <!-- EXP01B -->
+    <div class="exp-card reveal">
+      <div class="exp-header">
+        <div>
+          <span class="exp-id" style="color:var(--cyan);">exp01b</span>
+          <span class="exp-model">Qwen2.5-VL-7B &mdash; Attention Analysis</span>
+        </div>
+        <span class="exp-status status-done">Done</span>
+      </div>
+      <div class="exp-body">
+        <div class="exp-metrics">
+          <div class="metric-box">
+            <div class="metric-label">Sink Position</div>
+            <div class="metric-value">Pos 2<span class="metric-unit">(1st visual patch)</span></div>
+            <div class="metric-note">Universal across all 5 layers</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Sink Dominance</div>
+            <div class="metric-value">12&ndash;28<span class="metric-unit">x</span></div>
+            <div class="metric-note">vs #2 receiver, 12K-18K total attention</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Text&rarr;Visual Gini</div>
+            <div class="metric-value">&gt;0.91</div>
+            <div class="metric-note">Extreme sparsity &rarr; pruning viable</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Min Entropy Layer</div>
+            <div class="metric-value">L21<span class="metric-unit">(3.44)</span></div>
+            <div class="metric-note">vs 4.0-4.2 average</div>
+          </div>
+        </div>
+
+        <div class="attn-visual" id="attnViz">
+          <!-- filled by JS -->
+        </div>
+
+        <div class="exp-insight">
+          <strong>Key insight:</strong> Position 2 (first visual patch) is a universal attention sink, receiving 12-28x more attention than any other token.
+          Text&rarr;Visual attention is extremely sparse (Gini >0.91), strongly supporting visual token pruning approaches.
+        </div>
+      </div>
+    </div>
+
+    <!-- EXP02A -->
+    <div class="exp-card reveal">
+      <div class="exp-header">
+        <div>
+          <span class="exp-id" style="color:var(--green);">exp02a</span>
+          <span class="exp-model">ACT (LeRobot) &mdash; VLA Baseline Profiling</span>
+        </div>
+        <span class="exp-status status-done">Done</span>
+      </div>
+      <div class="exp-body">
+        <div class="exp-metrics">
+          <div class="metric-box">
+            <div class="metric-label">Total Latency</div>
+            <div class="metric-value">~3<span class="metric-unit">ms</span></div>
+            <div class="metric-note">850x faster than Qwen2.5-VL</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Encode (ResNet18)</div>
+            <div class="metric-value">~2.6<span class="metric-unit">ms</span></div>
+            <div class="metric-note">80% of total &mdash; bottleneck</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Action Head</div>
+            <div class="metric-value">~0.6<span class="metric-unit">ms</span></div>
+            <div class="metric-note">CVAE action chunking, 20%</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Resolution Impact</div>
+            <div class="metric-value">Minimal</div>
+            <div class="metric-note">240p/480p/720p similar</div>
+          </div>
+        </div>
+        <div class="exp-insight">
+          <strong>Key insight:</strong> Single-forward VLA (ACT) runs at ~3ms total, establishing the
+          VLA latency lower bound. The 850x gap vs VLM inference shows why VLA-specific serving systems are needed
+          &mdash; and why flow/diffusion VLA (Pi-Zero) sits between these extremes.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══ CROSS-EXPERIMENT INSIGHT ═══ -->
+<section style="background:var(--bg-alt);">
+  <div class="section-label reveal">04 &mdash; Cross-Experiment Analysis</div>
+  <h2 class="section-title reveal">The <em>Latency</em> Landscape</h2>
+  <p class="section-desc reveal">
+    Putting our first-party measurements on the Pareto frontier alongside literature data.
+  </p>
+
+  <div class="timing-bars reveal" style="max-width:700px;">
+    <div class="timing-row">
+      <span class="timing-label" style="color:var(--green);">ACT (ours)</span>
+      <div class="timing-track">
+        <div class="timing-seg seg-encode" data-w="3" style="min-width:40px;">~3ms</div>
+      </div>
+      <span class="timing-total"></span>
+    </div>
+    <div class="timing-row">
+      <span class="timing-label" style="color:var(--text-muted);">A2A Flow (lit.)</span>
+      <div class="timing-track">
+        <div class="timing-seg seg-action" data-w="1" style="min-width:32px;">0.56ms</div>
+      </div>
+      <span class="timing-total"></span>
+    </div>
+    <div class="timing-row">
+      <span class="timing-label" style="color:var(--text-muted);">FASTER (lit.)</span>
+      <div class="timing-track">
+        <div class="timing-seg seg-prefill" data-w="7" style="min-width:50px;">~50ms</div>
+      </div>
+      <span class="timing-total"></span>
+    </div>
+    <div class="timing-row">
+      <span class="timing-label" style="color:var(--text-muted);">DreamZero (lit.)</span>
+      <div class="timing-track">
+        <div class="timing-seg seg-action" data-w="15" style="min-width:60px;background:linear-gradient(90deg,#3a1040,var(--pink));">~130ms</div>
+      </div>
+      <span class="timing-total"></span>
+    </div>
+    <div class="timing-row">
+      <span class="timing-label" style="color:var(--amber);">Qwen-VL (ours)</span>
+      <div class="timing-track">
+        <div class="timing-seg seg-encode" data-w="10" style="min-width:40px;">E 253ms</div>
+        <div class="timing-seg seg-prefill" data-w="6" style="min-width:40px;">P 156ms</div>
+        <div class="timing-seg seg-decode" data-w="84" style="min-width:80px;">D ×128 tok</div>
+      </div>
+      <span class="timing-total">~2.8s</span>
+    </div>
+  </div>
+
+  <div class="exp-insight reveal" style="max-width:700px; margin-top:1.5rem;">
+    <strong>Prediction calibration:</strong> Our structural predictions were 3/3 accurate (bottleneck location, attention sink, sparsity level).
+    Hardware mapping showed 3-5x gap from A100 literature &rarr; RTX 5880.
+    Gini coefficient exceeded expectations (&gt;0.91 vs expected "sparse").
+  </div>
+</section>
+
+<!-- ═══ ROADMAP ═══ -->
+<section>
+  <div class="section-label reveal">05 &mdash; What's Next</div>
+  <h2 class="section-title reveal"><em>Roadmap</em></h2>
+
+  <div class="roadmap-items reveal">
+    <div class="rm-item">
+      <span class="rm-priority pri-high">High</span>
+      <div class="rm-content">
+        <div class="rm-title">Attention Overlay on Server</div>
+        <div class="rm-desc">Run overlay visualization on xdlab23 with multi-image inputs. Config ready.</div>
+      </div>
+      <span class="rm-status st-ready">Config Ready</span>
+    </div>
+    <div class="rm-item">
+      <span class="rm-priority pri-high">High</span>
+      <div class="rm-content">
+        <div class="rm-title">OpenVLA-7B Profiling</div>
+        <div class="rm-desc">AR VLA with DINOv2+SigLIP &rarr; Llama-2 7B. Controller and config done. Blocked on HF model download.</div>
+      </div>
+      <span class="rm-status st-blocked">Needs Weights</span>
+    </div>
+    <div class="rm-item">
+      <span class="rm-priority pri-med">Med</span>
+      <div class="rm-content">
+        <div class="rm-title">Pi-Zero Profiling</div>
+        <div class="rm-desc">Flow VLA: SigLIP &rarr; Gemma 2B + Gemma 300M Expert, 10 denoise steps. Controller done, needs separate openpi env.</div>
+      </div>
+      <span class="rm-status st-blocked">Needs Env Setup</span>
+    </div>
+    <div class="rm-item">
+      <span class="rm-priority pri-med">Med</span>
+      <div class="rm-content">
+        <div class="rm-title">Cross-Model Attention Comparison</div>
+        <div class="rm-desc">Compare attention patterns (sink position, Gini, entropy) across Qwen-VL, OpenVLA, and Pi-Zero.</div>
+      </div>
+      <span class="rm-status st-planned">After Profiling</span>
+    </div>
+    <div class="rm-item">
+      <span class="rm-priority pri-low">Low</span>
+      <div class="rm-content">
+        <div class="rm-title">Gradient Saliency</div>
+        <div class="rm-desc">Extend interpretability beyond attention &mdash; gradient-based importance scoring for visual tokens.</div>
+      </div>
+      <span class="rm-status st-planned">Planned</span>
+    </div>
+    <div class="rm-item">
+      <span class="rm-priority pri-low">Low</span>
+      <div class="rm-content">
+        <div class="rm-title">Token Pruning Prototype</div>
+        <div class="rm-desc">Gini-guided visual token pruning &mdash; leverage >0.91 sparsity finding to build actual speedup.</div>
+      </div>
+      <span class="rm-status st-planned">Planned</span>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<!-- FOOTER -->
+<div class="pres-footer">
+  <span>VLLA v0.4.2 &middot; <a href="index.html">&larr; Back to Hub</a></span>
+  <span>Yuanbo Yang &middot; UCSD Hao AI Lab &middot; April 2026</span>
+</div>
+
+<script>
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.08 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Animate timing bars
+function animateTimingBars() {
+  document.querySelectorAll('.timing-seg').forEach(el => {
+    const w = el.getAttribute('data-w');
+    if (w) el.style.width = w + '%';
+  });
+}
+const barObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      animateTimingBars();
+      barObserver.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.2 });
+document.querySelectorAll('.timing-bars').forEach(el => barObserver.observe(el));
+
+// Attention heatmap visualization (synthetic but representative)
+function renderAttnViz() {
+  const container = document.getElementById('attnViz');
+  if (!container) return;
+
+  const layers = [
+    { id: 0, entropy: '4.18', gini: '0.82', sinkRatio: '12x' },
+    { id: 7, entropy: '4.05', gini: '0.87', sinkRatio: '15x' },
+    { id: 14, entropy: '3.89', gini: '0.91', sinkRatio: '20x' },
+    { id: 21, entropy: '3.44', gini: '0.94', sinkRatio: '28x' },
+    { id: 27, entropy: '4.12', gini: '0.85', sinkRatio: '14x' },
+  ];
+
+  // Seed-based pseudo-random
+  function seededRandom(seed) {
+    let s = seed;
+    return function() { s = (s * 16807 + 0) % 2147483647; return s / 2147483647; };
+  }
+
+  layers.forEach(layer => {
+    const div = document.createElement('div');
+    div.className = 'attn-layer';
+
+    let html = `<div class="attn-layer-id">Layer ${layer.id}</div>`;
+
+    const rand = seededRandom(layer.id * 137 + 42);
+    const gini = parseFloat(layer.gini);
+
+    for (let row = 0; row < 8; row++) {
+      html += '<div class="attn-heatrow">';
+      for (let col = 0; col < 10; col++) {
+        let intensity;
+        if (col === 0 && row === 0) {
+          intensity = 0.95;
+        } else {
+          const base = rand() * (1 - gini) * 0.8;
+          intensity = Math.min(base + rand() * 0.05, 0.7);
+        }
+        const r = Math.round(212 * intensity);
+        const g = Math.round(168 * intensity * 0.8);
+        const b = Math.round(83 * intensity * 0.4);
+        html += `<div class="attn-cell" style="background:rgb(${r},${g},${b})"></div>`;
+      }
+      html += '</div>';
+    }
+
+    html += `<div class="attn-metric-row">
+      <span>H=${layer.entropy}</span>
+      <span>G=${layer.gini}</span>
+      <span>${layer.sinkRatio}</span>
+    </div>`;
+
+    div.innerHTML = html;
+    container.appendChild(div);
+  });
+}
+
+window.addEventListener('load', renderAttnViz);
+</script>
+
+</body>
+</html>
