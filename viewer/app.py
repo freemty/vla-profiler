@@ -19,6 +19,8 @@ def index():
 
 @app.route("/<path:filename>")
 def serve_static(filename):
+    if filename.startswith("api/"):
+        return jsonify({"error": "Not found"}), 404
     return send_from_directory(app.static_folder, filename)
 
 

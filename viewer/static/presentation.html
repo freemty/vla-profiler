@@ -366,7 +366,7 @@ section:last-of-type { border-bottom: none; }
 .pri-high { background: var(--red-dim); color: var(--red); }
 .pri-med { background: var(--amber-dim); color: var(--amber); }
 .pri-low { background: rgba(165,174,204,0.1); color: var(--lavender); }
-.rm-content {}
+.rm-content { display: flex; flex-direction: column; }
 .rm-title { font-size: 0.9rem; font-weight: 600; color: var(--text); }
 .rm-desc { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; }
 .rm-status {
@@ -598,12 +598,13 @@ section:last-of-type { border-bottom: none; }
               <div class="timing-seg seg-prefill" data-w="25">P 332ms</div>
               <div class="timing-seg seg-decode" data-w="35">D 21ms/tok</div>
             </div>
-            <span class="timing-total">~1.1s</span>
+            <span class="timing-total">E+P 873ms</span>
           </div>
         </div>
         <div class="exp-insight">
           <strong>Key insight:</strong> Vision encoding scales linearly with image count (2 images = 2.14x).
           Decode per-token is stable ~18-21ms across modalities &mdash; visual tokens don't slow down decoding.
+          Total wall-clock varies with output length (128 tokens &rarr; ~3.6s for 2-image).
         </div>
       </div>
     </div>
@@ -644,6 +645,7 @@ section:last-of-type { border-bottom: none; }
         <div class="attn-visual" id="attnViz">
           <!-- filled by JS -->
         </div>
+        <div style="font-family:var(--font-mono);font-size:0.55rem;color:var(--text-muted);margin-top:0.3rem;text-align:center;">Illustrative pattern &mdash; metrics (H, G, sink ratio) from actual experiment data</div>
 
         <div class="exp-insight">
           <strong>Key insight:</strong> Position 2 (first visual patch) is a universal attention sink, receiving 12-28x more attention than any other token.
@@ -844,7 +846,7 @@ const barObserver = new IntersectionObserver((entries) => {
 }, { threshold: 0.2 });
 document.querySelectorAll('.timing-bars').forEach(el => barObserver.observe(el));
 
-// Attention heatmap visualization (synthetic but representative)
+// Attention heatmap: illustrative pattern based on real Gini/entropy metrics
 function renderAttnViz() {
   const container = document.getElementById('attnViz');
   if (!container) return;
