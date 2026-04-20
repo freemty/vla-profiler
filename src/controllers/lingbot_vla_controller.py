@@ -275,6 +275,7 @@ class LingBotVLAController(BaseVLAController):
         )
 
         return {
+            "actions": actions,
             "action_shape": list(actions.shape) if torch.is_tensor(actions) else "unknown",
             "num_cameras": num_cameras,
             "num_denoise_steps": config.get("num_steps", 10),

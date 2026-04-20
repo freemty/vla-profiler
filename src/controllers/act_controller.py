@@ -192,6 +192,7 @@ class ACTController(BaseVLAController):
         actions, _ = policy.model(observation)
 
         return {
+            "actions": actions,
             "action": actions.cpu(),
             "action_shape": list(actions.shape),
         }

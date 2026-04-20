@@ -29,6 +29,7 @@ import src.tasks.profiling_task  # noqa: F401 — register task
 import src.tasks.attention_task  # noqa: F401 — register task
 import src.tasks.attention_overlay_task  # noqa: F401 — register task
 import src.tasks.validation_task  # noqa: F401 — register task
+import src.tasks.demo_reproduce_task  # noqa: F401 — register task
 
 
 logger = logging.getLogger(__name__)
@@ -168,6 +169,45 @@ def _run_profiling(controller: Any, cfg: DictConfig) -> None:
     logger.info("All inputs profiled")
 
 
+def _run_demo(controller: Any, cfg: DictConfig) -> None:
+    """
+    Run demo mode: single inference + output verification.
+
+    Performs one warmup + one real inference, stores result on controller,
+    then executes demo_reproduce task for validation.
+    """
+    inputs_list = controller.prepare_inputs(cfg)
+    logger.info("Demo mode: %d inputs", len(inputs_list))
+
+    controller.register_hooks()
+
+    for idx, inp in enumerate(inputs_list):
+        input_name = inp.get("name", "unnamed")
+        logger.info("Demo input %d/%d: %s", idx + 1, len(inputs_list), input_name)
+
+        # Single warmup
+        controller.timer.reset()
+        controller.model_inference(controller.pipeline, cfg, inp)
+
+        # Real run
+        controller.timer.reset()
+        result = controller.model_inference(controller.pipeline, cfg, inp)
+        controller._last_result = result
+
+        # Save raw result
+        if hasattr(controller, "save_results"):
+            controller.save_results(inp, result, cfg)
+
+        # Execute tasks
+        base_output = cfg.get("base_output_path", "output")
+        model_short = cfg.model_name.split("/")[-1] if cfg.model_name else cfg.controller_name
+        save_dir = os.path.join(base_output, model_short, input_name)
+        os.makedirs(save_dir, exist_ok=True)
+        _execute_tasks_to_dir(controller, cfg, save_dir)
+
+    logger.info("Demo verification complete")
+
+
 def _run_analysis(controller: Any, cfg: DictConfig) -> None:
     """
     Run analysis mode: single inference pass with hook data collection.
@@ -253,6 +293,8 @@ def main(raw_cfg: DictConfig) -> None:
     mode = cfg.controller_config.get("mode", "analysis")
     if mode == "profiling":
         _run_profiling(controller, cfg)
+    elif mode == "demo":
+        _run_demo(controller, cfg)
     else:
         _run_analysis(controller, cfg)
 

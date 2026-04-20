@@ -1,0 +1,30 @@
+# OpenVLA-7B demo reproduction
+# Verify: generates exactly 7 action tokens in [0, 255] range
+defaults:
+  - /base
+  - _self_
+
+model_name: "${HF_PATH}/openvla/openvla-7b"
+controller_name: "openvla"
+
+controller_config:
+  mode: "demo"
+
+tasks:
+  - "demo_reproduce"
+
+task_configs:
+  demo_reproduce:
+    model_type: "openvla"
+    expected:
+      action_token_count: 7
+
+inputs:
+  - name: "official_demo"
+    messages:
+      - role: "user"
+        content:
+          - type: "image"
+            image: "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"
+          - type: "text"
+            text: "pick up the red cup"

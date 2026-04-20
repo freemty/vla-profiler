@@ -1,0 +1,31 @@
+# ACT (LeRobot) demo reproduction
+# Verify: forward pass produces correct action chunk shape [1, chunk_size, action_dim]
+defaults:
+  - /base
+  - _self_
+
+model_name: ""
+controller_name: "act"
+
+controller_config:
+  mode: "demo"
+
+# ACT default config: chunk_size=100, action_dim=14
+chunk_size: 100
+action_dim: 14
+state_dim: 14
+
+tasks:
+  - "demo_reproduce"
+
+task_configs:
+  demo_reproduce:
+    model_type: "vla"
+    expected:
+      action_shape: [1, 100, 14]
+      action_ndim: 3
+
+inputs:
+  - name: "official_demo"
+    image_shape: [3, 480, 640]
+    state_dim: 14

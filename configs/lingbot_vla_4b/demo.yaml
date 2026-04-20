@@ -1,0 +1,31 @@
+# LingBot-VLA-4B demo reproduction
+# Verify: flow matching produces actions with correct shape and denoise steps
+defaults:
+  - /base
+  - _self_
+
+model_name: "/data1/ybyang/modelscope/Robbyant/lingbot-vla-4b"
+controller_name: "lingbot_vla"
+
+controller_config:
+  mode: "demo"
+
+tasks:
+  - "demo_reproduce"
+
+task_configs:
+  demo_reproduce:
+    model_type: "vla"
+    expected:
+      action_ndim: 3
+      denoise_steps: 10
+
+inputs:
+  - name: "official_demo"
+    messages:
+      - role: "user"
+        content:
+          - type: "image"
+            image: "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"
+          - type: "text"
+            text: "pick up the red cup"

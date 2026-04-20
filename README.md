@@ -193,11 +193,16 @@ Available configs:
 | `qwen_vl_7b/profiling` | Qwen2.5-VL-7B | E/P/D timing |
 | `qwen_vl_7b/attention` | Qwen2.5-VL-7B | Attention analysis (sink, sparsity, entropy) |
 | `qwen_vl_7b/attention_overlay` | Qwen2.5-VL-7B | Attention heatmap overlay on input images |
+| `qwen_vl_7b/demo` | Qwen2.5-VL-7B | Demo reproduction (text generation verify) |
 | `act/profiling` | ACT (LeRobot) | E/A timing |
+| `act/demo` | ACT (LeRobot) | Demo reproduction (action shape verify) |
 | `openvla_7b/profiling` | OpenVLA-7B | E/P/D timing |
 | `openvla_7b/attention` | OpenVLA-7B | Attention analysis |
+| `openvla_7b/demo` | OpenVLA-7B | Demo reproduction (7 discrete action tokens) |
 | `lingbot_vla_4b/profiling` | LingBot-VLA-4B | E/C/A timing (flow VLA, requires uv env) |
+| `lingbot_vla_4b/demo` | LingBot-VLA-4B | Demo reproduction (flow action verify) |
 | `pizero/profiling` | Pi-Zero (3.2B) | E/C/A timing (open-pi-zero backend, vendored) |
+| `pizero/demo` | Pi-Zero (3.2B) | Demo reproduction (action shape + clip verify) |
 
 ## Adding New Models
 

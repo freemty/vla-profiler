@@ -1,0 +1,31 @@
+# Qwen2.5-VL-7B demo reproduction
+# Verify: loads model, processes image, generates coherent text description
+defaults:
+  - /base
+  - _self_
+
+model_name: "${HF_PATH}/Qwen/Qwen2.5-VL-7B-Instruct"
+controller_name: "qwen_vl"
+
+controller_config:
+  mode: "demo"
+
+tasks:
+  - "demo_reproduce"
+
+task_configs:
+  demo_reproduce:
+    model_type: "vlm"
+    expected:
+      min_output_tokens: 10
+      keywords: ["woman", "dog", "beach", "sunset", "sand"]
+
+inputs:
+  - name: "official_demo"
+    messages:
+      - role: "user"
+        content:
+          - type: "image"
+            image: "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"
+          - type: "text"
+            text: "Describe this image in detail."
