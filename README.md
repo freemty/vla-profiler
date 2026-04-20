@@ -13,18 +13,18 @@ Advisor: Hao Zhang (UCSD) — vLLM / FastVideo / Chatbot Arena.
 |-----------|--------|---------|
 | **Framework core** | Done | `model-probe-core` submodule (shared with rope2sink), BaseController / StoreMixin / HookManager / Registry |
 | **VLM controller** | Done | BaseVLMController (E/P/D phases) -> QwenVLController (Qwen2.5-VL-7B) |
-| **VLA controller** | Done | BaseVLAController (E/C/A phases) -> ACTController (LeRobot ACT) |
+| **VLA controller** | Done | BaseVLAController (E/C/A phases) -> ACTController, LingBotVLAController, PiZeroController |
 | **Profiling task** | Done | `epd_profiling` — CUDA event timing, median/P10/P90/P99/CV stats |
 | **Attention tasks** | Done | `visual_text_attention`, `sink_detection`, `per_layer_stats` |
 | **Attention overlay** | Done | Interpretability Mixin + OverlayRenderer (heatmap/strip/GIF) |
 | **Timing validation** | Done | `timing_validation` — PhaseTimer vs torch.profiler cross-check |
 | **PhaseTimer** | Done | CUDA event wrapper with CPU fallback, cumulative decode support |
 | **Server deployment** | Done | xdlab23 scripts (sync/launch/download/monitor) |
-| **Hydra configs** | Done | base.yaml + qwen_vl_7b/{profiling,attention,attention_overlay} + act/profiling |
+| **Hydra configs** | Done | base.yaml + qwen_vl_7b/{profiling,attention,attention_overlay} + act/profiling + lingbot_vla_4b/profiling + pizero/profiling |
 | **Survey** | Done | 180+ papers across 4 documents (landscape, recent-papers, va-world-models, va-world-models-web) |
 | **Profiling survey** | Done | 8-system ML profiling comparison (vLLM/SGLang/FastVideo/TensorRT-LLM/DeepSpeed/Triton/llama.cpp/MLC LLM) |
 | **Tests** | Done | Unit tests for timing, registry, attention task, overlay renderer, interpretability mixin, attention overlay task |
-| **Viewer** | Skeleton | Flask server + survey dashboard HTML |
+| **Viewer** | Done | Flask server + research presentation viewer (hub, slides, experiments) |
 
 ### Experiment Results
 
@@ -33,6 +33,7 @@ Advisor: Hao Zhang (UCSD) — vLLM / FastVideo / Chatbot Arena.
 | **exp01a** | Qwen2.5-VL-7B | Encode 253ms (58% of total), scales linearly with images. Decode ~18-21ms/tok, stable across modalities. |
 | **exp01b** | Qwen2.5-VL-7B | Pos 2 (first visual patch) is universal attention sink (12-28x). Text->Visual Gini >0.91 (extreme sparsity). Layer 21 entropy lowest. |
 | **exp02a** | ACT (LeRobot) | Total ~3ms, 850x faster than VLM. Encode (ResNet18) 80%, Action 20%. VLA latency lower bound. |
+| **exp03a** | LingBot-VLA-4B | E=35.7ms / C=38.3ms / A=0.48ms (total 74.5ms ≈ 13Hz). 3B backbone 7x faster than 7B. Context ≈ Encode. Flow action head negligible. |
 
 Hardware: RTX 5880 Ada 48GB on xdlab23, 10 benchmark runs + 3 warmup.
 
@@ -42,12 +43,11 @@ Hardware: RTX 5880 Ada 48GB on xdlab23, 10 benchmark runs + 3 warmup.
 |------|----------|--------|-------|
 | **Attention overlay on server** | High | Not started | Config ready (`qwen_vl_7b/attention_overlay`), needs to run on xdlab23 with more input variants |
 | **OpenVLA profiling** | High | Config ready | Controller done (`openvla_controller.py`), config done (`openvla_7b/`). Blocked: HF model weights download on server |
+| **LingBot-VLA attention analysis** | High | Not started | 3B backbone attention patterns vs 7B (exp01b). Need attention config YAML |
 | **OpenVLA attention analysis** | Medium | Config ready | `openvla_7b/attention.yaml` exists, depends on profiling run first |
 | **Pi-Zero profiling** | Medium | Controller done | `pizero_controller.py` + `pizero/profiling.yaml` done. Needs separate conda env (`openpi`) on server |
-| **Pi-Zero openpi env setup** | Medium | Not started | torch 2.7 + transformers 4.53 pinning, runbook TBD (`docs/knowhow/runbooks/setup-openpi-env.md`) |
 | **Gradient saliency** | Low | Not started | Extend interpretability framework beyond attention |
 | **More VLA models** | Low | Not started | InternVL, Llava, etc. — controller stubs needed |
-| **Viewer enhancement** | Low | Skeleton only | Flask app + survey dashboard, no experiment result viewer yet |
 
 ## Architecture
 
@@ -60,6 +60,7 @@ probe_core.BaseController           # Model-agnostic: hook lifecycle, StoreMixin
   |
   +-> BaseVLAController             # VLA: E/C/A phases (Encode/Context/Action)
         +-> ACTController           # ACT (LeRobot): ResNet18 -> CVAE -> action chunk
+        +-> LingBotVLAController    # LingBot-VLA-4B: Qwen2.5-VL-3B + 10-step flow action head
         +-> PiZeroController        # Pi-Zero: SigLIP -> Gemma 2B + Gemma 300M Expert
 ```
 
@@ -187,6 +188,7 @@ Available configs:
 | `act/profiling` | ACT (LeRobot) | E/A timing |
 | `openvla_7b/profiling` | OpenVLA-7B | E/P/D timing |
 | `openvla_7b/attention` | OpenVLA-7B | Attention analysis |
+| `lingbot_vla_4b/profiling` | LingBot-VLA-4B | E/C/A timing (flow VLA, requires uv env) |
 | `pizero/profiling` | Pi-Zero | E/C/A timing (requires openpi env) |
 
 ## Adding New Models
@@ -203,7 +205,8 @@ Available configs:
 |------|-------|
 | SSH | `ssh xdlab23_yang` (port 66) |
 | Path | `/data1/ybyang/vlla` |
-| Conda | `vit-probe` (shared with rope2sink) |
+| Conda | `vit-probe` (shared with rope2sink, Qwen/OpenVLA/ACT) |
+| uv venv | `.venvs/lingbot-vla/` (LingBot-VLA, PyTorch 2.8) |
 | GPUs | 8x RTX 5880 Ada 48GB |
 | HF cache | `/data1/ybyang/huggingface` |
 | Code sync | Git bundle (GitHub blocked by firewall) |
