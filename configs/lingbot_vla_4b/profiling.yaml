@@ -1,10 +1,11 @@
 # LingBot-VLA-4B profiling configuration
-# AR VLA: Qwen2.5-VL-3B backbone -> action tokens (max 75-dim)
+# Flow VLA: Qwen2.5-VL-3B backbone -> Pi0 flow action head (10 denoise steps)
 defaults:
   - /base
   - _self_
 
-model_name: "${oc.env:HF_HOME,/data1/ybyang/huggingface}/robbyant/lingbot-vla-4b"
+model_name: "/data1/ybyang/modelscope/Robbyant/lingbot-vla-4b"
+qwen_path: "/data1/ybyang/huggingface/Qwen/Qwen2.5-VL-3B-Instruct"
 controller_name: "lingbot_vla"
 
 controller_config:
@@ -15,7 +16,6 @@ tasks:
 
 num_warmup_runs: 3
 num_benchmark_runs: 10
-max_new_tokens: 128
 
 inputs:
   - name: "single_img_manipulation"

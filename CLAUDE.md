@@ -162,12 +162,13 @@ Pipeline state tracked in .pipeline-state.json.
 
 ## Current state
 
-- **current_exp:** exp01b (Qwen2.5-VL-7B attention analysis — done)
+- **current_exp:** exp03a (LingBot-VLA-4B profiling — done)
 - **stage:** experiment
-- **skill_updated_at:** 2026-04-15
+- **skill_updated_at:** 2026-04-20
 - **key findings:**
   - **exp01a (profiling):** text P=20ms/D=18ms; single_img E=253ms/P=156ms/D=18.6ms; multi_img E=541ms/P=332ms/D=21ms. Encode scales linearly.
   - **exp01b (attention):** Pos 2 (first visual patch) is universal attention sink (12K-18K received, 12-28x vs #2). Text→Visual Gini >0.91 (extreme sparsity → token pruning viable). Layer 21 entropy lowest (3.44).
   - **exp02a (ACT):** Total ~3ms (850x faster than VLM). Encode 80%, action 20%. VLA latency lower bound.
-- **latest (v0.4.0):** Attention Overlay Visualization, Interpretability Mixin, GQA fix, BaseVLAController, ACTController.
-- **next:** Run attention overlay on server. OpenVLA (need HF download). Pi-Zero controller. Gradient saliency.
+  - **exp03a (LingBot-VLA-4B):** single_img E=35.7ms/C=38.3ms/A=0.48ms (total 74.5ms). 3B backbone 比 7B 快 7x。Context ≈ Encode。Flow action head 0.48ms ≈ ACT。Total 74.5ms ≈ 13Hz。
+- **latest (v0.4.3):** LingBotVLAController, research presentation viewer.
+- **next:** Run attention overlay on server. OpenVLA (need HF download). Pi-Zero controller. Gradient saliency. LingBot-VLA attention analysis.
