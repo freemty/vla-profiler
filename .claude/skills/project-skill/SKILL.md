@@ -2,16 +2,16 @@
 name: project-skill
 description: "Use when advising on project architecture, experiment history, codebase navigation, or research findings."
 user-invocable: false
-version: v2
-note: "v2 — attention overlay viz, exp01b/exp02a results, VLA controller hierarchy, timing cross-validation."
-updated_at: "2026-04-15"
+version: v3
+note: "v3 — exp03a LingBot-VLA-4B done, BaseVLAController inheritance fix, Codex review fixes, research presentation viewer, uv env migration."
+updated_at: "2026-04-20"
 ---
 
 # vlla — Project Knowledge
 
 > VLM/VLA Real-Time Systems Survey & Research
 > UCSD PhD 方向调研项目 | 导师: 张昊 (Hao Zhang) — vLLM/FastVideo/Chatbot Arena 作者
-> v2 — attention overlay, exp01b/exp02a, VLA controller, timing validation.
+> v3 — exp03a LingBot-VLA-4B, Codex review fixes, presentation viewer, uv env.
 
 ---
 
@@ -25,15 +25,17 @@ updated_at: "2026-04-15"
 张昊的技术路线: Parameter Server -> Alpa -> vLLM -> FastVideo -> **VLM/VLA real-time systems**。每一步都是 ML Systems 前沿的下一个自然问题。VLM/VLA serving 正处于 "pre-vLLM" 阶段，存在巨大的系统研究空间。
 
 **当前阶段:** Experiment (Phase 1 — VLM/VLA Profiling + Interpretability)
-- `current_exp`: exp02a (ACT profiling — **done**)
+- `current_exp`: exp03a (LingBot-VLA-4B profiling — **done**)
 - `stage`: experiment
+- `version`: v0.4.3
 - Survey 产出: 4 份核心文档，覆盖 180+ 篇论文/项目 (2024-2026)
 - Framework 产出: VLM profiling + attention analysis + attention overlay 可视化 + VLA profiling 框架 (`src/`)
 - 新增模块: Interpretability Mixin 体系 (`src/interpretability/`)、OverlayRenderer (`src/viz/`)、Timing Cross-Validation (`src/tasks/validation_task.py`)
 - 共享核心: `model-probe-core` git submodule (`src/core/`)，同时被 rope2sink 消费
-- 服务器: xdlab23 (8x RTX 5880 Ada 48GB)，3 个实验完成
-- **完成的实验:** exp01a (E/P/D profiling), exp01b (attention analysis), exp02a (ACT profiling)
-- **下一步:** OpenVLA profiling (配置已就绪)、attention overlay 在更多 input variant 上运行、扩展到更多 VLA 模型
+- Presentation viewer: `viewer/` — Flask + 3 HTML pages (hub, presentation, experiments) for advisor meeting
+- 服务器: xdlab23 (8x RTX 5880 Ada 48GB)，4 个实验完成
+- **完成的实验:** exp01a (E/P/D profiling), exp01b (attention analysis), exp02a (ACT profiling), exp03a (LingBot-VLA-4B profiling)
+- **下一步:** Attention overlay 在服务器运行、OpenVLA profiling (需 HF 下载)、Pi-Zero controller、Gradient saliency、LingBot-VLA attention analysis
 
 **核心数据汇总:**
 
@@ -42,6 +44,7 @@ updated_at: "2026-04-15"
 | exp01a | Qwen2.5-VL-7B | E=253ms (58%), D=18-21ms/tok |
 | exp01b | Qwen2.5-VL-7B | Pos 2 = universal sink (12-28x), Gini >0.91 |
 | exp02a | ACT (LeRobot) | Total ~3ms, 850x faster than VLM |
+| exp03a | LingBot-VLA-4B | E=35.7ms/C=38.3ms/A=0.48ms, total 74.5ms ≈ 13Hz |
 
 ---
 
@@ -66,10 +69,12 @@ vlla/
 |   |       |-- registry.py     # Registry class (dict-based dispatch)
 |   |-- controllers/
 |   |   |-- base_vlm_controller.py  # BaseVLMController: E/P/D phase hooks, PhaseTimer
-|   |   |-- base_vla_controller.py  # BaseVLAController: E/C/A phase hooks
+|   |   |-- base_vla_controller.py  # BaseVLAController: E/C/A phase hooks, _register_capture_hook
 |   |   |-- qwen_vl_controller.py   # QwenVLController: model loading, inference, QKV hooks
 |   |   |-- openvla_controller.py   # OpenVLAController: DINOv2+SigLIP→Llama-2
 |   |   |-- act_controller.py       # ACTController: ResNet18→CVAE→action chunk
+|   |   |-- lingbot_vla_controller.py  # LingBotVLAController: Qwen2.5-VL-3B + flow action head
+|   |   |-- pizero_controller.py    # PiZeroController: Pi-Zero (lazy import, separate env)
 |   |-- interpretability/           # Attention overlay system
 |   |   |-- base_mixin.py     # TokenSpatialMap, TokenType, BaseInterpretabilityMixin
 |   |   |-- vlm_mixin.py      # VLMInterpretabilityMixin (Qwen2.5-VL token→image mapping)
@@ -82,6 +87,7 @@ vlla/
 |   |   |-- attention_overlay_task.py  # attention→image space→heatmap render
 |   |   |-- validation_task.py      # timing cross-validation PhaseTimer vs torch.profiler
 |   |-- utils/
+|       |-- __init__.py         # Shared utility functions
 |       |-- timing.py           # PhaseTimer: CUDA event wrapper (CPU fallback)
 |
 |-- configs/               # Hydra experiment configs
@@ -93,10 +99,28 @@ vlla/
 |   |-- act/
 |   |   |-- profiling.yaml         # ACT E/A profiling
 |   |-- openvla_7b/
-|       |-- profiling.yaml         # OpenVLA E/P/D profiling
-|       |-- attention.yaml         # OpenVLA attention analysis
+|   |   |-- profiling.yaml         # OpenVLA E/P/D profiling
+|   |   |-- attention.yaml         # OpenVLA attention analysis
+|   |-- lingbot_vla_4b/
+|   |   |-- profiling.yaml         # LingBot-VLA E/C/A profiling
+|   |-- pizero/
+|       |-- profiling.yaml         # Pi-Zero profiling (requires openpi env)
 |
-|-- scripts/               # Server deployment scripts
+|-- scripts/               # Server deployment & convenience scripts
+|   |-- sync_to_remote.sh         # Git bundle sync to xdlab23
+|   |-- launch_exp.sh             # Launch experiment on server GPU
+|   |-- download-results.sh       # Rsync results from server
+|   |-- run_local.sh              # Local GPU experiment
+|   |-- run_remote.sh             # SSH → xdlab23 launch (quoted args)
+|   |-- run_viewer.sh             # Flask viewer startup
+|   |-- run_tests.sh              # pytest test suite
+|   |-- setup_lingbot_vla.sh      # LingBot-VLA uv env + model download
+|-- viewer/                # Research presentation viewer (Flask)
+|   |-- app.py                    # Flask app + static file catch-all (api/ guard)
+|   |-- static/
+|       |-- index.html            # Navigation hub
+|       |-- presentation.html     # 5-section advisor meeting slides
+|       |-- experiments.html      # Expandable experiment detail tables
 |-- survey/                # 文献综述
 |-- exp/summary.md         # 实验 flight recorder
 |-- docs/
@@ -106,8 +130,14 @@ vlla/
 |   |-- superpowers/plans/
 |   |   |-- 2026-04-14-vlm-profiling-framework.md
 |   |   |-- 2026-04-15-attention-overlay-visualization.md
+|   |-- papers/
+|   |   |-- landscape.md
+|   |   |-- starvla-framework-deep-dive.md
+|   |   |-- openpi-pytorch-profiling-feasibility.md
 |   |-- knowhow/
 |       |-- runbooks/deploy-to-xdlab23.md
+|       |-- runbooks/setup-openpi-env.md
+|       |-- runbooks/setup-uv-env-xdlab23.md
 |       |-- toolchain/cuda-profiling-patterns.md
 |       |-- toolchain/hydra-config-patterns.md
 |       |-- debug-solutions/phasetimer-cpu-backend-bug.md
@@ -115,6 +145,7 @@ vlla/
 |       |-- debug-solutions/gqa-attention-analysis.md
 |       |-- debug-solutions/qwen25vl-model-structure.md
 |       |-- debug-solutions/qwen25vl-vision-token-mapping.md
+|       |-- debug-solutions/lingbotvla-integration.md
 |       |-- infrastructure/xdlab23-model-weights.md
 ```
 
@@ -123,21 +154,22 @@ vlla/
 ```
 probe_core.BaseController          # Model-agnostic: hook lifecycle, StoreMixin, HookMode
   |
-  +-> BaseVLMController            # VLM-specific: E/P/D phases, PhaseTimer
+  +-> BaseVLMController            # VLM-specific: E/P/D phases, PhaseTimer, _register_capture_hook
   |     +-> QwenVLController       # Qwen2.5-VL: model loading, QKV hooks, VLMInterpretabilityMixin
   |     +-> OpenVLAController      # OpenVLA (AR VLA): DINOv2+SigLIP→Llama-2 7B
   |     +-> (future) InternVLController
   |
-  +-> BaseVLAController            # VLA-specific: E/C/A phases (encode/context/action)
+  +-> BaseVLAController            # VLA-specific: E/C/A phases, _register_capture_hook (独立定义)
         +-> ACTController          # ACT (LeRobot): ResNet18→CVAE→action chunk, single-forward
-        +-> (future) PiZeroController  # Pi-Zero: VLM backbone + flow action head
+        +-> LingBotVLAController   # LingBot-VLA-4B: Qwen2.5-VL-3B + 10-step flow action head
+        +-> PiZeroController       # Pi-Zero: VLM backbone + flow action head (lazy import, separate env)
 ```
 
 **VLM vs VLA Phase Models:**
 - **VLM (BaseVLMController):** E/P/D — Encode / Prefill / Decode (autoregressive)
 - **VLA (BaseVLAController):** E/C/A — Encode / Context / Action (C optional, A may iterate)
-  - `has_context_phase()`: True for VLA-with-VLM-backbone (Pi-Zero), False for pure VA (ACT)
-  - `get_denoise_steps()`: 1 for single-forward (ACT), N for flow/diffusion models
+  - `has_context_phase()`: True for VLA-with-VLM-backbone (LingBot-VLA, Pi-Zero), False for pure VA (ACT)
+  - `get_denoise_steps()`: 1 for single-forward (ACT), N for flow/diffusion models (LingBot-VLA: 10)
 
 **Interpretability Mixin Architecture:**
 ```
@@ -153,6 +185,9 @@ BaseInterpretabilityMixin  # ABC: get_token_spatial_mappings, classify_token_typ
 - 配置驱动: 新增 input variant 只需改 YAML
 - Interpretability Mixin 通过多重继承注入 Controller，不修改 Controller 核心逻辑
 - Timing Cross-Validation: PhaseTimer (CUDA Events) 与 torch.profiler 双测对比，verdict: PASS/WARN/FAIL
+- `_register_capture_hook` 在 BaseVLMController 和 BaseVLAController 中各自独立定义 (两条继承链不共享此方法)
+- PiZeroController 使用 lazy import + try/except (requires openpi conda env，避免依赖 crash)
+- LingBot-VLA 使用 uv venv 而非 conda (xdlab23 非交互 SSH 下 conda 不可用)
 
 ### 2.3 Server Deployment
 
@@ -161,7 +196,12 @@ Local (Mac) --git bundle+scp--> xdlab23 (8x RTX 5880 Ada)
             <--rsync results---  /data1/ybyang/vlla
 ```
 
-SSH: `ssh xdlab23_yang` | Conda: `vit-probe` | HF: `/data1/ybyang/huggingface`
+SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot-vla/` | HF: `/data1/ybyang/huggingface`
+
+**Environment strategy:**
+- `vit-probe` (conda) — shared with rope2sink, for Qwen2.5-VL / OpenVLA / ACT
+- `.venvs/lingbot-vla/` (uv) — LingBot-VLA specific (lerobot compat, PyTorch 2.8)
+- `openpi` (conda) — Pi-Zero (separate, requires openpi package)
 
 ---
 
@@ -195,16 +235,27 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` | HF: `/data1/ybyang/huggingface`
 - **VLA 延迟下界 baseline:** Encode (ResNet18) ~2.5-2.8ms (80%), Action ~0.4-0.8ms
 - **Resolution impact minimal on encode:** 240p/480p/720p 差异不大
 
+**From exp03a (first-party):**
+- **3B backbone 比 7B 快 ~7x:** Encode 35.7ms vs 253ms (同 ViT 架构，参数量差异)
+- **Context ≈ Encode:** KV cache fill (38.3ms) 与 vision encoding (35.7ms) 几乎等价
+- **Multi-view encode 几乎不增加 (+1.5%):** patchified input 在 ViT 之前聚合，ViT 处理合并后的 patch 序列
+- **Flow action head 极快 (0.48ms):** 10-step denoise loop 的 action_out_proj 累计仅 0.48ms，与 ACT (0.5ms) comparable
+- **Total 74.5ms ≈ 13Hz:** 接近机器人 10Hz 实时需求，仍有 ~25% gap
+
 ### 3.3 活跃假设
 
 - [x] ~~Vision encoding 占 >50% prefill 延迟~~ → **exp01a 已验证 (58%)**
 - [x] ~~Attention sink 存在于 VLM~~ → **exp01b 已验证 (Pos 2 universal sink)**
 - [x] ~~Text→Visual attention sparse, supports pruning~~ → **exp01b Gini >0.91**
+- [x] ~~Flow VLA (real model) 延迟在 50-100ms 范围~~ → **exp03a 验证 74.5ms**
+- [x] ~~Flow action head overhead 可忽略~~ → **exp03a 验证 0.48ms (0.6% of total)**
 - [ ] EPD 三阶段分离实际收益 (disaggregation ROI)
 - [ ] VLM speculative decoding 中 visual token 对 acceptance rate 的影响
 - [ ] Per-layer attention entropy 分布的实际意义 (Layer 21 最低 → 是否是最佳 pruning 切入点?)
 - [ ] OpenVLA (AR VLA) profiling: E/P/D 与 Qwen2.5-VL 有多大差异?
 - [ ] Pi-Zero flow VLA profiling: denoise step count vs latency trade-off
+- [ ] LingBot-VLA attention analysis: 3B backbone 的 attention pattern 是否与 7B 一致?
+- [ ] 3B→7B backbone scaling law: 是否线性? (exp01a vs exp03a 初步暗示 ~7x for 2.3x params)
 
 ---
 
@@ -218,8 +269,9 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` | HF: `/data1/ybyang/huggingface`
 | 控制频率 | >200Hz | 2-10Hz | ~7Hz | 60-100Hz |
 | 泛化能力 | 低 | 高 | 极高 | 中 |
 
-**新增 first-party 基线 (exp02a):**
-- ACT (single-forward VA): ~3ms total → 落入 VA 1-5ms 范围，符合预期
+**First-party baselines (from experiments):**
+- ACT (single-forward VA): ~3ms total → 落入 VA 1-5ms 范围 ✓
+- LingBot-VLA-4B (flow VLA, 3B backbone): 74.5ms total ≈ 13Hz → 在 VLA 2-10Hz 范围的高端
 
 ### 4.2 Pareto 前沿
 
@@ -228,6 +280,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` | HF: `/data1/ybyang/huggingface`
 | Action-to-Action Flow | 0.56ms | VA 速度下界 |
 | **ACT (our measurement)** | **~3ms** | **VA baseline (first-party)** |
 | Mean-Flow VLA / FASTER | ~50ms | VLA 单步化 |
+| **LingBot-VLA-4B (our measurement)** | **74.5ms** | **Flow VLA baseline (first-party, 3B)** |
 | DreamZero | ~130ms, 7Hz | WAM zero-shot |
 | SAGE | 3.36x speedup | VLM SD 标杆 |
 | ID-Selection | 97.2% token reduction | Token pruning 上界 |
@@ -241,16 +294,20 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` | HF: `/data1/ybyang/huggingface`
 | Git bundle sync | rsync only | Bundle preserves git history on server side |
 | ACT model.forward() | policy.select_action() | select_action() has action queue cache, skips forward on subsequent calls |
 | GQA repeat_interleave | Separate Q/K head handling | repeat_interleave is HF standard, clean single codepath |
+| uv venv (LingBot-VLA) | conda (shared vit-probe) | conda not available in non-interactive SSH; uv is PATH-independent |
+| Separate _register_capture_hook per base | Shared mixin | Two inheritance chains (VLM/VLA) need independent hook definitions; mixin adds complexity |
+| eager attention (LingBot-VLA) | flash-attn / flex_attention | flex_attention dtype bug in PyTorch 2.8; flash-attn "not implemented" in lingbotvla |
 
 ---
 
 ## 5. Experiment History
 
-| Exp ID | Date | Status | Prediction | Actual | Key Finding |
-|--------|------|--------|-----------|--------|-------------|
-| exp01a | 2026-04-15 | **done** | E >50% of total | E=58% | E scales linearly with images; D per-token stable ~18-21ms |
-| exp01b | 2026-04-15 | **done** | Sink exists (literature) | Pos 2 sink 12-28x | Universal sink at first visual patch; Gini >0.91 supports pruning |
-| exp02a | 2026-04-15 | **done** | VA ~1-5ms (literature) | ~3ms total | ACT 850x faster than VLM; ResNet18 encode 80% of total |
+| Exp ID | Date | Status | Prediction | Actual | Key Finding | Calibration |
+|--------|------|--------|-----------|--------|-------------|-------------|
+| exp01a | 2026-04-15 | **done** | E >50% of total | E=58% | E scales linearly with images; D per-token stable ~18-21ms | Accurate (structure), Off (hardware: 3-5x gap to A100 literature) |
+| exp01b | 2026-04-15 | **done** | Sink exists (literature) | Pos 2 sink 12-28x | Universal sink at first visual patch; Gini >0.91 supports pruning | Confirmed (existence), Surprised (Gini >0.91 extreme) |
+| exp02a | 2026-04-15 | **done** | VA ~1-5ms (literature) | ~3ms total | ACT 850x faster than VLM; ResNet18 encode 80% of total | Accurate (range), Off (resolution insensitivity) |
+| exp03a | 2026-04-20 | **done** | 250-350ms (7B→3B ~2x scaling) | 74.5ms total | 3B backbone 7x faster than 7B; Context≈Encode; flow action 0.48ms; ≈13Hz | Way Off — actual 3.4-4.7x better than predicted |
 
 ### 5.1 Prediction Calibration: exp01a
 
@@ -275,15 +332,45 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` | HF: `/data1/ybyang/huggingface`
 | Encode 占比 | 主导 (CNN bottleneck) | 80% | **Confirmed** |
 | Resolution sensitivity | 应该有影响 | Minimal impact | **Off** — ResNet18 对 resolution 不敏感 |
 
-**Meta-Learning — Prediction Calibration Trends:**
-- **结构性判断准确:** 哪个阶段是瓶颈、存在 attention sink、sparsity 可利用 — 3/3 correct
-- **硬件映射偏差:** 文献数据 (A100/H100) 到 RTX 5880 有 3-5x gap，需要 hardware correction factor
-- **量级估计偏差:** ResNet18 对 resolution 不敏感是 miss — 小模型 vs 大 ViT 的假设不能直接迁移
-- **Gini 系数超预期:** 预测 "sparse" 但没预测到 >0.91 的极端稀疏度
+### 5.4 Prediction Calibration: exp03a
+
+| Metric | Survey Prediction | Actual | Calibration |
+|--------|------------------|--------|-------------|
+| Total latency | 250-350ms (7B→3B ~2x scaling) | 74.5ms | **Way Off** — 预估基于 naive 2x scaling，实际 7x |
+| E/C relative cost | Encode dominant | E≈C (35.7 vs 38.3ms) | **Off** — 未预料到 context phase 如此重 |
+| Action overhead | <5ms (flow is fast) | 0.48ms | **Accurate** — flow action head 确实极快 |
+| Multi-view scaling | ~2x for 2 cameras | +1.5% only | **Way Off** — patchified aggregation 绕过重复 ViT |
 
 ---
 
-## 6. Engineering Lessons (APPEND-ONLY)
+## 6. Prediction Calibration — Meta-Learning
+
+**系统性偏差:**
+
+1. **结构性判断准确:** 哪个阶段是瓶颈、存在 attention sink、sparsity 可利用 — 4/4 experiments correct
+2. **硬件映射偏差:** 文献数据 (A100/H100) 到 RTX 5880 有 3-5x gap，需要 hardware correction factor
+3. **量级估计偏差 (小模型方向):** ResNet18 对 resolution 不敏感; patchified input 绕过重复 ViT — 小模型/special input pipeline 的行为不能从大模型简单 scaling
+4. **Gini 系数超预期:** 预测 "sparse" 但没预测到 >0.91 的极端稀疏度
+5. **Backbone scaling 非线性 (NEW):** 预测 7B→3B 是 ~2x speedup (naive param ratio)，实际 7x。原因:
+   - 3B 的 ViT 更小 (不只是 LLM backbone 缩小)
+   - Flow VLA 的 fixed-step denoise 比 autoregressive decode 高效得多
+   - Patchified input pipeline 避免了重复 ViT forward
+6. **Context phase 被低估 (NEW):** 未预料到 LLM forward (KV cache fill) 与 ViT encode 几乎等价 — 需要将 "context/prefill" 作为独立瓶颈对待
+
+**校准精度趋势:**
+- exp01a: 2/3 accurate — 结构 OK，硬件数字偏差
+- exp01b: 2/2 confirmed — 文献预测准
+- exp02a: 2/3 accurate — resolution 不敏感是 miss
+- exp03a: 1/4 accurate — **最差的一次**，backbone scaling 和 input pipeline 理解不足
+
+**改进方向:**
+- 对 backbone scaling 使用 FLOPs ratio 而非 param ratio
+- 对非标准 input pipeline (patchified, pre-tokenized) 的模型不做 naive multi-image scaling 假设
+- 将 context/prefill phase 作为独立 cost center 预测
+
+---
+
+## 7. Engineering Lessons (APPEND-ONLY)
 
 ### 2026-04-11: Survey 过程
 1. 先全景后深入的调研策略有效
@@ -312,15 +399,25 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` | HF: `/data1/ybyang/huggingface`
 20. **_aggregated_timing 必须显式声明:** 动态属性 → 显式声明为 `Optional[Dict]` in `__init__`，防止 AttributeError
 21. **detach before numpy:** `attn_probs.detach().numpy()` — 忘记 detach 会在 backward-enabled tensor 上 crash
 
+### 2026-04-20: LingBot-VLA-4B + Codex Review (v0.4.2 + v0.4.3)
+22. **两条继承链各自需要 hook 方法:** `_register_capture_hook` 在 BaseVLMController 有定义，但 BaseVLAController 继承自 BaseController 而非 BaseVLMController — LingBotVLAController 调用 `self._register_capture_hook()` 会 AttributeError。修复: 在 BaseVLAController 中也定义该方法
+23. **Empty weights glob 必须 guard:** safetensors glob 返回空列表时应抛 FileNotFoundError，否则静默加载空权重导致难以调试的推理错误
+24. **Shell 脚本变量必须 quote:** `run_remote.sh` 中 `$CONFIG` 未加引号 → 可被 command injection。修复: `"$CONFIG"` 双引号包裹
+25. **PyTorch `.forward()` 不触发 hooks:** lingbotvla 源码调用 `self.model.forward(...)` 而非 `self.model(...)`，PyTorch hooks 只在 `__call__` 时触发。profiling hooks 静默失效
+26. **uv 替代 conda 解决非交互 SSH 问题:** xdlab23 的 conda 依赖 `.bashrc` 中的 `conda init`，非交互 SSH 不 source `.bashrc`。uv 安装在 `~/.local/bin/` 无需 shell init
+27. **PI0Config 字段过滤:** lingbotvla config.json 含自定义字段，PI0Config dataclass 不接受额外 kwargs。用 `dataclasses.fields()` 过滤有效字段 + `setattr` 附加
+28. **Patchified input 绕过 multi-view scaling:** lingbotvla 在 ViT 之前 patchify 并聚合多视角输入 → ViT 处理合并后的 patch 序列 → multi-view encode 几乎不增加 (+1.5%)。不能假设 multi-image = multi-ViT-forward
+29. **Flask catch-all 路由需要 api/ 前缀防护:** 无条件 catch-all 会遮蔽未注册的 API 路由，导致 404 静默返回 HTML 而非 JSON error
+
 ---
 
-## 7. Active Prompt Versions & Trade-offs
+## 8. Active Prompt Versions & Trade-offs
 
 (No prompt versioning files yet — `prompts/` directory does not exist. When added, track here.)
 
 ---
 
-## 8. Quick Reference
+## 9. Quick Reference
 
 ### Commands
 
@@ -332,7 +429,14 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` | HF: `/data1/ybyang/huggingface`
 | `bash scripts/launch_exp.sh 0 qwen_vl_7b/attention_overlay` | Overlay viz GPU 0 |
 | `bash scripts/launch_exp.sh 0 act/profiling` | ACT profiling GPU 0 |
 | `bash scripts/launch_exp.sh 0 openvla_7b/profiling` | OpenVLA profiling GPU 0 |
+| `bash scripts/launch_exp.sh 0 lingbot_vla_4b/profiling` | LingBot-VLA profiling GPU 0 |
+| `bash scripts/launch_exp.sh 0 pizero/profiling` | Pi-Zero profiling GPU 0 |
+| `bash scripts/run_remote.sh <gpu> <config>` | SSH → xdlab23 launch |
+| `bash scripts/run_local.sh <gpu> <config>` | Local GPU launch |
+| `bash scripts/run_viewer.sh` | Flask viewer |
+| `bash scripts/run_tests.sh` | pytest suite |
 | `bash scripts/download-results.sh` | Download results |
+| `bash scripts/setup_lingbot_vla.sh` | Setup LingBot-VLA env on xdlab23 |
 
 ### Server
 
@@ -340,12 +444,14 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` | HF: `/data1/ybyang/huggingface`
 |------|-------|
 | SSH | `ssh xdlab23_yang` (port 66) |
 | Path | `/data1/ybyang/vlla` |
-| Conda | `vit-probe` |
+| Conda | `vit-probe` (legacy, shared with rope2sink) |
+| uv venv | `.venvs/lingbot-vla/` (LingBot-VLA) |
 | GPUs | 8x RTX 5880 Ada 48GB |
+| HF cache | `/data1/ybyang/huggingface` |
 
 ### Registries
 
-**Controllers:** `qwen_vl` → QwenVLController, `openvla` → OpenVLAController, `act` → ACTController
+**Controllers:** `qwen_vl` → QwenVLController, `openvla` → OpenVLAController, `act` → ACTController, `lingbot_vla` → LingBotVLAController, `pizero` → PiZeroController (lazy)
 **Tasks:** `epd_profiling`, `visual_text_attention`, `sink_detection`, `per_layer_stats`, `attention_overlay`, `timing_validation`
 
 ### Knowhow Index
@@ -353,6 +459,8 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` | HF: `/data1/ybyang/huggingface`
 | File | Topic |
 |------|-------|
 | `docs/knowhow/runbooks/deploy-to-xdlab23.md` | xdlab23 部署流程 |
+| `docs/knowhow/runbooks/setup-openpi-env.md` | Pi-Zero openpi 环境搭建 |
+| `docs/knowhow/runbooks/setup-uv-env-xdlab23.md` | uv venv 替代 conda (非交互 SSH) |
 | `docs/knowhow/toolchain/cuda-profiling-patterns.md` | CUDA Event vs torch.profiler 对比 |
 | `docs/knowhow/toolchain/hydra-config-patterns.md` | Hydra ListConfig/device gotchas |
 | `docs/knowhow/debug-solutions/gqa-attention-analysis.md` | GQA Q/K head mismatch |
@@ -360,8 +468,11 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` | HF: `/data1/ybyang/huggingface`
 | `docs/knowhow/debug-solutions/phasetimer-cpu-backend-bug.md` | CPU backend no-op bug |
 | `docs/knowhow/debug-solutions/qwen25vl-model-structure.md` | Qwen2.5-VL 模型结构 |
 | `docs/knowhow/debug-solutions/qwen25vl-vision-token-mapping.md` | Vision token 定位 |
+| `docs/knowhow/debug-solutions/lingbotvla-integration.md` | LingBot-VLA flow VLA 集成 14 个问题 |
 | `docs/knowhow/infrastructure/xdlab23-model-weights.md` | ModelScope 404 issue |
+| `docs/papers/starvla-framework-deep-dive.md` | StarVLA 模块化 VLA framework 深度分析 |
+| `docs/papers/openpi-pytorch-profiling-feasibility.md` | OpenPI profiling 可行性 |
 
 ---
 
-*v2 — attention overlay viz, exp01b/exp02a results, VLA controller hierarchy, timing cross-validation. Updated: 2026-04-15*
+*v3 — exp03a LingBot-VLA-4B done, Codex review fixes, presentation viewer, uv env migration. Updated: 2026-04-20*

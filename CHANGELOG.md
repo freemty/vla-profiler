@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.4.4 — 2026-04-20
+
+### 新增
+- **exp03a 完成** — LingBot-VLA-4B E/C/A profiling (74.5ms ≈ 13Hz)
+  - single_img: E=35.7ms / C=38.3ms / A=0.48ms
+  - multi_view: E=36.3ms / C=38.3ms / A=0.48ms
+  - 3B backbone 比 7B (exp01a) 快 ~7x
+- `BaseVLAController._register_capture_hook()` — analysis hooks 支持 VLA 继承链
+
+### 修复
+- LingBotVLAController 继承链 AttributeError (`_register_capture_hook` 只在 VLM 基类)
+- Empty safetensors guard — `init_pipeline` 找不到权重时抛 FileNotFoundError
+- `scripts/run_remote.sh` command injection — shell 变量加引号
+- `scripts/setup_lingbot_vla.sh` 补全 lingbotvla/lerobot 安装步骤，修正 model download 路径
+
+### 文档
+- `docs/knowhow/debug-solutions/lingbotvla-integration.md` — BaseVLAController 继承链问题
+- Project skill v3 — exp03a findings, lessons #22-29, prediction calibration
+
 ## v0.4.3 — 2026-04-17
 
 ### 新增

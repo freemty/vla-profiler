@@ -1,5 +1,18 @@
 # Project Skill Changelog
 
+## 2026-04-20 — v3 LingBot-VLA-4B + Codex Review + Presentation Viewer
+
+Incremental update: exp03a done, Codex adversarial review fixes, research viewer.
+
+- **Updated:** Section 1 — current_exp → exp03a (done), core data table +1 row, version v0.4.3
+- **Updated:** Section 2 — LingBotVLAController + PiZeroController in tree, _register_capture_hook note on both base classes, 3 environment strategy, new scripts/viewer/docs files
+- **Updated:** Section 3 — 4 new verified hypotheses (exp03a), 3 new active hypotheses (LingBot attention, scaling law, OpenVLA)
+- **Updated:** Section 4 — LingBot-VLA in Pareto table, 3 rejected alternatives (uv, eager attn, separate capture hook)
+- **Updated:** Section 5 — exp03a row + prediction calibration 5.4 (worst: 1/4 accurate)
+- **Updated:** Section 6 — 2 new systematic biases (backbone scaling non-linear, context underestimated), calibration trend
+- **Added:** Engineering Lessons #22-#29 (inheritance chain, empty weights, shell injection, .forward() hooks, uv, PI0Config, patchified scaling, Flask catch-all)
+- **Added:** 7 new commands, 5 knowhow entries, 2 new registry entries in Quick Reference
+
 ## 2026-04-15 — v2 Attention Overlay + exp01b/exp02a + VLA Controller
 
 Incremental update: attention overlay visualization, VLA controller hierarchy, 3 experiments done.

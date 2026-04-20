@@ -56,6 +56,14 @@ sed -i 's/self.qwenvl_with_expert.forward(/self.qwenvl_with_expert(/' modeling_l
 # 在 our_eager_attention_forward 中添加: attention_mask = attention_mask.bool()
 ```
 
+## BaseVLAController 继承链 (2026-04-20)
+
+`_register_capture_hook` 原本只定义在 `BaseVLMController` 上。`LingBotVLAController` 继承的是 `BaseVLAController` → `BaseController`，调用 `self._register_capture_hook()` 会 AttributeError。
+
+**Fix:** 在 `BaseVLAController` 中也定义 `_register_capture_hook`（相同逻辑）。
+
+**教训:** 新建 Controller 子类时，检查 analysis hooks 方法的继承来源。两条继承链 (VLM vs VLA) 各自需要独立的 hook 方法。
+
 ## Notes
 - Date: 2026-04-20
 - Environment: xdlab23, uv venv `.venvs/lingbot-vla/`, PyTorch 2.8
