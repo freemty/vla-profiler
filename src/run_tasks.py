@@ -52,12 +52,15 @@ def _create_controller(cfg: DictConfig) -> Any:
 
     controller_cls = CONTROLLER_REGISTRY[controller_name]
 
+    mode = controller_cfg.get("mode", "analysis")
+    hook_mode = "profiling" if mode == "demo" else mode
+
     controller = controller_cls(
         model_name=cfg.model_name,
         store_type=controller_cfg.get("store_type"),
         store_layers=controller_cfg.get("store_layers"),
         store_phases=controller_cfg.get("store_phases"),
-        hook_mode=controller_cfg.get("mode", "analysis"),
+        hook_mode=hook_mode,
     )
 
     return controller
