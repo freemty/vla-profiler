@@ -38,7 +38,7 @@ if ! command -v uv &>/dev/null; then
 fi
 
 uv --version
-nvidia-smi --query-gpu=driver_version --format=csv,noheader | head -1
+nvidia-smi --query-gpu=driver_version --format=csv,noheader | head -1 || true
 
 # =============================================================================
 # Step 1: Create venv
