@@ -8,6 +8,7 @@ CONTROLLER_REGISTRY = Registry("controller")
 from src.controllers.qwen_vl_controller import QwenVLController  # noqa: F401
 from src.controllers.openvla_controller import OpenVLAController  # noqa: F401
 from src.controllers.act_controller import ACTController  # noqa: F401
+from src.controllers.lingbot_vla_controller import LingBotVLAController  # noqa: F401
 
 # Pi-Zero requires separate conda env (openpi) — lazy import to avoid dependency crash
 try:

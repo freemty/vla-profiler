@@ -1,0 +1,38 @@
+# LingBot-VLA-4B profiling configuration
+# AR VLA: Qwen2.5-VL-3B backbone -> action tokens (max 75-dim)
+defaults:
+  - /base
+  - _self_
+
+model_name: "${oc.env:HF_HOME,/data1/ybyang/huggingface}/robbyant/lingbot-vla-4b"
+controller_name: "lingbot_vla"
+
+controller_config:
+  mode: "profiling"
+
+tasks:
+  - "epd_profiling"
+
+num_warmup_runs: 3
+num_benchmark_runs: 10
+max_new_tokens: 128
+
+inputs:
+  - name: "single_img_manipulation"
+    messages:
+      - role: "user"
+        content:
+          - type: "image"
+            image: "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"
+          - type: "text"
+            text: "pick up the red cup"
+  - name: "multi_view_manipulation"
+    messages:
+      - role: "user"
+        content:
+          - type: "image"
+            image: "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"
+          - type: "image"
+            image: "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"
+          - type: "text"
+            text: "pick up the red cup"
