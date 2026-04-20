@@ -102,7 +102,10 @@ class LingBotVLAController(BaseVLAController):
         (used for both tokenizer and VLM architecture config).
         """
         from easydict import EasyDict as edict
-        from lerobot.common.policies.pi0.configuration_pi0 import PI0Config
+        try:
+            from lerobot.policies.pi0.configuration_pi0 import PI0Config
+        except ImportError:
+            from lerobot.common.policies.pi0.configuration_pi0 import PI0Config
         from safetensors import safe_open
 
         from lingbotvla.models.vla.pi0.modeling_lingbot_vla import LingbotVlaPolicy
@@ -295,8 +298,9 @@ class LingBotVLAController(BaseVLAController):
         os.makedirs(save_dir, exist_ok=True)
 
         save_path = os.path.join(save_dir, f"{name}_result.json")
+        serializable = {k: v for k, v in results.items() if not torch.is_tensor(v)}
         with open(save_path, "w", encoding="utf-8") as f:
-            json.dump(results, f, ensure_ascii=False, indent=2)
+            json.dump(serializable, f, ensure_ascii=False, indent=2)
 
         self.logger.info("Results saved to %s", save_path)
         return save_dir

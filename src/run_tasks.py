@@ -53,7 +53,7 @@ def _create_controller(cfg: DictConfig) -> Any:
     controller_cls = CONTROLLER_REGISTRY[controller_name]
 
     mode = controller_cfg.get("mode", "analysis")
-    hook_mode = "profiling" if mode == "demo" else mode
+    hook_mode = "none" if mode == "demo" else mode
 
     controller = controller_cls(
         model_name=cfg.model_name,
@@ -181,8 +181,6 @@ def _run_demo(controller: Any, cfg: DictConfig) -> None:
     """
     inputs_list = controller.prepare_inputs(cfg)
     logger.info("Demo mode: %d inputs", len(inputs_list))
-
-    controller.register_hooks()
 
     for idx, inp in enumerate(inputs_list):
         input_name = inp.get("name", "unnamed")
