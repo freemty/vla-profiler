@@ -49,8 +49,31 @@ model_name: "${oc.env:HF_HOME,/data1/ybyang/huggingface}/Qwen/Qwen2.5-VL-7B-Inst
 ```
 运行时设置 `export HF_HOME=/data1/ybyang/huggingface`。
 
+### LingBot-VLA-4B (2026-04-20)
+
+`robbyant/lingbot-vla-4b` — HuggingFace ConnectTimeout 确认，需走 ModelScope。
+
+```bash
+source /data1/ybyang/vlla/.venvs/lingbot-vla/bin/activate
+python -c "
+from modelscope import snapshot_download
+model_dir = snapshot_download('Robbyant/lingbot-vla-4b', cache_dir='/data1/ybyang/modelscope')
+print(f'Downloaded to: {model_dir}')
+"
+# Then symlink:
+mkdir -p /data1/ybyang/huggingface/robbyant
+ln -sf /data1/ybyang/modelscope/Robbyant/lingbot-vla-4b \
+       /data1/ybyang/huggingface/robbyant/lingbot-vla-4b
+```
+
+| 模型 | HF 路径 | 实际位置 | 大小 | 状态 |
+|------|---------|---------|------|------|
+| lingbot-vla-4b | `/data1/ybyang/huggingface/robbyant/lingbot-vla-4b` | symlink → modelscope | ~8GB | pending |
+| lingbot-vla-4b-posttrain-robotwin | — | — | ~8GB | pending |
+
 ## Notes
-- Date: 2026-04-15
+- Date: 2026-04-20 (updated)
 - Environment: xdlab23, modelscope 1.35.3
+- HuggingFace 直连确认 ConnectTimeout (2026-04-20 实测)
 - ModelScope 下载速度: ~10MB/s (校园网)
 - 总下载时间 (Qwen2.5-VL-7B): ~11 分钟
