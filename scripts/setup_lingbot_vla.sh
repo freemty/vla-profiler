@@ -92,7 +92,29 @@ uv pip install \
     ftfy \
     easydict \
     qwen-vl-utils \
-    huggingface_hub
+    huggingface_hub \
+    safetensors \
+    omegaconf \
+    hydra-core \
+    ipdb
+
+# =============================================================================
+# Step 4b: lingbotvla + lerobot (from source)
+# =============================================================================
+
+log "Installing lingbotvla (from local clone)..."
+LINGBOT_REPO="/data1/ybyang/lingbot-vla"
+if [ -d "$LINGBOT_REPO" ]; then
+    uv pip install -e "$LINGBOT_REPO"
+else
+    log "WARNING: lingbotvla repo not found at $LINGBOT_REPO"
+    log "  Clone it first: git clone git@github.com:Robbyant/lingbot-vla.git $LINGBOT_REPO"
+fi
+
+log "Installing lerobot..."
+uv pip install lerobot || {
+    log "WARNING: lerobot install failed. Install manually."
+}
 
 # =============================================================================
 # Step 5: Verify
@@ -123,13 +145,15 @@ cat << 'EOF'
 # Activate first:
 source /data1/ybyang/vlla/.venvs/lingbot-vla/bin/activate
 
-# Main model
-huggingface-cli download robbyant/lingbot-vla-4b \
-    --cache-dir /data1/ybyang/huggingface
+# Main model (downloads to ModelScope path matching profiling.yaml config)
+# Config expects: /data1/ybyang/modelscope/Robbyant/lingbot-vla-4b
+pip install modelscope
+modelscope download --model Robbyant/lingbot-vla-4b \
+    --local_dir /data1/ybyang/modelscope/Robbyant/lingbot-vla-4b
 
-# Post-train checkpoint
-huggingface-cli download robbyant/lingbot-vla-4b-posttrain-robotwin \
-    --cache-dir /data1/ybyang/huggingface
+# Alternative: HuggingFace (need to update config model_name if using this path)
+# huggingface-cli download robbyant/lingbot-vla-4b \
+#     --local-dir /data1/ybyang/modelscope/Robbyant/lingbot-vla-4b
 
 EOF
 

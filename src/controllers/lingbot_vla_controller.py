@@ -161,6 +161,11 @@ class LingBotVLAController(BaseVLAController):
 
         # Load trained weights from safetensors
         all_safetensors = sorted(glob(os.path.join(model_path, "*.safetensors")))
+        if not all_safetensors:
+            raise FileNotFoundError(
+                f"No .safetensors files found in {model_path}. "
+                "Check model_name path and ensure weights are downloaded."
+            )
         merged_weights = {}
         for fpath in all_safetensors:
             with safe_open(fpath, framework="pt", device="cpu") as f:

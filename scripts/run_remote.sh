@@ -13,4 +13,4 @@ GPU_ID=${1:-0}
 CONFIG_NAME=${2:?Usage: run_remote.sh <GPU_ID> <CONFIG_NAME>}
 
 echo "=== Launching on xdlab23: GPU ${GPU_ID}, config ${CONFIG_NAME} ==="
-ssh -p 66 "$REMOTE_HOST" "cd $REMOTE_DIR && bash scripts/launch_exp.sh $GPU_ID $CONFIG_NAME"
+ssh -p 66 "$REMOTE_HOST" "cd $REMOTE_DIR && bash scripts/launch_exp.sh '${GPU_ID}' '${CONFIG_NAME}'"
