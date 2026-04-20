@@ -41,3 +41,38 @@ inputs:
             image: "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"
           - type: "text"
             text: "Describe this image in detail."
+
+  # Multiple distinct objects — tests whether attention disperses across object regions.
+  # Uses Qwen-VL official demo3.jpeg (indoor scene, multiple objects on table).
+  - name: "multi_object"
+    messages:
+      - role: "user"
+        content:
+          - type: "image"
+            image: "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo3.jpeg"
+          - type: "text"
+            text: "List all the objects you can see in this image and describe their positions."
+
+  # Text-heavy image — tests attention on text tokens embedded in the visual stream.
+  # Uses Qwen-VL official demo2.jpeg (street scene with visible signage/text).
+  - name: "text_heavy"
+    messages:
+      - role: "user"
+        content:
+          - type: "image"
+            image: "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo2.jpeg"
+          - type: "text"
+            text: "Read all the text visible in this image and explain what this place is."
+
+  # Two-image input — tests cross-image attention mapping and token allocation per image.
+  # Combines demo.jpeg (outdoor) and demo2.jpeg (text-heavy) to maximise scene diversity.
+  - name: "two_images"
+    messages:
+      - role: "user"
+        content:
+          - type: "image"
+            image: "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"
+          - type: "image"
+            image: "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo2.jpeg"
+          - type: "text"
+            text: "Compare these two images. What are the main differences in scene, objects, and text content?"

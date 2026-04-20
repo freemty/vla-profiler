@@ -1,0 +1,49 @@
+# LingBot-VLA-4B attention analysis configuration
+# Flow VLA: Qwen2.5-VL-3B backbone (36 layers) -> Pi0 flow action head
+defaults:
+  - /base
+  - _self_
+
+model_name: "/data1/ybyang/modelscope/Robbyant/lingbot-vla-4b"
+qwen_path: "/data1/ybyang/huggingface/Qwen/Qwen2.5-VL-3B-Instruct"
+controller_name: "lingbot_vla"
+
+controller_config:
+  mode: "analysis"
+  store_layers:
+    - 0
+    - 7
+    - 14
+    - 21
+    - 28
+    - 35
+  store_type:
+    - "self_q"
+    - "self_k"
+
+tasks:
+  - "visual_text_attention"
+  - "sink_detection"
+  - "per_layer_stats"
+
+task_configs:
+  visual_text_attention:
+    top_k: 5
+    head_dim: 128
+  sink_detection:
+    sink_k: 10
+    head_dim: 128
+  per_layer_stats:
+    head_dim: 128
+
+max_new_tokens: 128
+
+inputs:
+  - name: "single_img_manipulation"
+    messages:
+      - role: "user"
+        content:
+          - type: "image"
+            image: "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"
+          - type: "text"
+            text: "pick up the red cup"
