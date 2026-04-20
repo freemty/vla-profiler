@@ -1,0 +1,39 @@
+# Fast-WAM profiling config
+# Note: Fast-WAM uses its own config system (OmegaConf/Hydra).
+# This file serves as metadata for our profiling framework.
+
+defaults:
+  - /base
+
+experiment:
+  name: "exp04a_fastwam_profiling"
+  description: "Fast-WAM E/A latency breakdown on RTX 5880 Ada"
+
+model:
+  name: "Fast-WAM"
+  type: "wam"
+  paradigm: "skip-imagination"
+  repo: "https://github.com/yuantianyuan01/FastWAM"
+  checkpoint: "checkpoints/fastwam_release/libero_uncond_2cam224.pt"
+  config: "configs/model/fastwam.yaml"
+  dataset_stats: "checkpoints/fastwam_release/libero_uncond_2cam224_dataset_stats.json"
+
+profiling:
+  gpu_id: 0
+  warmup: 5
+  iterations: 20
+  input:
+    num_cameras: 2
+    image_size: 224
+    action_dim: 14  # 7-DoF per arm x 2
+  phases:
+    - encode    # SigLIP vision encoding
+    - context   # ActionDiT backbone forward
+    - action    # Flow matching Euler solver
+
+notes: |
+  Fast-WAM inference does NOT generate future video frames.
+  It directly predicts actions from visual tokens + text conditioning.
+  This is the key difference from full WAMs (DreamZero, LingBot-VA).
+
+  Expected result: 190ms total, with context (ActionDiT) dominating.
