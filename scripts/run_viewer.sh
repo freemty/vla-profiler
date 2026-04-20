@@ -12,4 +12,4 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_DIR"
 
 echo "Starting viewer on http://localhost:${PORT}"
-python viewer/app.py
+FLASK_DEBUG=1 python viewer/app.py
