@@ -34,6 +34,7 @@ Advisor: Hao Zhang (UCSD) — vLLM / FastVideo / Chatbot Arena.
 | **exp01b** | Qwen2.5-VL-7B | Pos 2 (first visual patch) is universal attention sink (12-28x). Text->Visual Gini >0.91 (extreme sparsity). Layer 21 entropy lowest. |
 | **exp02a** | ACT (LeRobot) | Total ~3ms, 850x faster than VLM. Encode (ResNet18) 80%, Action 20%. VLA latency lower bound. |
 | **exp03a** | LingBot-VLA-4B | E=35.7ms / C=38.3ms / A=0.48ms (total 74.5ms ≈ 13Hz). 3B backbone 7x faster than 7B. Context ≈ Encode. Flow action head negligible. |
+| **pi-zero** | Pi-Zero (3.2B) | Total 211ms ≈ 4.7Hz (224x224, bf16, 10 denoise steps, random weights). open-pi-zero backend. |
 
 Hardware: RTX 5880 Ada 48GB on xdlab23, 10 benchmark runs + 3 warmup.
 
@@ -45,7 +46,7 @@ Hardware: RTX 5880 Ada 48GB on xdlab23, 10 benchmark runs + 3 warmup.
 | **OpenVLA profiling** | High | Config ready | Controller done (`openvla_controller.py`), config done (`openvla_7b/`). Blocked: HF model weights download on server |
 | **LingBot-VLA attention analysis** | High | Not started | 3B backbone attention patterns vs 7B (exp01b). Need attention config YAML |
 | **OpenVLA attention analysis** | Medium | Config ready | `openvla_7b/attention.yaml` exists, depends on profiling run first |
-| **Pi-Zero profiling** | Medium | Controller done | `pizero_controller.py` + `pizero/profiling.yaml` done. Needs separate conda env (`openpi`) on server |
+| **Pi-Zero E/C/A breakdown** | Medium | Baseline done | Total 211ms/4.7Hz (random weights, bf16). Need pretrained weights for real profiling |
 | **Gradient saliency** | Low | Not started | Extend interpretability framework beyond attention |
 | **More VLA models** | Low | Not started | InternVL, Llava, etc. — controller stubs needed |
 
@@ -87,6 +88,8 @@ src/
   viz/                  OverlayRenderer (heatmap, strip, GIF)
   utils/                PhaseTimer
   run_tasks.py          Hydra entry point
+vendor/
+  open_pi_zero/         Vendored open-pi-zero model code (allenzren/open-pi-zero)
 configs/                Hydra experiment configs (base + per-model)
 scripts/                Server deployment and experiment scripts
 survey/                 Literature survey (180+ papers, 4 documents)
@@ -94,6 +97,7 @@ exp/                    Experiment log and results
 docs/knowhow/           Infrastructure, toolchain, debug solutions, runbooks
 viewer/                 Flask server + survey dashboard
 tests/                  Unit tests
+pyproject.toml          uv project definition (torch>=2.5, transformers>=4.47)
 ```
 
 ## Getting Started
@@ -101,8 +105,12 @@ tests/                  Unit tests
 ### Prerequisites
 
 ```bash
+# Option A: uv (recommended for Pi-Zero / LingBot-VLA)
+uv sync                     # core deps (torch, transformers, hydra, etc.)
+uv sync --extra qwen        # + qwen-vl-utils
+
+# Option B: conda (legacy, for Qwen/OpenVLA/ACT)
 conda activate vit-probe
-# PyTorch 2.9+ (CUDA), transformers, hydra-core, omegaconf, einops, easydict, qwen-vl-utils
 ```
 
 ### Clone
@@ -189,7 +197,7 @@ Available configs:
 | `openvla_7b/profiling` | OpenVLA-7B | E/P/D timing |
 | `openvla_7b/attention` | OpenVLA-7B | Attention analysis |
 | `lingbot_vla_4b/profiling` | LingBot-VLA-4B | E/C/A timing (flow VLA, requires uv env) |
-| `pizero/profiling` | Pi-Zero | E/C/A timing (requires openpi env) |
+| `pizero/profiling` | Pi-Zero (3.2B) | E/C/A timing (open-pi-zero backend, vendored) |
 
 ## Adding New Models
 
@@ -206,7 +214,7 @@ Available configs:
 | SSH | `ssh xdlab23_yang` (port 66) |
 | Path | `/data1/ybyang/vlla` |
 | Conda | `vit-probe` (shared with rope2sink, Qwen/OpenVLA/ACT) |
-| uv venv | `.venvs/lingbot-vla/` (LingBot-VLA, PyTorch 2.8) |
+| uv venv | `.venv/` (Pi-Zero/LingBot-VLA, torch 2.5+cu121, Python 3.12) |
 | GPUs | 8x RTX 5880 Ada 48GB |
 | HF cache | `/data1/ybyang/huggingface` |
 | Code sync | Git bundle (GitHub blocked by firewall) |

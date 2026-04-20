@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.5.0 — 2026-04-20
+
+### 新增
+- **Pi-Zero open-pi-zero 后端迁移** — 从 OpenPI (torch 2.7+) 切换到 open-pi-zero (allenzren)，与项目其他模型共享同一 uv venv
+  - `PiZeroController` 全面重写：vendor path 校验、cuDNN probe-based 降级、random weights profiling 模式
+  - Benchmark: 211ms total ≈ 4.7Hz (224x224, bf16, 10 denoise steps, RTX 5880 Ada)
+  - Vendored code: `vendor/open_pi_zero/` (server-side, imports 从 `src.` 改为 `open_pi_zero.`)
+- **uv 项目初始化** — `pyproject.toml` (torch>=2.5, transformers>=4.47, hydra, easydict)，替代 conda 作为 Pi-Zero/LingBot-VLA 的默认环境管理
+
+### 变更
+- `configs/pizero/profiling.yaml` — 简化为 open-pi-zero 后端配置 (model_name="" = random weights)
+- README 更新：Pi-Zero 结果 (211ms/4.7Hz)、uv 安装说明、vendor/ 目录、server uv venv 信息
+
+### 构建与工具链
+- `pyproject.toml` — hatchling build backend, ruff config (line-length=100, py311)
+- uv env on xdlab23: `.venv/` with torch 2.5+cu121, Python 3.12
+
 ## v0.4.4 — 2026-04-20
 
 ### 新增

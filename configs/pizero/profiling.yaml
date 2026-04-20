@@ -1,17 +1,18 @@
 # Pi-Zero profiling configuration
+# Backend: open-pi-zero (allenzren/open-pi-zero)
 # Flow VLA: SigLIP → Gemma 2B (context, 1x) → Gemma 300M Expert (action, 10x)
-# REQUIRES: openpi conda env (torch 2.7 + transformers 4.53)
 defaults:
   - /base
   - _self_
 
-model_name: "/data1/ybyang/openpi/checkpoints/pi0_base"
+model_name: ""  # empty = random weights (sufficient for profiling latency)
 controller_name: "pizero"
 
 controller_config:
   mode: "profiling"
 
 denoise_steps: 10
+use_bf16: true
 
 tasks:
   - "epd_profiling"
@@ -22,10 +23,3 @@ num_benchmark_runs: 10
 inputs:
   - name: "single_camera_224"
     image_shape: [3, 224, 224]
-    state_dim: 32
-    instruction: "pick up the red cup"
-
-  - name: "single_camera_480"
-    image_shape: [3, 480, 640]
-    state_dim: 32
-    instruction: "pick up the red cup"

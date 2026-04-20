@@ -1,14 +1,13 @@
 """
-Pi-Zero (π₀) controller via OpenPI PyTorch backend.
+Pi-Zero (π₀) controller via open-pi-zero (allenzren/open-pi-zero).
 
-Architecture: PaliGemma (SigLIP + Gemma 2B) + Gemma 300M Action Expert
+Architecture: PaliGemma (SigLIP ViT-So400m/14 + Gemma 2B) + Gemma 300M Action Expert
 Phase model: E/C/A
-  - E: SigLIP vision encoder
-  - C: PaliGemma prefill (Gemma 2B LM, one-time, caches KV)
-  - A: Flow matching denoise (Gemma 300M Expert, 10 Euler steps)
+  - E: SigLIP vision encoder + multi_modal_projector
+  - C: Joint model prefill (VLM + proprio), caches KV
+  - A: Flow matching denoise (Action Expert, N Euler steps)
 
-Requires: separate conda env (openpi) due to torch 2.7 + transformers 4.53 pinning.
-Setup: see docs/knowhow/runbooks/setup-openpi-env.md
+Backend: vendor/open_pi_zero (vendored from github.com/allenzren/open-pi-zero)
 """
 
 from __future__ import annotations
@@ -16,10 +15,12 @@ from __future__ import annotations
 import json
 import logging
 import os
+import sys
 from typing import Any, Dict, List, Optional, Union
 
 import torch
 import torch.nn as nn
+from omegaconf import OmegaConf
 
 from src.controllers import CONTROLLER_REGISTRY
 from src.controllers.base_vla_controller import BaseVLAController
@@ -27,10 +28,27 @@ from src.controllers.base_vla_controller import BaseVLAController
 
 logger = logging.getLogger(__name__)
 
+VENDOR_PATH = os.path.join(
+    os.path.dirname(__file__), "..", "..", "vendor", "open_pi_zero"
+)
+
+
+def _ensure_vendor_on_path() -> None:
+    abs_path = os.path.abspath(VENDOR_PATH)
+    expected_module = os.path.join(abs_path, "open_pi_zero", "__init__.py")
+    if not os.path.exists(expected_module):
+        raise ImportError(
+            f"Vendored open_pi_zero not found at {abs_path}. "
+            "Run: git clone https://github.com/allenzren/open-pi-zero vendor/open_pi_zero "
+            "and rename src/ to open_pi_zero/"
+        )
+    if abs_path not in sys.path:
+        sys.path.insert(0, abs_path)
+
 
 class PiZeroController(BaseVLAController):
     """
-    Hook controller for Pi-Zero via OpenPI.
+    Hook controller for Pi-Zero via open-pi-zero.
 
     Dual-stream Transformer: PaliGemma processes image+text,
     Action Expert processes noisy actions. Expert attends to PaliGemma KV
@@ -61,106 +79,166 @@ class PiZeroController(BaseVLAController):
             hook_mode=hook_mode,
         )
 
-    # ---- Abstract implementations ----
-
     def get_vision_encoder(self) -> nn.Module:
-        """Return SigLIP ViT-So400m/14 vision tower."""
-        return self.pipeline.model.paligemma_with_expert.paligemma.model.vision_tower
+        return self.pipeline.model.vision_tower
 
     def get_action_head(self) -> nn.Module:
-        """Return Gemma 300M Action Expert."""
-        return self.pipeline.model.paligemma_with_expert.gemma_expert
+        return self.pipeline.model.joint_model.mixtures["action"]
 
     def get_denoise_steps(self) -> int:
+        if self.pipeline is not None:
+            return self.pipeline.model.num_inference_steps
         return self._denoise_steps
 
     def get_language_model(self) -> Optional[nn.Module]:
-        """Return PaliGemma Gemma 2B language model."""
-        return self.pipeline.model.paligemma_with_expert.paligemma.language_model
+        return self.pipeline.model.joint_model.mixtures["vlm"]
 
     def get_layer_blocks(self) -> List[nn.Module]:
-        """Return PaliGemma LM layers for analysis hooks."""
-        lm = self.get_language_model()
-        if lm is None:
+        vlm = self.get_language_model()
+        if vlm is None:
             return []
-        # Gemma model.layers
-        if hasattr(lm, "model") and hasattr(lm.model, "layers"):
-            return list(lm.model.layers)
-        if hasattr(lm, "layers"):
-            return list(lm.layers)
+        if hasattr(vlm, "layers"):
+            return list(vlm.layers)
         return []
 
     def has_context_phase(self) -> bool:
-        """Pi-Zero has PaliGemma context encoding."""
         return True
 
     @staticmethod
     def init_pipeline(cfg: Any) -> Any:
         """
-        Initialize Pi-Zero via OpenPI.
+        Initialize Pi-Zero via open-pi-zero vendored code.
 
-        Requires openpi package in the active conda env.
-        Model weights loaded from config path or downloaded via gcloud.
+        Loads model config from YAML, builds PiZero model,
+        optionally loads pretrained weights.
         """
         from easydict import EasyDict as edict
 
-        try:
-            from openpi.models import model as openpi_model
-            from openpi.policies.pi0 import Pi0Policy
-            from openpi.training.config import Pi0Config
-        except ImportError as e:
-            raise ImportError(
-                "OpenPI not installed. Activate the openpi conda env first. "
-                "See docs/knowhow/runbooks/setup-openpi-env.md"
-            ) from e
+        _ensure_vendor_on_path()
+
+        # cuDNN mismatch: torch cu121 vs system cuDNN 9.19 on some hosts.
+        # Only disable if cuDNN init actually fails on a probe conv.
+        _cudnn_before = torch.backends.cudnn.enabled
+        if torch.cuda.is_available():
+            try:
+                _probe = torch.randn(1, 3, 4, 4, device="cuda")
+                torch.nn.functional.conv2d(_probe, torch.randn(1, 3, 3, 3, device="cuda"))
+                del _probe
+            except RuntimeError:
+                torch.backends.cudnn.enabled = False
+                logger.warning("cuDNN probe failed, disabling cuDNN for this session")
+
+        from open_pi_zero.model.vla.pizero import PiZero
 
         model_path = getattr(cfg, "model_name", "")
         denoise_steps = getattr(cfg, "denoise_steps", 10)
-
-        # Load config and policy
-        config = Pi0Config()
-        if model_path:
-            config.checkpoint_path = model_path
-
-        policy = Pi0Policy(config)
-        policy.model.eval()
-
         device = getattr(cfg, "device", "cuda:0")
-        policy.model = policy.model.to(device)
+        use_bf16 = getattr(cfg, "use_bf16", True)
+
+        model_config_path = getattr(cfg, "model_config", None)
+        if model_config_path and os.path.exists(model_config_path):
+            model_cfg = OmegaConf.load(model_config_path)
+        else:
+            model_cfg = _default_pizero_config(model_path)
+            if not model_path:
+                logger.warning(
+                    "No model_name specified — using random weights. "
+                    "Set model_name to a checkpoint directory for real profiling."
+                )
+
+        if denoise_steps:
+            model_cfg.num_inference_steps = denoise_steps
+
+        model = PiZero(model_cfg)
+        model.tie_action_proprio_weights()
+
+        if model_path:
+            if not os.path.isdir(model_path):
+                raise ValueError(
+                    f"model_name '{model_path}' is not a local directory. "
+                    "Pi-Zero requires a local checkpoint path with .safetensors files."
+                )
+            model_cfg.pretrained_model_path = model_path
+            model.load_pretrained_weights()
+            logger.info("Loaded pretrained weights from %s", model_path)
+
+        dtype = torch.bfloat16 if use_bf16 else torch.float32
+        model = model.to(device).to(dtype)
+        model.eval()
+
+        logger.info(
+            "PiZero initialized: device=%s, dtype=%s, denoise_steps=%d",
+            device, dtype, denoise_steps,
+        )
 
         return edict(
-            model=policy.model,
-            policy=policy,
-            config=config,
+            model=model,
+            config=model_cfg,
+            dtype=dtype,
+            device=device,
         )
 
     def prepare_inputs(self, cfg: Any) -> List[Dict[str, Any]]:
         """
-        Prepare inputs for Pi-Zero inference.
+        Prepare synthetic inputs for Pi-Zero profiling.
 
-        Pi-Zero expects: image(s), language instruction, robot state.
-        For profiling, we can use synthetic data if no real data provided.
+        Pi-Zero expects: pixel_values, input_ids, attention_mask, proprios.
+        For profiling we use random tensors matching expected shapes.
         """
         from src.utils import to_plain
 
         raw_inputs = getattr(cfg, "inputs", [])
         inputs = []
+        device = self.pipeline.device
+        dtype = self.pipeline.dtype
+        model_cfg = self.pipeline.config
+
+        max_image_text_tokens = model_cfg.max_image_text_tokens
+        num_image_tokens = model_cfg.vision.config.num_image_tokens
+        cond_steps = model_cfg.cond_steps
+        action_dim = model_cfg.action_dim
+        proprio_dim = model_cfg.proprio_dim
+
+        image_size = model_cfg.vision.config.image_size
 
         for entry in raw_inputs:
             entry = to_plain(entry)
-
             name = entry.get("name", "unnamed")
             image_shape = entry.get("image_shape", [3, 224, 224])
-            state_dim = entry.get("state_dim", 32)
-            device = getattr(cfg, "device", "cuda:0")
 
-            observation = {
-                "image": torch.randn(1, *image_shape, device=device, dtype=torch.float32),
-                "state": torch.randn(1, state_dim, device=device, dtype=torch.float32),
-                "instruction": entry.get("instruction", "pick up the object"),
-            }
+            bsz = 1
+            # SigLIP expects fixed image_size; resize to match vision tower
+            pixel_values = torch.randn(
+                bsz, image_shape[0], image_size, image_size,
+                device=device, dtype=dtype,
+            )
 
-            inputs = [*inputs, {"name": name, "observation": observation}]
+            text_len = max_image_text_tokens - num_image_tokens
+            input_ids = torch.full(
+                (bsz, max_image_text_tokens),
+                model_cfg.pad_token_id,
+                dtype=torch.long,
+                device=device,
+            )
+            input_ids[:, :num_image_tokens] = model_cfg.image_token_index
+            input_ids[:, num_image_tokens:num_image_tokens + 5] = 2
+
+            attention_mask = torch.zeros(
+                bsz, max_image_text_tokens, dtype=torch.long, device=device
+            )
+            attention_mask[:, :num_image_tokens + 5] = 1
+
+            proprios = torch.randn(
+                bsz, cond_steps, proprio_dim, device=device, dtype=dtype
+            )
+
+            inputs = [*inputs, {
+                "name": name,
+                "pixel_values": pixel_values,
+                "input_ids": input_ids,
+                "attention_mask": attention_mask,
+                "proprios": proprios,
+            }]
 
         return inputs
 
@@ -169,26 +247,44 @@ class PiZeroController(BaseVLAController):
         self, pipeline: Any, cfg: Any, inputs: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        Run Pi-Zero inference: prefix forward + N denoise steps.
+        Run Pi-Zero inference: E (SigLIP) + C (VLM prefill) + A (N denoise steps).
 
-        Uses policy.infer() or policy.sample_actions() depending on API.
+        Uses model.infer_action() which:
+        1. Runs SigLIP + projector (E)
+        2. Forwards VLM + proprio through joint_model, caches KV (C)
+        3. Runs N Euler denoise steps through action expert (A)
         """
-        policy = pipeline.policy
-        observation = inputs.get("observation", {})
+        model = pipeline.model
+        dtype = pipeline.dtype
+        device = pipeline.device
 
-        # Call the policy inference
-        try:
-            # OpenPI API: policy.infer(observation)
-            result = policy.infer(observation)
-            actions = result.get("actions", result)
-        except AttributeError:
-            # Fallback: direct model call
-            actions = pipeline.model.sample_actions(observation)
+        pixel_values = inputs["pixel_values"]
+        input_ids = inputs["input_ids"]
+        attention_mask = inputs["attention_mask"]
+        proprios = inputs["proprios"]
+
+        causal_mask, vlm_pos_ids, proprio_pos_ids, action_pos_ids = (
+            model.build_causal_mask_and_position_ids(attention_mask, dtype=dtype)
+        )
+        image_text_proprio_mask, action_mask = (
+            model.split_full_mask_into_submasks(causal_mask)
+        )
+
+        actions = model.infer_action(
+            input_ids=input_ids,
+            pixel_values=pixel_values,
+            image_text_proprio_mask=image_text_proprio_mask.to(device),
+            action_mask=action_mask.to(device),
+            vlm_position_ids=vlm_pos_ids.to(device),
+            proprio_position_ids=proprio_pos_ids.to(device),
+            action_position_ids=action_pos_ids.to(device),
+            proprios=proprios,
+        )
 
         return {
-            "actions": actions.cpu() if torch.is_tensor(actions) else actions,
-            "action_shape": list(actions.shape) if torch.is_tensor(actions) else [],
-            "denoise_steps": self._denoise_steps,
+            "actions": actions,
+            "action_shape": list(actions.shape),
+            "denoise_steps": pipeline.model.num_inference_steps,
         }
 
     def save_results(
@@ -197,9 +293,10 @@ class PiZeroController(BaseVLAController):
         results: Dict[str, Any],
         cfg: Any,
     ) -> str:
-        """Save inference results."""
         name = inputs.get("name", "unnamed")
-        base_output = getattr(cfg, "output_path", getattr(cfg, "base_output_path", "./output"))
+        base_output = getattr(
+            cfg, "output_path", getattr(cfg, "base_output_path", "./output")
+        )
         save_dir = os.path.join(base_output, name)
         os.makedirs(save_dir, exist_ok=True)
 
@@ -213,6 +310,113 @@ class PiZeroController(BaseVLAController):
 
         self.logger.info("Results saved to %s", save_path)
         return save_dir
+
+
+def _default_pizero_config(pretrained_model_path: str = "") -> Any:
+    """Default OmegaConf config matching open-pi-zero bridge.yaml defaults."""
+    mixture = {
+        "vlm": {
+            "hidden_size": 2048,
+            "intermediate_size": 16384,
+            "use_final_norm": False,
+            "cache": True,
+            "use_quantize": False,
+            "use_lora": False,
+            "adaptive_mode": None,
+            "rope_theta": 10000.0,
+        },
+        "proprio": {
+            "hidden_size": 1024,
+            "intermediate_size": 4096,
+            "use_final_norm": True,
+            "cache": True,
+            "use_quantize": False,
+            "use_lora": False,
+            "adaptive_mode": None,
+            "rope_theta": 100.0,
+        },
+        "action": {
+            "hidden_size": 1024,
+            "intermediate_size": 4096,
+            "use_final_norm": True,
+            "cache": False,
+            "use_quantize": False,
+            "use_lora": False,
+            "adaptive_mode": None,
+            "rope_theta": 100.0,
+        },
+    }
+
+    cfg = OmegaConf.create({
+        "pretrained_model_path": pretrained_model_path,
+        "vocab_size": 257216,
+        "pad_token_id": 0,
+        "image_token_index": 257152,
+        "max_image_text_tokens": 276,
+        "max_seq_len": 276,
+        "cond_steps": 1,
+        "horizon_steps": 4,
+        "action_dim": 7,
+        "proprio_dim": 7,
+        "num_inference_steps": 10,
+        "final_action_clip_value": 1.0,
+        "flow_sig_min": 0.001,
+        "use_lm_head": False,
+        "action_expert_adaptive_mode": None,
+        "time_hidden_size": 256,
+        "time_max_period": 100.0,
+        "mixture": mixture,
+        "vision": {
+            "_target_": "open_pi_zero.model.paligemma.siglip.SiglipVisionModel",
+            "config": {
+                "hidden_size": 1152,
+                "intermediate_size": 4304,
+                "num_hidden_layers": 27,
+                "num_attention_heads": 16,
+                "num_channels": 3,
+                "image_size": 224,
+                "patch_size": 14,
+                "layer_norm_eps": 1e-6,
+                "attention_dropout": 0.0,
+                "num_image_tokens": 256,
+                "lora": {"r": 32, "dropout": 0.0},
+            },
+            "use_quantize": False,
+            "use_lora": False,
+        },
+        "quantize": False,
+        "lora": False,
+        "vision_projector": {
+            "_target_": "open_pi_zero.model.paligemma.siglip.PaliGemmaMultiModalProjector",
+            "config": {
+                "vision_config": {
+                    "hidden_size": 1152,
+                    "projection_dim": 2048,
+                },
+                "lora": {"r": 32, "dropout": 0.0},
+            },
+            "use_quantize": False,
+            "use_lora": False,
+        },
+        "joint": {
+            "_target_": "open_pi_zero.model.vla.joint_model.JointModel",
+            "config": {
+                "action_expert_adaptive_mode": None,
+                "time_hidden_size": 256,
+                "mixture": mixture,
+                "lora": {"r": 32, "dropout": 0.0},
+                "num_hidden_layers": 18,
+                "num_attention_heads": 8,
+                "num_key_value_heads": 1,
+                "head_dim": 256,
+                "rms_norm_eps": 1e-6,
+                "attention_bias": False,
+                "attention_dropout": 0.0,
+                "pad_token_id": 0,
+            },
+        },
+    })
+    return cfg
 
 
 CONTROLLER_REGISTRY.register("pizero", PiZeroController)
