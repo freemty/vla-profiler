@@ -77,10 +77,16 @@ class LingBotVLAController(BaseVLMController):
 
         model_path = cfg.model_name
 
+        try:
+            import flash_attn  # noqa: F401
+            attn_impl = "flash_attention_2"
+        except ImportError:
+            attn_impl = "sdpa"
+
         model = AutoModelForCausalLM.from_pretrained(
             model_path,
             torch_dtype=torch.bfloat16,
-            attn_implementation="flash_attention_2",
+            attn_implementation=attn_impl,
             trust_remote_code=True,
             low_cpu_mem_usage=True,
             device_map="auto",
