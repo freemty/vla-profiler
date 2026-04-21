@@ -227,8 +227,12 @@ def main():
 
     controller.reset_state()
     controller.model_inference(controller.pipeline, cfg, inp)
+    controller.postprocess()
 
     os.makedirs(args.output, exist_ok=True)
+
+    logger.info("step_store keys: %s", list(controller.step_store.keys()))
+    logger.info("global_store keys: %s", list(controller.global_store.keys()))
 
     qk_pairs = []
     for key in controller.global_store:
