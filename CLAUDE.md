@@ -58,6 +58,7 @@ slides/                # 演示文稿
 - **SGLang profiling 深度调研**: `notes/sglang-profiling-deep-survey.md` — SGLang 的 torch.profiler 集成、Prometheus metrics、benchmark 套件、prefill/decode 分离 profiling、内存追踪的实现级分析
 - **ML Inference Profiling Systems 横向调研**: `survey/papers/profiling-systems-survey.md` — FastVideo/TensorRT-LLM/DeepSpeed/Triton/vLLM/SGLang/llama.cpp/MLC LLM 8大系统的 profiling 实现对比，timing 机制、phase 定义、warmup 策略、统计方法、memory tracking 全面分析
 - **ML Profiling 综合调研报告**: `survey/papers/ml-profiling-systems-comprehensive-survey.md` — 4 agent 并行调研的综合报告，含 PhaseTimer 代码审查、CUDA timing 最佳实践、三层 profiling 架构建议
+- **Documentation index**: `docs/README.md` — 全项目文档结构索引 (survey, experiments, knowhow, specs, notes, viewer)
 
 ## Survey Dimensions
 
@@ -162,13 +163,15 @@ Pipeline state tracked in .pipeline-state.json.
 
 ## Current state
 
-- **current_exp:** exp03a (LingBot-VLA-4B profiling — done)
+- **current_exp:** exp04b (LingBot-VA full WAM profiling — done)
 - **stage:** experiment
-- **skill_updated_at:** 2026-04-20
+- **skill_updated_at:** 2026-04-21
 - **key findings:**
   - **exp01a (profiling):** text P=20ms/D=18ms; single_img E=253ms/P=156ms/D=18.6ms; multi_img E=541ms/P=332ms/D=21ms. Encode scales linearly.
   - **exp01b (attention):** Pos 2 (first visual patch) is universal attention sink (12K-18K received, 12-28x vs #2). Text→Visual Gini >0.91 (extreme sparsity → token pruning viable). Layer 21 entropy lowest (3.44).
   - **exp02a (ACT):** Total ~3ms (850x faster than VLM). Encode 80%, action 20%. VLA latency lower bound.
   - **exp03a (LingBot-VLA-4B):** single_img E=35.7ms/C=38.3ms/A=0.48ms (total 74.5ms). 3B backbone 比 7B 快 7x。Context ≈ Encode。Flow action head 0.48ms ≈ ACT。Total 74.5ms ≈ 13Hz。
-- **latest (v0.4.3):** LingBotVLAController, research presentation viewer.
-- **next:** Run attention overlay on server. OpenVLA (need HF download). Pi-Zero controller. Gradient saliency. LingBot-VLA attention analysis.
+  - **exp04a (Fast-WAM):** @10step: E=7.6ms/C=36.7ms/A=362ms (total 407ms, 2.5Hz). Action dominates 89%. Per-step ~32ms (30L MoT cross-attn).
+  - **exp04b (LingBot-VA):** E=75.5ms/V=592.5ms/A=1423ms (total 2091ms, 0.5Hz). Full WAM 5x slower than skip-imagination. Action 68%.
+- **latest (v0.5.1):** WAM profiling (Fast-WAM + LingBot-VA), LingBotVAController.
+- **next:** Attention overlay on server. OpenVLA (need HF download). LingBot-VLA attention analysis. Imagination value quantification. WAM step-count sensitivity.
