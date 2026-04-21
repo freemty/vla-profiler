@@ -1,0 +1,42 @@
+{
+  "model": "LingBot-VA",
+  "paradigm": "full WAM (video imagination + action)",
+  "mode": "random",
+  "device": "cuda:1",
+  "gpu_name": "NVIDIA RTX 5880 Ada Generation",
+  "dtype": "torch.bfloat16",
+  "warmup": 3,
+  "iterations": 10,
+  "video_steps": 20,
+  "action_steps": 50,
+  "resolution": "128x128x2cam",
+  "frame_chunk_size": 4,
+  "action_dim": 30,
+  "transformer_params_M": 5089.0,
+  "phases": {
+    "encode": {
+      "mean_ms": 75.5,
+      "std_ms": 16.04,
+      "min_ms": 58.61,
+      "max_ms": 92.07,
+      "n": 10
+    },
+    "video_denoise": {
+      "mean_ms": 592.5,
+      "std_ms": 84.76,
+      "min_ms": 506.82,
+      "max_ms": 683.22,
+      "n": 10
+    },
+    "action_denoise": {
+      "mean_ms": 1423.09,
+      "std_ms": 232.47,
+      "min_ms": 1195.28,
+      "max_ms": 1700.17,
+      "n": 10
+    }
+  },
+  "total_e2e_ms": 2091.24,
+  "total_e2e_std_ms": 330.47,
+  "hz": 0.5
+}

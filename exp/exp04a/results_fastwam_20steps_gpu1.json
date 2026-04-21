@@ -1,0 +1,39 @@
+{
+  "model": "Fast-WAM",
+  "paradigm": "skip-imagination WAM",
+  "mode": "random",
+  "device": "cuda:1",
+  "gpu_name": "NVIDIA RTX 5880 Ada Generation",
+  "dtype": "torch.bfloat16",
+  "warmup": 5,
+  "iterations": 20,
+  "num_inference_steps": 20,
+  "action_horizon": 10,
+  "input_shape": "1x3x224x448",
+  "phases": {
+    "encode": {
+      "mean_ms": 7.01,
+      "std_ms": 0.1,
+      "min_ms": 6.89,
+      "max_ms": 7.3,
+      "n": 20
+    },
+    "context": {
+      "mean_ms": 32.35,
+      "std_ms": 0.71,
+      "min_ms": 31.94,
+      "max_ms": 35.4,
+      "n": 20
+    },
+    "action": {
+      "mean_ms": 637.85,
+      "std_ms": 2.2,
+      "min_ms": 633.89,
+      "max_ms": 641.57,
+      "n": 20
+    }
+  },
+  "total_e2e_ms": 677.33,
+  "total_e2e_std_ms": 2.22,
+  "hz": 1.5
+}
