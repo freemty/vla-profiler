@@ -42,30 +42,27 @@ inputs:
           - type: "text"
             text: "Describe this image in detail."
 
-  # Multiple distinct objects — tests whether attention disperses across object regions.
-  # Uses Qwen-VL official demo3.jpeg (indoor scene, multiple objects on table).
+  # Smaller scene — different composition from the main demo
   - name: "multi_object"
     messages:
       - role: "user"
         content:
           - type: "image"
-            image: "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo3.jpeg"
+            image: "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen2-VL/demo_small.jpg"
           - type: "text"
             text: "List all the objects you can see in this image and describe their positions."
 
-  # Text-heavy image — tests attention on text tokens embedded in the visual stream.
-  # Uses Qwen-VL official demo2.jpeg (street scene with visible signage/text).
+  # Text-heavy image — tests attention on text tokens embedded in the visual stream
   - name: "text_heavy"
     messages:
       - role: "user"
         content:
           - type: "image"
-            image: "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo2.jpeg"
+            image: "/data1/ybyang/vlla/test_images/text_signs.jpg"
           - type: "text"
-            text: "Read all the text visible in this image and explain what this place is."
+            text: "Read all the text visible in this image."
 
-  # Two-image input — tests cross-image attention mapping and token allocation per image.
-  # Combines demo.jpeg (outdoor) and demo2.jpeg (text-heavy) to maximise scene diversity.
+  # Two-image input — tests cross-image attention mapping and token allocation
   - name: "two_images"
     messages:
       - role: "user"
@@ -73,6 +70,6 @@ inputs:
           - type: "image"
             image: "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg"
           - type: "image"
-            image: "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo2.jpeg"
+            image: "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen2-VL/demo_small.jpg"
           - type: "text"
-            text: "Compare these two images. What are the main differences in scene, objects, and text content?"
+            text: "Compare these two images. What are the main differences?"
