@@ -2,16 +2,16 @@
 name: project-skill
 description: "Use when advising on project architecture, experiment history, codebase navigation, or research findings."
 user-invocable: false
-version: v3
-note: "v3 — exp03a LingBot-VLA-4B done, BaseVLAController inheritance fix, Codex review fixes, research presentation viewer, uv env migration."
-updated_at: "2026-04-20"
+version: v4
+note: "v4 — exp04a Fast-WAM ActionDiT profiling done, exp04b LingBot-VA full WAM profiling done, LingBotVAController added."
+updated_at: "2026-04-21"
 ---
 
 # vlla — Project Knowledge
 
 > VLM/VLA Real-Time Systems Survey & Research
 > UCSD PhD 方向调研项目 | 导师: 张昊 (Hao Zhang) — vLLM/FastVideo/Chatbot Arena 作者
-> v3 — exp03a LingBot-VLA-4B, Codex review fixes, presentation viewer, uv env.
+> v4 — exp04a/04b WAM profiling complete, LingBotVAController added.
 
 ---
 
@@ -25,16 +25,16 @@ updated_at: "2026-04-20"
 张昊的技术路线: Parameter Server -> Alpa -> vLLM -> FastVideo -> **VLM/VLA real-time systems**。每一步都是 ML Systems 前沿的下一个自然问题。VLM/VLA serving 正处于 "pre-vLLM" 阶段，存在巨大的系统研究空间。
 
 **当前阶段:** Experiment (Phase 1 — VLM/VLA Profiling + Interpretability)
-- `current_exp`: exp03a (LingBot-VLA-4B profiling — **done**)
+- `current_exp`: exp04b (LingBot-VA full WAM E/V/A profiling — **done**)
 - `stage`: experiment
-- `version`: v0.4.3
+- `version`: v0.4.4
 - Survey 产出: 4 份核心文档，覆盖 180+ 篇论文/项目 (2024-2026)
 - Framework 产出: VLM profiling + attention analysis + attention overlay 可视化 + VLA profiling 框架 (`src/`)
 - 新增模块: Interpretability Mixin 体系 (`src/interpretability/`)、OverlayRenderer (`src/viz/`)、Timing Cross-Validation (`src/tasks/validation_task.py`)
 - 共享核心: `model-probe-core` git submodule (`src/core/`)，同时被 rope2sink 消费
 - Presentation viewer: `viewer/` — Flask + 3 HTML pages (hub, presentation, experiments) for advisor meeting
-- 服务器: xdlab23 (8x RTX 5880 Ada 48GB)，4 个实验完成
-- **完成的实验:** exp01a (E/P/D profiling), exp01b (attention analysis), exp02a (ACT profiling), exp03a (LingBot-VLA-4B profiling)
+- 服务器: xdlab23 (8x RTX 5880 Ada 48GB)，6 个实验完成
+- **完成的实验:** exp01a (E/P/D profiling), exp01b (attention analysis), exp02a (ACT profiling), exp03a (LingBot-VLA-4B profiling), exp04a (Fast-WAM ActionDiT profiling), exp04b (LingBot-VA full WAM profiling)
 - **下一步:** Attention overlay 在服务器运行、OpenVLA profiling (需 HF 下载)、Pi-Zero controller、Gradient saliency、LingBot-VLA attention analysis
 
 **核心数据汇总:**
@@ -45,6 +45,8 @@ updated_at: "2026-04-20"
 | exp01b | Qwen2.5-VL-7B | Pos 2 = universal sink (12-28x), Gini >0.91 |
 | exp02a | ACT (LeRobot) | Total ~3ms, 850x faster than VLM |
 | exp03a | LingBot-VLA-4B | E=35.7ms/C=38.3ms/A=0.48ms, total 74.5ms ≈ 13Hz |
+| exp04a | Fast-WAM (ActionDiT, 6.7B) | @10step: E=7.6ms/C=36.7ms/A=362ms, total 407ms, 2.5Hz |
+| exp04b | LingBot-VA (full WAM, 5B DiT) | E=75.5ms/V=592.5ms/A=1423.1ms, total 2091ms, 0.5Hz |
 
 ---
 
@@ -74,6 +76,7 @@ vlla/
 |   |   |-- openvla_controller.py   # OpenVLAController: DINOv2+SigLIP→Llama-2
 |   |   |-- act_controller.py       # ACTController: ResNet18→CVAE→action chunk
 |   |   |-- lingbot_vla_controller.py  # LingBotVLAController: Qwen2.5-VL-3B + flow action head
+|   |   |-- lingbot_va_controller.py   # LingBotVAController: full WAM, E/V/A phases (VAE+5B DiT video+action)
 |   |   |-- pizero_controller.py    # PiZeroController: Pi-Zero (lazy import, separate env)
 |   |-- interpretability/           # Attention overlay system
 |   |   |-- base_mixin.py     # TokenSpatialMap, TokenType, BaseInterpretabilityMixin
@@ -115,6 +118,8 @@ vlla/
 |   |-- run_viewer.sh             # Flask viewer startup
 |   |-- run_tests.sh              # pytest test suite
 |   |-- setup_lingbot_vla.sh      # LingBot-VLA uv env + model download
+|   |-- profile_lingbot_va.py     # LingBot-VA standalone profiling script (E/V/A)
+|   |-- profile_fastwam.py        # Fast-WAM standalone profiling script (E/C/A)
 |-- viewer/                # Research presentation viewer (Flask)
 |   |-- app.py                    # Flask app + static file catch-all (api/ guard)
 |   |-- static/
@@ -162,6 +167,7 @@ probe_core.BaseController          # Model-agnostic: hook lifecycle, StoreMixin,
   +-> BaseVLAController            # VLA-specific: E/C/A phases, _register_capture_hook (独立定义)
         +-> ACTController          # ACT (LeRobot): ResNet18→CVAE→action chunk, single-forward
         +-> LingBotVLAController   # LingBot-VLA-4B: Qwen2.5-VL-3B + 10-step flow action head
+        +-> LingBotVAController    # LingBot-VA (full WAM): VAE + 5B WanDiT, E/V/A phases
         +-> PiZeroController       # Pi-Zero: VLM backbone + flow action head (lazy import, separate env)
 ```
 
@@ -170,6 +176,9 @@ probe_core.BaseController          # Model-agnostic: hook lifecycle, StoreMixin,
 - **VLA (BaseVLAController):** E/C/A — Encode / Context / Action (C optional, A may iterate)
   - `has_context_phase()`: True for VLA-with-VLM-backbone (LingBot-VLA, Pi-Zero), False for pure VA (ACT)
   - `get_denoise_steps()`: 1 for single-forward (ACT), N for flow/diffusion models (LingBot-VLA: 10)
+- **WAM (LingBotVAController overrides):** E/V/A — Encode / Video-denoise / Action-denoise
+  - Video denoising is an explicit phase (V), separate from action denoising (A)
+  - Both V and A use the same shared 5B DiT; phases differ only in token routing (action_mode flag)
 
 **Interpretability Mixin Architecture:**
 ```
@@ -188,6 +197,7 @@ BaseInterpretabilityMixin  # ABC: get_token_spatial_mappings, classify_token_typ
 - `_register_capture_hook` 在 BaseVLMController 和 BaseVLAController 中各自独立定义 (两条继承链不共享此方法)
 - PiZeroController 使用 lazy import + try/except (requires openpi conda env，避免依赖 crash)
 - LingBot-VLA 使用 uv venv 而非 conda (xdlab23 非交互 SSH 下 conda 不可用)
+- WAM profiling (exp04a/04b) 使用 standalone scripts 而非 Hydra controller，因为这些模型有自包含推理 pipeline
 
 ### 2.3 Server Deployment
 
@@ -199,9 +209,10 @@ Local (Mac) --git bundle+scp--> xdlab23 (8x RTX 5880 Ada)
 SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot-vla/` | HF: `/data1/ybyang/huggingface`
 
 **Environment strategy:**
-- `vit-probe` (conda) — shared with rope2sink, for Qwen2.5-VL / OpenVLA / ACT
+- `vit-probe` (conda) — shared with rope2sink, for Qwen2.5-VL / OpenVLA / ACT / LingBot-VA
 - `.venvs/lingbot-vla/` (uv) — LingBot-VLA specific (lerobot compat, PyTorch 2.8)
 - `openpi` (conda) — Pi-Zero (separate, requires openpi package)
+- `fastwam` (conda) — Fast-WAM (Python 3.10, PyTorch 2.7.1+cu128)
 
 ---
 
@@ -242,13 +253,46 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 - **Flow action head 极快 (0.48ms):** 10-step denoise loop 的 action_out_proj 累计仅 0.48ms，与 ACT (0.5ms) comparable
 - **Total 74.5ms ≈ 13Hz:** 接近机器人 10Hz 实时需求，仍有 ~25% gap
 
-### 3.3 活跃假设
+**From exp04a (first-party) — Fast-WAM ActionDiT profiling:**
+- **Action phase dominates at 89-94%:** @10step A=362ms of 407ms total — A-dominated
+- **Per-step cost ~32ms/step:** 每个 Euler step 运行完整 30-layer ActionDiT 通过 MoT cross-attention
+- **Paper's 190ms 是 A100/H100 + 5 steps:** RTX 5880 + 10 steps = 407ms
+- **Encode 极轻 (7ms):** 单帧 VAE encode
+- **Architecture: 6.7B params:** "skip-imagination" 仍加载完整 5B video expert + 350M ActionDiT
+
+**From exp04b (first-party) — LingBot-VA full WAM profiling:**
+- **Full WAM 5x slower than skip-imagination WAM:** 2091ms vs 407ms
+- **Action still dominates at 68%:** 与 Fast-WAM 一致
+- **Per-step cost V≈A (~29ms/step):** 共享同一个 5B DiT
+- **VAE encode 75.5ms vs Fast-WAM 7.6ms (10x):** streaming VAE with z_dim=48 vs lightweight path
+- **0.5 Hz makes real-time impossible:** 26x slower than VLA (13Hz), 660x slower than ACT
+
+### 3.3 WAM Profiling 综合洞察 (exp04a + exp04b)
+
+**完整 latency spectrum (RTX 5880 Ada, bf16):**
+
+| Model | Paradigm | Total | E | V | A | Hz | Bottleneck |
+|-------|----------|-------|---|---|---|-----|-----------|
+| ACT | VA (CVAE) | 3ms | 2.5ms | — | 0.5ms | 330 | E (80%) |
+| LingBot-VLA | Flow VLA | 74.5ms | 35.7ms | — | 38.8ms | 13 | E≈C (50/50) |
+| Fast-WAM @10step | WAM (skip) | 407ms | 7.6ms | — | 362ms | 2.5 | A (89%) |
+| LingBot-VA (full) | WAM (full) | 2091ms | 75.5ms | 592ms | 1423ms | 0.5 | A (68%) |
+
+**关键规律:**
+1. **Action head scaling 决定 WAM 瓶颈:** 小 action head (0.48ms) vs 大 MoT action (362ms) — 架构决定
+2. **Video generation 代价:** Full WAM vs skip 的 5x 差距几乎全来自 video denoise (592ms)
+3. **Per-step cost 在同一 DiT 内高度一致:** V/A ~29ms/step — step count 是线性的
+4. **"Skip-imagination" 是工程妥协:** 仍加载完整 5B video expert，省 compute 不省 memory
+
+### 3.4 活跃假设
 
 - [x] ~~Vision encoding 占 >50% prefill 延迟~~ → **exp01a 已验证 (58%)**
 - [x] ~~Attention sink 存在于 VLM~~ → **exp01b 已验证 (Pos 2 universal sink)**
 - [x] ~~Text→Visual attention sparse, supports pruning~~ → **exp01b Gini >0.91**
 - [x] ~~Flow VLA (real model) 延迟在 50-100ms 范围~~ → **exp03a 验证 74.5ms**
 - [x] ~~Flow action head overhead 可忽略~~ → **exp03a 验证 0.48ms (0.6% of total)**
+- [x] ~~WAM latency dominated by action diffusion~~ → **exp04a/04b 验证 (68-94%)**
+- [x] ~~Full WAM significantly slower than skip-imagination~~ → **exp04b 验证 5x slower**
 - [ ] EPD 三阶段分离实际收益 (disaggregation ROI)
 - [ ] VLM speculative decoding 中 visual token 对 acceptance rate 的影响
 - [ ] Per-layer attention entropy 分布的实际意义 (Layer 21 最低 → 是否是最佳 pruning 切入点?)
@@ -256,6 +300,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 - [ ] Pi-Zero flow VLA profiling: denoise step count vs latency trade-off
 - [ ] LingBot-VLA attention analysis: 3B backbone 的 attention pattern 是否与 7B 一致?
 - [ ] 3B→7B backbone scaling law: 是否线性? (exp01a vs exp03a 初步暗示 ~7x for 2.3x params)
+- [ ] Imagination value quantification: Full WAM 的 592ms video generation 带来多少 task success rate 提升?
 
 ---
 
@@ -270,10 +315,27 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | 泛化能力 | 低 | 高 | 极高 | 中 |
 
 **First-party baselines (from experiments):**
-- ACT (single-forward VA): ~3ms total → 落入 VA 1-5ms 范围 ✓
-- LingBot-VLA-4B (flow VLA, 3B backbone): 74.5ms total ≈ 13Hz → 在 VLA 2-10Hz 范围的高端
+- ACT (single-forward VA): ~3ms total → VA 1-5ms 范围 ✓
+- LingBot-VLA-4B (flow VLA, 3B backbone): 74.5ms total ≈ 13Hz → VLA 高端
+- Fast-WAM @10step (skip-imagination, 6.7B): 407ms → 2.5Hz
+- LingBot-VA (full WAM, 5B DiT): 2091ms → 0.5Hz
 
-### 4.2 Pareto 前沿
+### 4.2 WAM Benchmark Baselines (RTX 5880 Ada, bf16, random-init)
+
+| Config | E | V (video) | A (action) | Total | Hz |
+|--------|---|-----------|------------|-------|-----|
+| Fast-WAM @5step | 7.1ms | — | 164ms | 205ms | 4.9 |
+| Fast-WAM @10step | 7.6ms | — | 362ms | 407ms | 2.5 |
+| Fast-WAM @20step | 7.0ms | — | 638ms | 677ms | 1.5 |
+| LingBot-VA @20V+50A | 75.5ms | 592.5ms | 1423ms | 2091ms | 0.5 |
+
+**Per-step cost reference:**
+- Fast-WAM ActionDiT (30L, 1024 hidden, MoT cross-attn): ~32ms/step
+- LingBot-VA WanDiT video (30L, 3072 hidden): ~29.6ms/step
+- LingBot-VA WanDiT action (30L, 3072 hidden): ~28.5ms/step
+- LingBot-VLA flow action head (small head, 10 steps): ~0.048ms/step
+
+### 4.3 Pareto 前沿
 
 | 方法 | 延迟 | 意义 |
 |------|------|------|
@@ -281,11 +343,13 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | **ACT (our measurement)** | **~3ms** | **VA baseline (first-party)** |
 | Mean-Flow VLA / FASTER | ~50ms | VLA 单步化 |
 | **LingBot-VLA-4B (our measurement)** | **74.5ms** | **Flow VLA baseline (first-party, 3B)** |
-| DreamZero | ~130ms, 7Hz | WAM zero-shot |
+| DreamZero | ~130ms, 7Hz | WAM zero-shot (A100) |
+| **Fast-WAM @10step (our measurement)** | **407ms** | **Skip-imagination WAM (first-party)** |
+| **LingBot-VA (our measurement)** | **2091ms** | **Full WAM baseline (first-party)** |
 | SAGE | 3.36x speedup | VLM SD 标杆 |
 | ID-Selection | 97.2% token reduction | Token pruning 上界 |
 
-### 4.3 Rejected Alternatives & Rationale
+### 4.4 Rejected Alternatives & Rationale
 
 | Decision | Alternative Considered | Why Rejected |
 |----------|----------------------|-------------|
@@ -297,6 +361,8 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | uv venv (LingBot-VLA) | conda (shared vit-probe) | conda not available in non-interactive SSH; uv is PATH-independent |
 | Separate _register_capture_hook per base | Shared mixin | Two inheritance chains (VLM/VLA) need independent hook definitions; mixin adds complexity |
 | eager attention (LingBot-VLA) | flash-attn / flex_attention | flex_attention dtype bug in PyTorch 2.8; flash-attn "not implemented" in lingbotvla |
+| Standalone scripts (WAM profiling) | Hydra controller integration | Fast-WAM and LingBot-VA have self-contained pipelines; controller adds complexity without benefit for one-off profiling |
+| Random init for WAM timing | Real checkpoint weights | Timing depends on compute graph not weight values; saves 12GB+ download |
 
 ---
 
@@ -308,6 +374,8 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | exp01b | 2026-04-15 | **done** | Sink exists (literature) | Pos 2 sink 12-28x | Universal sink at first visual patch; Gini >0.91 supports pruning | Confirmed (existence), Surprised (Gini >0.91 extreme) |
 | exp02a | 2026-04-15 | **done** | VA ~1-5ms (literature) | ~3ms total | ACT 850x faster than VLM; ResNet18 encode 80% of total | Accurate (range), Off (resolution insensitivity) |
 | exp03a | 2026-04-20 | **done** | 250-350ms (7B→3B ~2x scaling) | 74.5ms total | 3B backbone 7x faster than 7B; Context≈Encode; flow action 0.48ms; ≈13Hz | Way Off — actual 3.4-4.7x better than predicted |
+| exp04a | 2026-04-21 | **done** | E=15-25ms/C=100-130ms/A=30-50ms | @10step: E=7.6ms/C=36.7ms/A=362ms, total 407ms | Action dominates 89%; per-step 32ms; paper's 190ms is A100+5step | Way Off on A (predicted 30-50ms, got 362ms) |
+| exp04b | 2026-04-21 | **done** | E=10-15ms/V=600-900ms/A=500-750ms | E=75.5ms/V=592.5ms/A=1423ms, total 2091ms | Full WAM 5x skip-imagination; Action 68%; V≈A per-step (~29ms); 0.5Hz | V nailed, E 5-7x under, A 2x under |
 
 ### 5.1 Prediction Calibration: exp01a
 
@@ -341,32 +409,54 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | Action overhead | <5ms (flow is fast) | 0.48ms | **Accurate** — flow action head 确实极快 |
 | Multi-view scaling | ~2x for 2 cameras | +1.5% only | **Way Off** — patchified aggregation 绕过重复 ViT |
 
+### 5.5 Prediction Calibration: exp04a (Fast-WAM)
+
+| Metric | Survey Prediction | Actual (@10step) | Calibration |
+|--------|------------------|-----------------|-------------|
+| E (VAE encode) | ~15-25ms | 7.6ms | **Off** — VAE much lighter than expected |
+| C (Video prefill) | ~100-130ms | 36.7ms | **Off** — single-frame input |
+| A (flow matching, 10 steps) | ~30-50ms | 362ms | **Way Off** — missed 30-layer MoT cross-attn per step |
+| Total | ~150-200ms | 407ms | **Off** — 2x over due to A underestimation |
+
+### 5.6 Prediction Calibration: exp04b (LingBot-VA)
+
+| Metric | Survey Prediction | Actual | Calibration |
+|--------|------------------|--------|-------------|
+| E (VAE encode) | ~10-15ms | 75.5ms | **Way Off** — streaming VAE z_dim=48 much heavier |
+| V (Video denoise, 20 steps) | ~600-900ms | 592.5ms | **Accurate** — nailed the lower bound |
+| A (Action denoise) | ~500-750ms | 1423ms | **Off** — missed 50 steps (2.5x more than video's 20) |
+| Total | ~1100-1700ms | 2091ms | **Off** — 23% over upper bound |
+
 ---
 
 ## 6. Prediction Calibration — Meta-Learning
 
 **系统性偏差:**
 
-1. **结构性判断准确:** 哪个阶段是瓶颈、存在 attention sink、sparsity 可利用 — 4/4 experiments correct
+1. **结构性判断准确:** 哪个阶段是瓶颈、存在 attention sink、sparsity 可利用 — 6/6 experiments correct
 2. **硬件映射偏差:** 文献数据 (A100/H100) 到 RTX 5880 有 3-5x gap，需要 hardware correction factor
-3. **量级估计偏差 (小模型方向):** ResNet18 对 resolution 不敏感; patchified input 绕过重复 ViT — 小模型/special input pipeline 的行为不能从大模型简单 scaling
+3. **量级估计偏差 (小模型方向):** ResNet18 对 resolution 不敏感; patchified input 绕过重复 ViT
 4. **Gini 系数超预期:** 预测 "sparse" 但没预测到 >0.91 的极端稀疏度
-5. **Backbone scaling 非线性 (NEW):** 预测 7B→3B 是 ~2x speedup (naive param ratio)，实际 7x。原因:
-   - 3B 的 ViT 更小 (不只是 LLM backbone 缩小)
-   - Flow VLA 的 fixed-step denoise 比 autoregressive decode 高效得多
-   - Patchified input pipeline 避免了重复 ViT forward
-6. **Context phase 被低估 (NEW):** 未预料到 LLM forward (KV cache fill) 与 ViT encode 几乎等价 — 需要将 "context/prefill" 作为独立瓶颈对待
+5. **Backbone scaling 非线性:** 预测 7B→3B 是 ~2x speedup，实际 7x
+6. **Context phase 被低估:** LLM forward (KV cache fill) 与 ViT encode 几乎等价
+7. **WAM action phase 被严重低估:** 没有意识到每个 denoise step 都运行完整 MoT (30 layers × cross-attn)。正确推算: `steps × layers × per-layer-cost`
+8. **Step count 遗漏:** LingBot-VA action 50 steps (not 20 like video)。**教训: 必须先 grep config defaults 再做预测**
+9. **VAE 类型差异巨大:** Fast-WAM 7.6ms vs LingBot-VA 75.5ms — 10x 差异。不能假设 "VAE always cheap"
 
 **校准精度趋势:**
 - exp01a: 2/3 accurate — 结构 OK，硬件数字偏差
 - exp01b: 2/2 confirmed — 文献预测准
 - exp02a: 2/3 accurate — resolution 不敏感是 miss
-- exp03a: 1/4 accurate — **最差的一次**，backbone scaling 和 input pipeline 理解不足
+- exp03a: 1/4 accurate — 最差，backbone scaling 理解不足
+- exp04a: 0/4 accurate (direction correct, magnitude way off) — MoT cross-attn 代价未预料
+- exp04b: 1/4 accurate (V phase nailed) — step count + streaming VAE 低估
 
 **改进方向:**
 - 对 backbone scaling 使用 FLOPs ratio 而非 param ratio
-- 对非标准 input pipeline (patchified, pre-tokenized) 的模型不做 naive multi-image scaling 假设
+- 对非标准 input pipeline 不做 naive scaling 假设
 - 将 context/prefill phase 作为独立 cost center 预测
+- WAM 预测必须先确认: (1) per-step architecture (layers × heads × attn type), (2) exact step counts from config
+- 预测前 grep `num_inference_steps` / `action_steps` 等 config 字段
 
 ---
 
@@ -409,6 +499,16 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 28. **Patchified input 绕过 multi-view scaling:** lingbotvla 在 ViT 之前 patchify 并聚合多视角输入 → ViT 处理合并后的 patch 序列 → multi-view encode 几乎不增加 (+1.5%)。不能假设 multi-image = multi-ViT-forward
 29. **Flask catch-all 路由需要 api/ 前缀防护:** 无条件 catch-all 会遮蔽未注册的 API 路由，导致 404 静默返回 HTML 而非 JSON error
 
+### 2026-04-21: WAM Profiling — Fast-WAM + LingBot-VA (exp04a + exp04b)
+30. **先 grep config defaults 再做 latency 预测:** LingBot-VA action 用 50 steps，video 用 20 steps — step count 差异直接导致 2x 预测偏差。**规则: 所有 diffusion model 预测前必须确认 num_inference_steps**
+31. **"Skip-imagination" 不意味着 "small model":** Fast-WAM 仍加载完整 5B video expert。跳过的是 test-time video denoising，不是 weight loading。6.7B params — 省 compute 不省 memory
+32. **MoT cross-attention per step 代价极高:** Fast-WAM 每个 Euler step 运行 30-layer ActionDiT + MoT cross-attend to full video KV cache — ~32ms/step。正确 cost model: `steps × layers × per-layer-attn-cost`
+33. **同一 DiT 的 V/A per-step cost 高度一致:** LingBot-VA V (~29.6ms) ≈ A (~28.5ms) — 在宽模型 (5120 hidden) 下 sequence length 对 per-step latency 影响可忽略
+34. **Standalone profiling scripts 比 Hydra controller 更适合 external repos:** 对于有自包含推理 pipeline 的模型，直接在 repo 内写 profiling script 比强行集成进 Hydra 体系更快
+35. **Random init 对 timing 结果有效:** timing 取决于 compute graph (operators, shapes, dtypes)，不取决于 weight values。节省 12GB+ checkpoint 下载
+36. **High variance 可能来自 GPU power management:** 短 workload 受 GPU power state 波动影响。更长的 sustained workload 或固定 power mode 可减少方差
+37. **WAM Action phase 占比 68-94% 是架构常数:** 在 Fast-WAM 和 LingBot-VA 上一致观察到。这是 diffusion action head 的内在代价
+
 ---
 
 ## 8. Active Prompt Versions & Trade-offs
@@ -437,6 +537,8 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | `bash scripts/run_tests.sh` | pytest suite |
 | `bash scripts/download-results.sh` | Download results |
 | `bash scripts/setup_lingbot_vla.sh` | Setup LingBot-VLA env on xdlab23 |
+| `python scripts/profile_fastwam.py --steps 10 --gpu 0` | Fast-WAM E/C/A profiling |
+| `python scripts/profile_lingbot_va.py --mode random --gpu 0` | LingBot-VA E/V/A profiling |
 
 ### Server
 
@@ -446,12 +548,15 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | Path | `/data1/ybyang/vlla` |
 | Conda | `vit-probe` (legacy, shared with rope2sink) |
 | uv venv | `.venvs/lingbot-vla/` (LingBot-VLA) |
+| Conda (WAM) | `fastwam` (Fast-WAM, Python 3.10, PyTorch 2.7.1+cu128) |
 | GPUs | 8x RTX 5880 Ada 48GB |
 | HF cache | `/data1/ybyang/huggingface` |
+| Fast-WAM repo | `/data1/ybyang/FastWAM` |
+| LingBot-VA repo | `/data1/ybyang/lingbot-va` |
 
 ### Registries
 
-**Controllers:** `qwen_vl` → QwenVLController, `openvla` → OpenVLAController, `act` → ACTController, `lingbot_vla` → LingBotVLAController, `pizero` → PiZeroController (lazy)
+**Controllers:** `qwen_vl` → QwenVLController, `openvla` → OpenVLAController, `act` → ACTController, `lingbot_vla` → LingBotVLAController, `lingbot_va` → LingBotVAController, `pizero` → PiZeroController (lazy)
 **Tasks:** `epd_profiling`, `visual_text_attention`, `sink_detection`, `per_layer_stats`, `attention_overlay`, `timing_validation`
 
 ### Knowhow Index
@@ -475,4 +580,4 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 
 ---
 
-*v3 — exp03a LingBot-VLA-4B done, Codex review fixes, presentation viewer, uv env migration. Updated: 2026-04-20*
+*v4 — exp04a Fast-WAM ActionDiT profiling done, exp04b LingBot-VA full WAM E/V/A profiling done, LingBotVAController added. Updated: 2026-04-21*

@@ -1,5 +1,18 @@
 # Project Skill Changelog
 
+## 2026-04-21 — v4 WAM Profiling Complete (Fast-WAM + LingBot-VA)
+
+Incremental update: exp04a Fast-WAM done, exp04b LingBot-VA full WAM done, LingBotVAController added.
+
+- **Updated:** Section 1 — current_exp → exp04b (done), core data table +2 rows (Fast-WAM, LingBot-VA)
+- **Updated:** Section 2 — LingBotVAController added, WAM E/V/A phase model documented, profile_fastwam.py + profile_lingbot_va.py scripts
+- **Updated:** Section 3 — 2 new confirmed hypotheses (action phase dominance, full WAM 5x slower), 1 new open hypothesis (MoT vs shared-DiT routing)
+- **Updated:** Section 4 — WAM benchmark baselines table (per-step cost reference), Fast-WAM + LingBot-VA in Pareto table
+- **Updated:** Section 5 — exp04a + exp04b rows with prediction calibration
+- **Updated:** Section 6 — 3 new systematic biases (#7-9: WAM per-step cost, action step count, video imagination overhead)
+- **Added:** Engineering Lessons #30-#37 (WAM shared DiT profiling, sys.path injection, VAE z_dim, init_latent shape, timestep batch dim, text encoder VRAM, FlowMatchScheduler shift, streaming VAE cache)
+- **Added:** Quick Reference: 2 new scripts, LingBotVAController registry entry
+
 ## 2026-04-20 — v3 LingBot-VLA-4B + Codex Review + Presentation Viewer
 
 Incremental update: exp03a done, Codex adversarial review fixes, research viewer.

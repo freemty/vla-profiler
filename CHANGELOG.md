@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.5.1 — 2026-04-21
+
+### 新增
+- **exp04a 完成** — Fast-WAM (skip-imagination WAM) E/C/A profiling on RTX 5880 Ada
+  - @10step: E=7.6ms / C=36.7ms / A=362ms (total 407ms, 2.5Hz)
+  - @20step: E=7.6ms / C=36.7ms / A=639ms (total 677ms, 1.5Hz)
+  - Action phase 占 89-94%，30-layer MoT cross-attn × N steps
+  - `scripts/profile_fastwam.py` — standalone profiler (random/full mode)
+- **exp04b 完成** — LingBot-VA (full WAM, video imagination + action) E/V/A profiling
+  - E=75.5ms / V=592.5ms (20 steps) / A=1423.1ms (50 steps), total 2091ms (0.5Hz)
+  - Full WAM 比 skip-imagination 慢 ~5x
+  - Video denoise ~29.6ms/step, action ~28.5ms/step (same DiT, similar per-step cost)
+- **LingBotVAController** — 全新 WAM controller，E/V/A 三阶段手动 timer marks (同一 transformer 服务 video+action，module hooks 无法区分)
+  - `scripts/profile_lingbot_va.py` — standalone profiler
+
+### 修复
+- Fast-WAM profiler: dummy_context 注释明确说明排除 text encoding 原因
+- LingBot-VA init_pipeline: 使用独立 `repo_path` 参数而非混用 `model_name` (Codex review P1)
+- LingBot-VA full mode: 不加载未使用的 4.7B text encoder，节省 ~9GB VRAM (Codex review P2)
+
+### 文档
+- Project skill v4 — exp04a/04b WAM findings, lessons #30-37, WAM benchmark baselines
+- exp/summary.md — exp04a + exp04b rows done
+
 ## v0.5.0 — 2026-04-20
 
 ### 新增
