@@ -94,24 +94,26 @@ class NitroGenController(BaseVLAController):
         device = getattr(cfg, "device", "cuda:0")
         dtype_str = getattr(cfg, "precision", "bfloat16")
         dtype = getattr(torch, dtype_str, torch.bfloat16)
-        mode = getattr(cfg, "weight_mode", getattr(cfg, "mode", "random"))
 
-        repo_path = getattr(cfg, "repo_path", "/data1/ybyang/NitroGen")
+        cc = getattr(cfg, "controller_config", cfg)
+        mode = getattr(cc, "weight_mode", getattr(cc, "mode", "random"))
+
+        repo_path = getattr(cc, "repo_path", "/data1/ybyang/NitroGen")
         sys.path.insert(0, repo_path)
 
         from nitrogen.flow_matching_transformer.nitrogen import NitroGen, NitroGen_Config
         from nitrogen.flow_matching_transformer.modules import DiT, DiTConfig, SelfAttentionTransformer, SelfAttentionTransformerConfig
 
-        num_inference_timesteps = getattr(cfg, "num_inference_steps", 16)
-        action_horizon = getattr(cfg, "action_horizon", 16)
-        action_dim = getattr(cfg, "action_dim", 20)
+        num_inference_timesteps = getattr(cc, "num_inference_steps", 16)
+        action_horizon = getattr(cc, "action_horizon", 16)
+        action_dim = getattr(cc, "action_dim", 20)
 
-        dit_num_layers = getattr(cfg, "dit_num_layers", 12)
-        dit_num_heads = getattr(cfg, "dit_num_heads", 16)
-        dit_head_dim = getattr(cfg, "dit_head_dim", 64)
-        vl_num_layers = getattr(cfg, "vl_num_layers", 4)
-        vl_num_heads = getattr(cfg, "vl_num_heads", 12)
-        vl_head_dim = getattr(cfg, "vl_head_dim", 64)
+        dit_num_layers = getattr(cc, "dit_num_layers", 12)
+        dit_num_heads = getattr(cc, "dit_num_heads", 16)
+        dit_head_dim = getattr(cc, "dit_head_dim", 64)
+        vl_num_layers = getattr(cc, "vl_num_layers", 4)
+        vl_num_heads = getattr(cc, "vl_num_heads", 12)
+        vl_head_dim = getattr(cc, "vl_head_dim", 64)
 
         hidden_size = dit_num_heads * dit_head_dim
 
@@ -127,7 +129,7 @@ class NitroGenController(BaseVLAController):
             norm_elementwise_affine=False,
             positional_embeddings="sinusoidal",
             final_dropout=False,
-            cross_attention_dim=getattr(cfg, "vision_hidden_size", 768),
+            cross_attention_dim=getattr(cc, "vision_hidden_size", 768),
         )
 
         vl_config = SelfAttentionTransformerConfig(
@@ -142,7 +144,7 @@ class NitroGenController(BaseVLAController):
         )
 
         vision_encoder_name = getattr(
-            cfg, "vision_encoder_name", "google/siglip-large-patch16-256"
+            cc, "vision_encoder_name", "google/siglip-large-patch16-256"
         )
 
         model_config = NitroGen_Config(
@@ -154,7 +156,7 @@ class NitroGenController(BaseVLAController):
             action_horizon=action_horizon,
             num_inference_timesteps=num_inference_timesteps,
             vision_encoder_name=vision_encoder_name,
-            vision_hidden_size=getattr(cfg, "vision_hidden_size", 768),
+            vision_hidden_size=getattr(cc, "vision_hidden_size", 768),
             add_pos_embed=True,
             tune_vision_tower=False,
             tune_mm_projector=False,
@@ -215,7 +217,7 @@ class NitroGenController(BaseVLAController):
                 )
                 nn.init.normal_(model.position_embedding.weight, mean=0.0, std=0.02)
         else:
-            ckpt_path = getattr(cfg, "checkpoint_path", None)
+            ckpt_path = getattr(cc, "checkpoint_path", None)
             if ckpt_path is None:
                 raise ValueError("checkpoint_path required for full mode")
             logger.info("Loading NitroGen from checkpoint: %s", ckpt_path)

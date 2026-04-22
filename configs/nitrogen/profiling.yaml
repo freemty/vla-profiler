@@ -16,6 +16,9 @@ model:
   repo: "https://github.com/MineDojo/NitroGen"
   checkpoint: "ng.pt"
 
+num_warmup_runs: 5
+num_benchmark_runs: 20
+
 model_name: "NitroGen-500M"
 controller_name: nitrogen
 controller_config:
