@@ -53,6 +53,7 @@ Project documentation map. All paths relative to repo root.
 | `docs/knowhow/toolchain/cuda-profiling-patterns.md` | CUDA Event vs torch.profiler 对比, warmup 策略, 统计方法 |
 | `docs/knowhow/toolchain/hydra-config-patterns.md` | Hydra ListConfig/device gotchas |
 | `docs/knowhow/toolchain/shell-script-safety-patterns.md` | Shell 脚本变量 quoting, command injection 防护 |
+| `docs/knowhow/toolchain/wam-standalone-profiling.md` | WAM standalone profiling patterns — random-init, sys.path injection, manual timer marks |
 
 ### Debug Solutions
 
@@ -64,6 +65,7 @@ Project documentation map. All paths relative to repo root.
 | `docs/knowhow/debug-solutions/act-action-queue-hooks.md` | ACT select_action() action queue 缓存陷阱 |
 | `docs/knowhow/debug-solutions/phasetimer-cpu-backend-bug.md` | PhaseTimer CPU backend record_end() no-op bug |
 | `docs/knowhow/debug-solutions/lingbotvla-integration.md` | LingBot-VLA flow VLA 集成 14 个问题汇总 |
+| `docs/knowhow/debug-solutions/lingbot-va-wam-integration.md` | LingBot-VA full WAM 集成 7 个陷阱 (构造参数, VAE, timestep, action_mode) |
 
 ### Infrastructure
 

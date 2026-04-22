@@ -58,6 +58,8 @@ slides/                # 演示文稿
 - **SGLang profiling 深度调研**: `notes/sglang-profiling-deep-survey.md` — SGLang 的 torch.profiler 集成、Prometheus metrics、benchmark 套件、prefill/decode 分离 profiling、内存追踪的实现级分析
 - **ML Inference Profiling Systems 横向调研**: `survey/papers/profiling-systems-survey.md` — FastVideo/TensorRT-LLM/DeepSpeed/Triton/vLLM/SGLang/llama.cpp/MLC LLM 8大系统的 profiling 实现对比，timing 机制、phase 定义、warmup 策略、统计方法、memory tracking 全面分析
 - **ML Profiling 综合调研报告**: `survey/papers/ml-profiling-systems-comprehensive-survey.md` — 4 agent 并行调研的综合报告，含 PhaseTimer 代码审查、CUDA timing 最佳实践、三层 profiling 架构建议
+- **NitroGen 精读**: `survey/papers/nitrogen-deep-dive.md` — NVIDIA 500M VA gaming foundation model, DiT+flow matching, 40K小时跨游戏训练, profiling 价值分析
+- **DreamDojo + DreamZero 精读**: `survey/papers/dreamdojo-dreamzero-deep-dive.md` — NVIDIA GEAR Lab 双论文: DreamDojo (44k hr human video WM, LAM, 蒸馏 10.81FPS) + DreamZero (WAM zero-shot policy, Wan2.1 14B, DiT caching, 7Hz on GB200). 含延迟对比 exp04a/04b
 - **Documentation index**: `docs/README.md` — 全项目文档结构索引 (survey, experiments, knowhow, specs, notes, viewer)
 
 ## Survey Dimensions
@@ -104,6 +106,7 @@ slides/                # 演示文稿
 - **Skill hub:** .claude/skills/project-skill/SKILL.md
 - **Experiment log:** exp/summary.md
 - **Domain papers:** survey/papers/
+- **TODO:** `docs/TODO.md` — Project action items and task backlog
 
 ## Knowhow
 
