@@ -1,5 +1,33 @@
 # Changelog
 
+## v0.6.0 @freemty — 2026-04-22
+
+### 新增
+- **exp05a 完成** — LingBot-VLA-4B attention analysis (6 layers: 0,7,14,21,28,35)
+  - VLA fine-tuning 彻底重塑 attention: sink Pos 2→Pos 64, Gini 0.91→0.07, entropy V-shape→flat
+  - 结论: VLM token pruning (FastV, FlashVLM) 不可迁移到 VLA
+  - Attention structure 是 training objective property 而非 architecture property
+- **exp05b 完成** — Qwen2.5-VL-3B-Instruct attention analysis (vanilla VLM baseline, ablation for exp05a)
+  - 消歧成功: Gini 崩塌归因于 VLA fine-tuning，非 model size
+  - 3B vanilla Gini 0.80-0.98 (与 7B 一致)，Pos 9 sink, entropy V-shape
+  - `configs/qwen_vl_3b/attention.yaml` — 新增 vanilla 3B VLM config
+- **exp06a 完成** — NitroGen 500M DiT E/C/A profiling + k sweep (k=1..16)
+  - Per-step DiT 7.2ms, perfectly linear scaling
+  - 174M DiT params, compute-bound → 174M-350M 之间转为 memory-BW-bound
+  - k=1: 17.9ms (55.9Hz), k=16: 126ms (7.9Hz)
+  - `NitroGenController` — SigLIP→VL-SA→DiT manual timing, random weights mode
+
+### 变更
+- Project skill v5 — exp05a/05b/06a findings, lessons #38-46, NitroGen in latency spectrum
+- CLAUDE.md — current_exp 更新到 exp06a, 新增 exp05a/05b/06a key findings
+- docs/TODO.md — NitroGen profiling 标记完成
+
+### 文档
+- `docs/knowhow/debug-solutions/nitrogen-controller-deployment.md` — NitroGen 部署 5 个问题 + Codex 审查发现
+- `docs/knowhow/debug-solutions/lingbot-va-wam-integration.md` — LingBot-VA WAM 集成
+- `docs/knowhow/toolchain/wam-standalone-profiling.md` — WAM standalone profiling 模式
+- `docs/knowhow/runbooks/deploy-new-model-package.md` — sparse clone→tar→scp 部署流程
+
 ## v0.5.1 — 2026-04-21
 
 ### 新增

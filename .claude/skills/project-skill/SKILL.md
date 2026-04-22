@@ -2,16 +2,16 @@
 name: project-skill
 description: "Use when advising on project architecture, experiment history, codebase navigation, or research findings."
 user-invocable: false
-version: v4
-note: "v4 — exp04a Fast-WAM ActionDiT profiling done, exp04b LingBot-VA full WAM profiling done, LingBotVAController added."
-updated_at: "2026-04-21"
+version: v5
+note: "v5 — exp05a/05b VLA attention analysis done, exp06a NitroGen 500M DiT profiling done, NitroGenController added. DiT per-step scaling curve established."
+updated_at: "2026-04-22"
 ---
 
 # vlla — Project Knowledge
 
 > VLM/VLA Real-Time Systems Survey & Research
 > UCSD PhD 方向调研项目 | 导师: 张昊 (Hao Zhang) — vLLM/FastVideo/Chatbot Arena 作者
-> v4 — exp04a/04b WAM profiling complete, LingBotVAController added.
+> v5 — exp05a/05b VLA attention analysis, exp06a NitroGen DiT profiling done. DiT per-step scaling curve.
 
 ---
 
@@ -25,17 +25,17 @@ updated_at: "2026-04-21"
 张昊的技术路线: Parameter Server -> Alpa -> vLLM -> FastVideo -> **VLM/VLA real-time systems**。每一步都是 ML Systems 前沿的下一个自然问题。VLM/VLA serving 正处于 "pre-vLLM" 阶段，存在巨大的系统研究空间。
 
 **当前阶段:** Experiment (Phase 1 — VLM/VLA Profiling + Interpretability)
-- `current_exp`: exp04b (LingBot-VA full WAM E/V/A profiling — **done**)
+- `current_exp`: exp06a (NitroGen 500M DiT profiling — **done**)
 - `stage`: experiment
-- `version`: v0.4.4
+- `version`: v0.5.1
 - Survey 产出: 4 份核心文档，覆盖 180+ 篇论文/项目 (2024-2026)
 - Framework 产出: VLM profiling + attention analysis + attention overlay 可视化 + VLA profiling 框架 (`src/`)
 - 新增模块: Interpretability Mixin 体系 (`src/interpretability/`)、OverlayRenderer (`src/viz/`)、Timing Cross-Validation (`src/tasks/validation_task.py`)
 - 共享核心: `model-probe-core` git submodule (`src/core/`)，同时被 rope2sink 消费
 - Presentation viewer: `viewer/` — Flask + 3 HTML pages (hub, presentation, experiments) for advisor meeting
-- 服务器: xdlab23 (8x RTX 5880 Ada 48GB)，6 个实验完成
-- **完成的实验:** exp01a (E/P/D profiling), exp01b (attention analysis), exp02a (ACT profiling), exp03a (LingBot-VLA-4B profiling), exp04a (Fast-WAM ActionDiT profiling), exp04b (LingBot-VA full WAM profiling)
-- **下一步:** Attention overlay 在服务器运行、OpenVLA profiling (需 HF 下载)、Pi-Zero controller、Gradient saliency、LingBot-VLA attention analysis
+- 服务器: xdlab23 (8x RTX 5880 Ada 48GB)，9 个实验完成
+- **完成的实验:** exp01a (E/P/D profiling), exp01b (attention analysis), exp02a (ACT profiling), exp03a (LingBot-VLA-4B profiling), exp04a (Fast-WAM ActionDiT profiling), exp04b (LingBot-VA full WAM profiling), exp05a (LingBot-VLA attention analysis), exp05b (Qwen2.5-VL-3B attention analysis), exp06a (NitroGen 500M DiT profiling)
+- **下一步:** DreamZero profiling on RTX 5880 Ada、DreamZero DiT layer activation variance 分析、OpenVLA profiling (需 HF 下载)、Pi-Zero controller
 
 **核心数据汇总:**
 
@@ -47,6 +47,9 @@ updated_at: "2026-04-21"
 | exp03a | LingBot-VLA-4B | E=35.7ms/C=38.3ms/A=0.48ms, total 74.5ms ≈ 13Hz |
 | exp04a | Fast-WAM (ActionDiT, 6.7B) | @10step: E=7.6ms/C=36.7ms/A=362ms, total 407ms, 2.5Hz |
 | exp04b | LingBot-VA (full WAM, 5B DiT) | E=75.5ms/V=592.5ms/A=1423.1ms, total 2091ms, 0.5Hz |
+| exp05a | LingBot-VLA-4B (attention) | VLA fine-tuning reshapes attention: sink migrates Pos2→Pos64, Gini 0.91→0.07, entropy V-shape→flat |
+| exp05b | Qwen2.5-VL-3B (attention) | Disambiguation: Gini collapse is VLA fine-tuning effect, not model size. 3B vanilla Gini 0.80-0.98 |
+| exp06a | NitroGen 500M DiT | Per-step 7.2ms, linear scaling. 174M DiT compute-bound. 174M→350M = BW transition |
 
 ---
 
@@ -77,6 +80,7 @@ vlla/
 |   |   |-- act_controller.py       # ACTController: ResNet18→CVAE→action chunk
 |   |   |-- lingbot_vla_controller.py  # LingBotVLAController: Qwen2.5-VL-3B + flow action head
 |   |   |-- lingbot_va_controller.py   # LingBotVAController: full WAM, E/V/A phases (VAE+5B DiT video+action)
+|   |   |-- nitrogen_controller.py     # NitroGenController: SigLIP→VL-SA→DiT, E/C/A manual timing, random weights
 |   |   |-- pizero_controller.py    # PiZeroController: Pi-Zero (lazy import, separate env)
 |   |-- interpretability/           # Attention overlay system
 |   |   |-- base_mixin.py     # TokenSpatialMap, TokenType, BaseInterpretabilityMixin
@@ -106,6 +110,8 @@ vlla/
 |   |   |-- attention.yaml         # OpenVLA attention analysis
 |   |-- lingbot_vla_4b/
 |   |   |-- profiling.yaml         # LingBot-VLA E/C/A profiling
+|   |-- nitrogen/
+|   |   |-- profiling.yaml         # NitroGen E/C/A profiling + k sweep
 |   |-- pizero/
 |       |-- profiling.yaml         # Pi-Zero profiling (requires openpi env)
 |
@@ -168,6 +174,7 @@ probe_core.BaseController          # Model-agnostic: hook lifecycle, StoreMixin,
         +-> ACTController          # ACT (LeRobot): ResNet18→CVAE→action chunk, single-forward
         +-> LingBotVLAController   # LingBot-VLA-4B: Qwen2.5-VL-3B + 10-step flow action head
         +-> LingBotVAController    # LingBot-VA (full WAM): VAE + 5B WanDiT, E/V/A phases
+        +-> NitroGenController      # NitroGen 500M: SigLIP→VL-SA→DiT flow matching, E/C/A manual timing
         +-> PiZeroController       # Pi-Zero: VLM backbone + flow action head (lazy import, separate env)
 ```
 
@@ -267,6 +274,25 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 - **VAE encode 75.5ms vs Fast-WAM 7.6ms (10x):** streaming VAE with z_dim=48 vs lightweight path
 - **0.5 Hz makes real-time impossible:** 26x slower than VLA (13Hz), 660x slower than ACT
 
+**From exp05a (first-party) — LingBot-VLA attention analysis:**
+- **VLA fine-tuning 彻底重塑 attention:** Sink 从 Pos 2 (vanilla VLM) 迁移到 Pos 64 (boundary token)
+- **Gini 从 >0.91 崩塌至 0.07-0.45:** Text→Visual attention near-uniform (VLM pruning 不可迁移)
+- **Entropy 从 V-profile 变为 flat (4.79-4.90):** 训练目标改变了 attention 结构
+- **结论:** Attention structure 是 training objective property 而非 architecture property
+
+**From exp05b (first-party) — Qwen2.5-VL-3B attention analysis (消歧实验):**
+- **Gini 崩塌归因于 VLA fine-tuning, 非 model size:** 3B vanilla Gini 0.80-0.98 (与 7B 一致)
+- **Pos 9 attention sink (2054), entropy V-shape (L7=2.69):** 与 7B vanilla pattern 一致
+- **seq_len 差异:** vanilla 1273 (424 visual) vs VLA 136 (64 visual, spatial_merge=4)
+
+**From exp06a (first-party) — NitroGen 500M DiT profiling:**
+- **Per-step DiT cost = 7.2ms, perfectly linear across k=1..16:** 完美线性
+- **174M DiT params (not 100M as estimated):** VL-SA 28M 独立于 DiT
+- **Action dominates 91.6% at k=16:** 与 Fast-WAM/LingBot-VA pattern 一致
+- **SigLIP encode = 8.7ms, VL self-attention = 1.9ms:** 两者都很轻
+- **k=1 achieves 55.9Hz:** 通过 step distillation 可达实时
+- **174M→350M: 2x params, 4.4x latency → super-linear:** compute-bound 到 memory-BW-bound 转换点在 174M-350M 之间
+
 ### 3.3 WAM Profiling 综合洞察 (exp04a + exp04b)
 
 **完整 latency spectrum (RTX 5880 Ada, bf16):**
@@ -274,6 +300,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | Model | Paradigm | Total | E | V | A | Hz | Bottleneck |
 |-------|----------|-------|---|---|---|-----|-----------|
 | ACT | VA (CVAE) | 3ms | 2.5ms | — | 0.5ms | 330 | E (80%) |
+| NitroGen @k16 | VA (flow DiT) | 126ms | 8.7ms | — | 115.4ms | 7.9 | A (91.6%) |
 | LingBot-VLA | Flow VLA | 74.5ms | 35.7ms | — | 38.8ms | 13 | E≈C (50/50) |
 | Fast-WAM @10step | WAM (skip) | 407ms | 7.6ms | — | 362ms | 2.5 | A (89%) |
 | LingBot-VA (full) | WAM (full) | 2091ms | 75.5ms | 592ms | 1423ms | 0.5 | A (68%) |
@@ -293,14 +320,19 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 - [x] ~~Flow action head overhead 可忽略~~ → **exp03a 验证 0.48ms (0.6% of total)**
 - [x] ~~WAM latency dominated by action diffusion~~ → **exp04a/04b 验证 (68-94%)**
 - [x] ~~Full WAM significantly slower than skip-imagination~~ → **exp04b 验证 5x slower**
+- [x] ~~LingBot-VLA attention analysis: VLA fine-tuning 是否改变 attention pattern?~~ → **exp05a 验证: 彻底重塑。Gini 0.91→0.07, sink migrates, entropy flattens**
+- [x] ~~Gini 崩塌是 model size 还是 fine-tuning 效应?~~ → **exp05b 消歧: fine-tuning effect。3B vanilla Gini 0.80-0.98**
+- [x] ~~NitroGen DiT per-step cost at ~100M params?~~ → **exp06a: 174M DiT, 7.2ms/step, compute-bound**
+- [x] ~~Compute-bound vs memory-BW-bound DiT size transition?~~ → **174M-350M 之间 (2x params, 4.4x latency)**
 - [ ] EPD 三阶段分离实际收益 (disaggregation ROI)
 - [ ] VLM speculative decoding 中 visual token 对 acceptance rate 的影响
 - [ ] Per-layer attention entropy 分布的实际意义 (Layer 21 最低 → 是否是最佳 pruning 切入点?)
 - [ ] OpenVLA (AR VLA) profiling: E/P/D 与 Qwen2.5-VL 有多大差异?
 - [ ] Pi-Zero flow VLA profiling: denoise step count vs latency trade-off
-- [ ] LingBot-VLA attention analysis: 3B backbone 的 attention pattern 是否与 7B 一致?
 - [ ] 3B→7B backbone scaling law: 是否线性? (exp01a vs exp03a 初步暗示 ~7x for 2.3x params)
 - [ ] Imagination value quantification: Full WAM 的 592ms video generation 带来多少 task success rate 提升?
+- [ ] DreamZero profiling: DiT caching 在 memory-BW-bound regime 的真实收益?
+- [ ] DreamZero DiT layer activation variance: 哪些层可以 cache?
 
 ---
 
@@ -333,6 +365,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 - Fast-WAM ActionDiT (30L, 1024 hidden, MoT cross-attn): ~32ms/step
 - LingBot-VA WanDiT video (30L, 3072 hidden): ~29.6ms/step
 - LingBot-VA WanDiT action (30L, 3072 hidden): ~28.5ms/step
+- NitroGen DiT (12L, 1024 hidden, cross-attn to 256 tokens): ~7.2ms/step — compute-bound
 - LingBot-VLA flow action head (small head, 10 steps): ~0.048ms/step
 
 ### 4.3 Pareto 前沿
@@ -341,6 +374,8 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 |------|------|------|
 | Action-to-Action Flow | 0.56ms | VA 速度下界 |
 | **ACT (our measurement)** | **~3ms** | **VA baseline (first-party)** |
+| **NitroGen @k1 (our measurement)** | **17.9ms** | **VA flow DiT baseline, 55.9Hz (first-party)** |
+| **NitroGen @k16 (our measurement)** | **126ms** | **VA flow DiT, 7.9Hz (first-party)** |
 | Mean-Flow VLA / FASTER | ~50ms | VLA 单步化 |
 | **LingBot-VLA-4B (our measurement)** | **74.5ms** | **Flow VLA baseline (first-party, 3B)** |
 | DreamZero | ~130ms, 7Hz | WAM zero-shot (A100) |
@@ -376,6 +411,9 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | exp03a | 2026-04-20 | **done** | 250-350ms (7B→3B ~2x scaling) | 74.5ms total | 3B backbone 7x faster than 7B; Context≈Encode; flow action 0.48ms; ≈13Hz | Way Off — actual 3.4-4.7x better than predicted |
 | exp04a | 2026-04-21 | **done** | E=15-25ms/C=100-130ms/A=30-50ms | @10step: E=7.6ms/C=36.7ms/A=362ms, total 407ms | Action dominates 89%; per-step 32ms; paper's 190ms is A100+5step | Way Off on A (predicted 30-50ms, got 362ms) |
 | exp04b | 2026-04-21 | **done** | E=10-15ms/V=600-900ms/A=500-750ms | E=75.5ms/V=592.5ms/A=1423ms, total 2091ms | Full WAM 5x skip-imagination; Action 68%; V≈A per-step (~29ms); 0.5Hz | V nailed, E 5-7x under, A 2x under |
+| exp05a | 2026-04-21 | **done** | VLA attention similar to VLM | Gini 0.91→0.07, sink migrates, entropy flat | VLA fine-tuning reshapes attention; VLM pruning not transferable | Way Off — opposite of prediction |
+| exp05b | 2026-04-21 | **done** | 3B model = different pattern | 3B vanilla Gini 0.80-0.98, consistent with 7B | Gini collapse from VLA fine-tuning, not model size | Confirmed — disambiguation successful |
+| exp06a | 2026-04-22 | **done** | ~100M DiT, 5-10ms/step | 174M DiT, 7.2ms/step, linear | Per-step 7.2ms, compute-bound, 174M→350M BW transition | Accurate on per-step, Off on param count (174M not 100M) |
 
 ### 5.1 Prediction Calibration: exp01a
 
@@ -509,6 +547,19 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 36. **High variance 可能来自 GPU power management:** 短 workload 受 GPU power state 波动影响。更长的 sustained workload 或固定 power mode 可减少方差
 37. **WAM Action phase 占比 68-94% 是架构常数:** 在 Fast-WAM 和 LingBot-VA 上一致观察到。这是 diffusion action head 的内在代价
 
+### 2026-04-21: VLA Attention Analysis (exp05a + exp05b)
+38. **VLA fine-tuning 彻底重塑 attention pattern:** 不能假设 VLM 的 attention 特性 (sink, sparsity) 在 VLA 中保持。Gini 从 0.91 崩塌至 0.07
+39. **消歧实验必不可少:** exp05a 发现 Gini 崩塌，但无法区分是 model size 还是 fine-tuning 效应。exp05b 用 3B vanilla VLM 消歧 → 确认是 fine-tuning
+40. **Attention structure 是 training objective property:** 不是 architecture property。相同架构、不同训练目标 → 完全不同的 attention pattern
+
+### 2026-04-22: NitroGen 500M DiT Profiling (exp06a)
+41. **controller_config 中 `mode` 字段被 framework 截取:** BaseController 用 `mode` 判断 hook_mode → 自定义用途需用不同 key name (如 `weight_mode`)
+42. **离线环境 `from_pretrained()` 需替换为 config-based 构建:** SigLIP random weights 不需要下载 HF 权重
+43. **`__new__` 绕过 `__init__` 时需手动导入子模块:** NitroGen random build 绕过了 `__init__` 的 import chain
+44. **DiT per-step cost 完美线性:** NitroGen 7.2ms/step × k steps — 无 warmup/overhead
+45. **Compute-bound → memory-BW-bound 转换点在 174M-350M:** 2x params 导致 4.4x latency (super-linear) — 关键的系统设计参考点
+46. **Sparse clone + tar 比 git bundle 更适合第三方 repo:** git bundle 需要完整历史；sparse clone 只下载需要的文件
+
 ---
 
 ## 8. Active Prompt Versions & Trade-offs
@@ -556,7 +607,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 
 ### Registries
 
-**Controllers:** `qwen_vl` → QwenVLController, `openvla` → OpenVLAController, `act` → ACTController, `lingbot_vla` → LingBotVLAController, `lingbot_va` → LingBotVAController, `pizero` → PiZeroController (lazy)
+**Controllers:** `qwen_vl` → QwenVLController, `openvla` → OpenVLAController, `act` → ACTController, `lingbot_vla` → LingBotVLAController, `lingbot_va` → LingBotVAController, `nitrogen` → NitroGenController, `pizero` → PiZeroController (lazy)
 **Tasks:** `epd_profiling`, `visual_text_attention`, `sink_detection`, `per_layer_stats`, `attention_overlay`, `timing_validation`
 
 ### Knowhow Index
@@ -574,10 +625,14 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | `docs/knowhow/debug-solutions/qwen25vl-model-structure.md` | Qwen2.5-VL 模型结构 |
 | `docs/knowhow/debug-solutions/qwen25vl-vision-token-mapping.md` | Vision token 定位 |
 | `docs/knowhow/debug-solutions/lingbotvla-integration.md` | LingBot-VLA flow VLA 集成 14 个问题 |
+| `docs/knowhow/debug-solutions/nitrogen-controller-deployment.md` | NitroGen 部署 5 个问题 (Hydra, hook_mode, SigLIP offline, imports, k sweep) |
+| `docs/knowhow/debug-solutions/lingbot-va-wam-integration.md` | LingBot-VA WAM 集成 |
+| `docs/knowhow/runbooks/deploy-new-model-package.md` | GitHub 被防火墙封锁时部署新模型包 (sparse clone→tar→scp) |
+| `docs/knowhow/toolchain/wam-standalone-profiling.md` | WAM standalone profiling 模式 |
 | `docs/knowhow/infrastructure/xdlab23-model-weights.md` | ModelScope 404 issue |
 | `docs/papers/starvla-framework-deep-dive.md` | StarVLA 模块化 VLA framework 深度分析 |
 | `docs/papers/openpi-pytorch-profiling-feasibility.md` | OpenPI profiling 可行性 |
 
 ---
 
-*v4 — exp04a Fast-WAM ActionDiT profiling done, exp04b LingBot-VA full WAM E/V/A profiling done, LingBotVAController added. Updated: 2026-04-21*
+*v5 — exp05a/05b VLA attention analysis done, exp06a NitroGen 500M DiT profiling done. DiT per-step scaling curve established (0.048ms→7.2ms→28.5ms→32ms). Updated: 2026-04-22*

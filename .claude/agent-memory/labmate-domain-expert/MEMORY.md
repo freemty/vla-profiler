@@ -3,3 +3,4 @@
 - [StarVLA Paper](paper_starvla.md) — Modular VLA framework (4 architectures); bridge to vlla profiling; WM4A connects to FastVideo
 - [WAM/VA Profiling Targets](project_profiling_targets.md) — Top-3: DDP-WM, AnoleVLA, GigaWorld-Policy; selected 2026-04-20
 - [WAM Profiling Findings](project_wam_profiling_findings.md) — exp04a/04b: action=memory-bandwidth bound, step reduction is top optimization, per-step ~28-32ms baseline
+- [VLA Attention Restructuring](finding_vla_attention_restructuring.md) — exp05a: VLA fine-tuning destroys VLM attention patterns; Gini 0.91->0.07; sink Pos2->boundary; VLM pruning won't transfer

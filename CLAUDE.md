@@ -166,9 +166,9 @@ Pipeline state tracked in .pipeline-state.json.
 
 ## Current state
 
-- **current_exp:** exp04b (LingBot-VA full WAM profiling — done)
+- **current_exp:** exp06a (NitroGen 500M DiT profiling — done)
 - **stage:** experiment
-- **skill_updated_at:** 2026-04-21
+- **skill_updated_at:** 2026-04-22
 - **key findings:**
   - **exp01a (profiling):** text P=20ms/D=18ms; single_img E=253ms/P=156ms/D=18.6ms; multi_img E=541ms/P=332ms/D=21ms. Encode scales linearly.
   - **exp01b (attention):** Pos 2 (first visual patch) is universal attention sink (12K-18K received, 12-28x vs #2). Text→Visual Gini >0.91 (extreme sparsity → token pruning viable). Layer 21 entropy lowest (3.44).
@@ -176,5 +176,8 @@ Pipeline state tracked in .pipeline-state.json.
   - **exp03a (LingBot-VLA-4B):** single_img E=35.7ms/C=38.3ms/A=0.48ms (total 74.5ms). 3B backbone 比 7B 快 7x。Context ≈ Encode。Flow action head 0.48ms ≈ ACT。Total 74.5ms ≈ 13Hz。
   - **exp04a (Fast-WAM):** @10step: E=7.6ms/C=36.7ms/A=362ms (total 407ms, 2.5Hz). Action dominates 89%. Per-step ~32ms (30L MoT cross-attn).
   - **exp04b (LingBot-VA):** E=75.5ms/V=592.5ms/A=1423ms (total 2091ms, 0.5Hz). Full WAM 5x slower than skip-imagination. Action 68%.
-- **latest (v0.5.1):** WAM profiling (Fast-WAM + LingBot-VA), LingBotVAController.
-- **next:** Attention overlay on server. OpenVLA (need HF download). LingBot-VLA attention analysis. Imagination value quantification. WAM step-count sensitivity.
+  - **exp05a (LingBot-VLA attention):** VLA fine-tuning reshapes attention: Gini 0.91→0.07, sink Pos2→Pos64, entropy flat. VLM pruning 不可迁移到 VLA。
+  - **exp05b (Qwen2.5-VL-3B attention):** 消歧: Gini 崩塌归因于 VLA fine-tuning (非 model size)。3B vanilla Gini 0.80-0.98。
+  - **exp06a (NitroGen 500M DiT):** Per-step 7.2ms (174M DiT), perfectly linear. 174M→350M: 2x params, 4.4x latency → compute-bound 到 memory-BW-bound 转换。k=1: 55.9Hz。
+- **latest (v0.5.1):** WAM profiling + VLA attention analysis + NitroGen DiT profiling, NitroGenController added.
+- **next:** DreamZero profiling on RTX 5880 Ada. DreamZero DiT layer activation variance 分析. OpenVLA (need HF download). Pi-Zero controller.
