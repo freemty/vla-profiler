@@ -77,6 +77,37 @@ bash scripts/launch_exp.sh 0 nitrogen/profiling
 bash scripts/download-results.sh
 ```
 
+## Results
+
+Model: 407M total (Vision=199M, VL-SA=28M, DiT=**174M**)
+
+| k (steps) | Encode (ms) | Context (ms) | Action (ms) | Total (ms) | Per-step (ms) | Hz |
+|-----------|-------------|-------------|-------------|------------|---------------|------|
+| **16** | 8.70 | 1.95 | **115.39** | **126.04** | **7.21** | 7.9 |
+| **8** | 8.98 | 1.95 | **57.40** | **68.33** | **7.18** | 14.6 |
+| **4** | 8.67 | 1.93 | **28.80** | **39.40** | **7.20** | 25.4 |
+| **2** | 9.06 | 1.94 | **14.45** | **25.45** | **7.22** | 39.2 |
+| **1** | 8.71 | 1.93 | **7.30** | **17.94** | **7.30** | 55.9 |
+
+### Key Findings
+
+1. **Per-step DiT cost = 7.2ms** — perfectly linear scaling across all k values
+2. **Action dominates 91.6%** at k=16 (consistent with Fast-WAM/LingBot-VA pattern)
+3. **SigLIP encode = 8.7ms** — stable, low variance (256x256 fixed input, 256 tokens)
+4. **VL self-attention = 1.9ms** — negligible overhead (4-layer, 28M params)
+5. **k=1 achieves 55.9Hz** — real-time capable with step distillation
+
+### DiT Per-Step Scaling Curve
+
+| Model | DiT Params | Per-step Cost | Regime |
+|-------|-----------|---------------|--------|
+| LingBot-VLA flow head | ~轻量 (embedded) | 0.048ms | Compute-bound |
+| **NitroGen DiT** | **174M** | **7.2ms** | **Compute-bound** |
+| LingBot-VA DiT | ~5B (shared) | 28.5ms | Memory-BW-bound |
+| Fast-WAM ActionDiT | ~350M | 32ms | Memory-BW-bound |
+
+174M→350M: 2x params, 4.4x latency → super-linear → **transition from compute-bound to memory-BW-bound between 174M-350M**.
+
 ## Status
 
-**pending** — controller written, needs deploy + run
+**done** — 2026-04-22

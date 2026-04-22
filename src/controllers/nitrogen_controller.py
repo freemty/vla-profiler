@@ -94,13 +94,13 @@ class NitroGenController(BaseVLAController):
         device = getattr(cfg, "device", "cuda:0")
         dtype_str = getattr(cfg, "precision", "bfloat16")
         dtype = getattr(torch, dtype_str, torch.bfloat16)
-        mode = getattr(cfg, "mode", "random")
+        mode = getattr(cfg, "weight_mode", getattr(cfg, "mode", "random"))
 
         repo_path = getattr(cfg, "repo_path", "/data1/ybyang/NitroGen")
         sys.path.insert(0, repo_path)
 
         from nitrogen.flow_matching_transformer.nitrogen import NitroGen, NitroGen_Config
-        from nitrogen.flow_matching_transformer.modules import DiTConfig, SelfAttentionTransformerConfig
+        from nitrogen.flow_matching_transformer.modules import DiT, DiTConfig, SelfAttentionTransformer, SelfAttentionTransformerConfig
 
         num_inference_timesteps = getattr(cfg, "num_inference_steps", 16)
         action_horizon = getattr(cfg, "action_horizon", 16)
@@ -164,8 +164,56 @@ class NitroGenController(BaseVLAController):
         )
 
         if mode == "random":
-            logger.info("Building NitroGen with pretrained SigLIP + random action head...")
-            model = NitroGen(config=model_config, game_mapping=None)
+            logger.info("Building NitroGen with random weights (timing-only)...")
+            from transformers import SiglipVisionConfig
+            vision_cfg = SiglipVisionConfig(
+                hidden_size=model_config.vision_hidden_size,
+                intermediate_size=model_config.vision_hidden_size * 4,
+                num_hidden_layers=27,
+                num_attention_heads=16,
+                image_size=256,
+                patch_size=16,
+            )
+            from transformers import SiglipVisionModel
+            random_vision = SiglipVisionModel(vision_cfg)
+            model = NitroGen.__new__(NitroGen)
+            nn.Module.__init__(model)
+            model.config = model_config
+            model.hidden_size = model_config.hidden_size
+            model.vision_hidden_size = model_config.vision_hidden_size
+            model.vision_encoder = random_vision.vision_model
+            model.vision_encoder_type = "siglip"
+            model.beta_dist = torch.distributions.Beta(
+                model_config.noise_beta_alpha, model_config.noise_beta_beta
+            )
+            model.num_timestep_buckets = model_config.num_timestep_buckets
+            model.model = DiT(config=model_config.diffusion_model_cfg)
+            model.action_dim = model_config.action_dim
+            model.action_horizon = model_config.action_horizon
+            model.num_inference_timesteps = model_config.num_inference_timesteps
+            model.vl_self_attention_model = SelfAttentionTransformer(
+                config=model_config.vl_self_attention_cfg
+            )
+            model.mm_projector = None
+            model.game_mapping = None
+
+            from nitrogen.flow_matching_transformer.nitrogen import MultiEmbodimentActionEncoder, CategorySpecificMLP
+            model.action_encoder = MultiEmbodimentActionEncoder(
+                action_dim=model_config.action_dim,
+                hidden_size=model_config.hidden_size,
+                num_embodiments=model_config.max_num_embodiments,
+            )
+            model.action_decoder = CategorySpecificMLP(
+                num_categories=model_config.max_num_embodiments,
+                input_dim=model_config.hidden_size,
+                hidden_dim=model_config.hidden_size,
+                output_dim=model_config.action_dim,
+            )
+            if model_config.add_pos_embed:
+                model.position_embedding = nn.Embedding(
+                    model_config.max_seq_len, model_config.hidden_size
+                )
+                nn.init.normal_(model.position_embedding.weight, mean=0.0, std=0.02)
         else:
             ckpt_path = getattr(cfg, "checkpoint_path", None)
             if ckpt_path is None:
@@ -227,7 +275,7 @@ class NitroGenController(BaseVLAController):
         dtype = pipeline.dtype
         config = pipeline.config
 
-        num_steps = model.num_inference_timesteps
+        num_steps = inputs.get("num_inference_steps", model.num_inference_timesteps)
         action_horizon = config.action_horizon
         action_dim = config.action_dim
         num_visual_tokens = 256
