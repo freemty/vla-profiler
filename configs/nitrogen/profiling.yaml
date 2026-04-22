@@ -1,0 +1,71 @@
+# NitroGen 500M VA profiling config
+# Model: SigLIP ViT (encode) → VL Self-Attn (context) → DiT (flow matching action)
+
+defaults:
+  - /base
+
+experiment:
+  name: "exp06a_nitrogen_profiling"
+  description: "NitroGen 500M DiT E/C/A breakdown + per-step cost + k sweep"
+
+model:
+  name: "NitroGen"
+  type: "va"
+  paradigm: "flow-matching-dit"
+  repo: "https://github.com/MineDojo/NitroGen"
+  checkpoint: "ng.pt"
+
+controller_name: nitrogen
+controller_config:
+  mode: random
+  repo_path: "/data1/ybyang/NitroGen"
+  vision_encoder_name: "google/siglip-large-patch16-256"
+  vision_hidden_size: 768
+  # DiT config (matches NitroGen 500M defaults)
+  dit_num_layers: 12
+  dit_num_heads: 16
+  dit_head_dim: 64
+  vl_num_layers: 4
+  vl_num_heads: 12
+  vl_head_dim: 64
+  # Action config
+  action_dim: 20
+  action_horizon: 16
+
+tasks:
+  - epd_profiling
+
+profiling:
+  gpu_id: 0
+  warmup: 5
+  iterations: 20
+  phases:
+    - encode    # SigLIP ViT
+    - context   # VL self-attention
+    - action    # DiT flow matching × k steps
+
+inputs:
+  - name: "k16"
+    num_inference_steps: 16
+  - name: "k8"
+    num_inference_steps: 8
+  - name: "k4"
+    num_inference_steps: 4
+  - name: "k2"
+    num_inference_steps: 2
+  - name: "k1"
+    num_inference_steps: 1
+
+notes: |
+  NitroGen is a pure VA model (no language encoder).
+  The SigLIP encoder produces 256 fixed tokens from a 256x256 image.
+  VL self-attention mixes these tokens before DiT cross-attends to them.
+
+  Key questions:
+  1. E/C/A breakdown at k=16 (default)
+  2. Per-step DiT cost (~100M DiT, estimate 5-10ms/step)
+  3. k sweep: latency vs step count (k=1,2,4,8,16)
+  4. Compute-bound vs memory-bandwidth-bound regime?
+
+  Expected: Total ~95-195ms at k=16, Action ~70-85% of total.
+  Compare with exp04a (Fast-WAM 350M DiT, 32ms/step).

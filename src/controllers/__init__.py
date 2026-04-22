@@ -10,6 +10,7 @@ from src.controllers.openvla_controller import OpenVLAController  # noqa: F401
 from src.controllers.act_controller import ACTController  # noqa: F401
 from src.controllers.lingbot_vla_controller import LingBotVLAController  # noqa: F401
 from src.controllers.lingbot_va_controller import LingBotVAController  # noqa: F401
+from src.controllers.nitrogen_controller import NitroGenController  # noqa: F401
 
 # Pi-Zero requires separate conda env (openpi) — lazy import to avoid dependency crash
 try:

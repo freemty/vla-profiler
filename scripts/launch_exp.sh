@@ -10,6 +10,7 @@ conda activate vit-probe
 
 export HF_HOME=/data1/ybyang/huggingface
 export TRANSFORMERS_CACHE=/data1/ybyang/huggingface
+export PYTHONPATH=/data1/ybyang/lingbot-vla:/data1/ybyang/nitrogen${PYTHONPATH:+:$PYTHONPATH}
 
 GPU_ID=${1:-0}
 CONFIG_NAME=${2:-qwen_vl_7b/profiling}

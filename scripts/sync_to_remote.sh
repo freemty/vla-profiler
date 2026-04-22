@@ -22,7 +22,7 @@ scp -P 66 "$BUNDLE_PATH" "$REMOTE_HOST:/tmp/"
 
 # Step 3: Also sync submodule (model-probe-core)
 echo "Syncing model-probe-core submodule..."
-cd /Users/sum_young/code/projects/model-probe-core
+cd "$LOCAL_DIR/src/core"
 git bundle create /tmp/model-probe-core.bundle main
 scp -P 66 /tmp/model-probe-core.bundle "$REMOTE_HOST:/tmp/"
 

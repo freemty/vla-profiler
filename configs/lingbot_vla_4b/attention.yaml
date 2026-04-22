@@ -30,11 +30,14 @@ task_configs:
   visual_text_attention:
     top_k: 5
     head_dim: 128
+    visual_token_count: 64
   sink_detection:
     sink_k: 10
     head_dim: 128
+    visual_token_count: 64
   per_layer_stats:
     head_dim: 128
+    visual_token_count: 64
 
 max_new_tokens: 128
 
