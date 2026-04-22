@@ -22,6 +22,14 @@
 - CLAUDE.md — current_exp 更新到 exp06a, 新增 exp05a/05b/06a key findings
 - docs/TODO.md — NitroGen profiling 标记完成
 
+### 修复
+- **NitroGenController config passthrough** — `init_pipeline()` 从 `controller_config` 读取 NitroGen 专属字段，YAML 配置不再被静默忽略
+- **NitroGen profiling warmup/iterations** — 顶层 `num_warmup_runs: 5` / `num_benchmark_runs: 20` 覆盖 base.yaml 默认值 (3/10)
+
+### 可视化
+- `viewer/static/scaling-curve.html` — Chart.js 交互式 dashboard: DiT scaling scatter (log-log), latency spectrum (stacked bar), NitroGen k-sweep (dual y-axis), paradigm comparison matrix
+- `viewer/static/index.html` — 新增第 4 张导航卡 "DiT Scaling & Latency"，版本号更新到 v0.5.1
+
 ### 文档
 - `docs/knowhow/debug-solutions/nitrogen-controller-deployment.md` — NitroGen 部署 5 个问题 + Codex 审查发现
 - `docs/knowhow/debug-solutions/lingbot-va-wam-integration.md` — LingBot-VA WAM 集成

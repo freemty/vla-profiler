@@ -102,6 +102,7 @@ body {
 .nav-card:nth-child(2) { animation: fadeUp 0.6s 0.35s forwards; }
 .nav-card:nth-child(3) { animation: fadeUp 0.6s 0.45s forwards; }
 .nav-card:nth-child(4) { animation: fadeUp 0.6s 0.55s forwards; }
+.nav-card:nth-child(5) { animation: fadeUp 0.6s 0.65s forwards; }
 
 .nav-card::before {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
@@ -139,7 +140,7 @@ body {
 .footer {
   font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-muted);
   letter-spacing: 0.05em; text-align: center;
-  opacity: 0; animation: fadeUp 0.6s 0.7s forwards;
+  opacity: 0; animation: fadeUp 0.6s 0.8s forwards;
 }
 
 @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
@@ -187,8 +188,16 @@ body {
       <span class="card-tag tag-done">3 Experiments Done</span>
     </a>
 
-    <a class="nav-card" href="/api/experiments">
+    <a class="nav-card" href="scaling-curve.html">
       <span class="card-number">04</span>
+      <div class="card-icon">&#9099;</div>
+      <div class="card-title">DiT Scaling &amp; Latency</div>
+      <div class="card-desc">DiT compute-vs-BW transition, full latency spectrum, NitroGen k-sweep, paradigm matrix</div>
+      <span class="card-tag tag-done">6 Experiments</span>
+    </a>
+
+    <a class="nav-card" href="/api/experiments">
+      <span class="card-number">05</span>
       <div class="card-icon">&#8962;</div>
       <div class="card-title">API &amp; Status</div>
       <div class="card-desc">Experiment metadata, pipeline state, JSON endpoints</div>
@@ -197,7 +206,7 @@ body {
   </nav>
 
   <footer class="footer">
-    VLLA v0.4.2 &middot; April 2026 &middot; Yuanbo Yang &middot; UCSD Hao AI Lab
+    VLLA v0.5.1 &middot; April 2026 &middot; Yuanbo Yang &middot; UCSD Hao AI Lab
   </footer>
 </div>
 
