@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.6.1 @freemty — 2026-04-23
+
+### 新增
+- **Advisor meeting slides** — `slides/vlla-phase1-results.html` (12 pages)
+  - Latency spectrum (9 models, 6 measured + 3 planned with dashed bars)
+  - Open-source landscape table (10 models by paradigm)
+  - Action Model Design Space 象限图 (latency × generalization, 14 data points, 5 paradigms)
+  - Emerging paradigms: Dual-System, MoE-VLA, SSM-VLA, 1-Step Flow
+  - 3 insight slides, prediction calibration, next steps
+
+---
+
 ## v0.6.0 @freemty — 2026-04-22
 
 ### 新增

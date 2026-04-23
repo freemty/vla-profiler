@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VLM/VLA Real-Time Inference — Phase 1 Profiling Results</title>
+<style>
+:root {
+  --bg: #faf8f4;
+  --surface: #ffffff;
+  --surface-warm: #f9f6f0;
+  --border: #e0d5c0;
+  --text: #2c2416;
+  --text-secondary: #5a4d38;
+  --text-muted: #7a6a50;
+  --accent: #b07a22;
+  --accent-hover: #8d6118;
+  --green: #2d8a4e;
+  --yellow: #a67c00;
+  --red: #c0392b;
+  --blue: #4a90d9;
+  --radius: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "SF Mono", Menlo, "Cascadia Code", monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%; overflow: hidden;
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.deck { width: 100vw; height: 100vh; position: relative; }
+
+.slide {
+  position: absolute; inset: 0;
+  display: none; flex-direction: column;
+  justify-content: center; align-items: center;
+  background: var(--bg);
+  padding: 48px 72px;
+  overflow: hidden;
+}
+.slide.active { display: flex; }
+
+.slide-inner {
+  width: 100%; max-width: 1100px;
+  display: flex; flex-direction: column; gap: 28px;
+}
+
+.counter {
+  position: fixed; bottom: 24px; right: 32px;
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--text-muted); letter-spacing: 0.04em; z-index: 100;
+}
+
+h1 { font-size: 46px; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; }
+h2 { font-size: 28px; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; }
+h3 { font-size: 15px; font-weight: 600; letter-spacing: 0.01em; }
+p  { font-size: 16px; line-height: 1.65; color: var(--text-secondary); }
+
+.section-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;
+}
+.divider { width: 40px; height: 2px; background: var(--border); border-radius: 2px; }
+.title-tag {
+  display: inline-block; background: var(--surface-warm);
+  border: 1px solid var(--border); border-radius: 40px;
+  padding: 6px 16px; font-size: 13px; font-family: var(--font-mono);
+  color: var(--text-muted); letter-spacing: 0.04em; margin-bottom: 8px;
+}
+.title-date {
+  font-size: 14px; font-family: var(--font-mono);
+  color: var(--text-muted); letter-spacing: 0.06em; margin-top: 8px;
+}
+
+.callout {
+  background: var(--surface-warm); border: 1px solid var(--border);
+  border-left: 3px solid var(--accent); border-radius: var(--radius);
+  padding: 14px 20px; font-size: 15px; line-height: 1.6; color: var(--text-secondary);
+}
+.callout strong { color: var(--text); }
+.callout.green { border-left-color: var(--green); }
+.callout.red { border-left-color: var(--red); }
+
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px 28px; box-shadow: var(--shadow);
+}
+.card.green-border { border-left: 3px solid var(--green); }
+.card.yellow-border { border-left: 3px solid var(--yellow); }
+.card.accent-border { border-left: 3px solid var(--accent); }
+.card.red-border { border-left: 3px solid var(--red); }
+.card.blue-border { border-left: 3px solid var(--blue); }
+
+.card h3 { margin-bottom: 14px; }
+.card h3.green { color: var(--green); }
+.card h3.yellow { color: var(--yellow); }
+.card h3.accent { color: var(--accent); }
+.card h3.red { color: var(--red); }
+.card h3.blue { color: var(--blue); }
+
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.card ul li {
+  font-size: 14px; line-height: 1.55; color: var(--text-secondary);
+  padding-left: 16px; position: relative;
+}
+.card ul li::before {
+  content: "\b7"; position: absolute; left: 4px; color: var(--text-muted);
+}
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.two-col-wide { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; align-items: start; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.stacked { display: flex; flex-direction: column; gap: 16px; }
+
+.badge {
+  display: inline-block; background: var(--surface-warm);
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 2px 8px; font-size: 12px; font-family: var(--font-mono); color: var(--text-muted);
+}
+.badge.accent { background: #fef6e6; border-color: #e8c87a; color: var(--accent); }
+.badge.green { background: #f0faf4; border-color: #a0d4b4; color: var(--green); }
+.badge.red { background: #fdf0ef; border-color: #e8a8a0; color: var(--red); }
+
+.compare-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.compare-table th {
+  text-align: left; padding: 8px 14px; font-size: 12px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-muted); border-bottom: 1px solid var(--border);
+}
+.compare-table td {
+  padding: 10px 14px; color: var(--text-secondary);
+  border-bottom: 1px solid var(--border); vertical-align: top;
+}
+.compare-table tr.highlight td {
+  background: #fef6e6; color: var(--text); font-weight: 500;
+}
+.compare-table td:first-child {
+  font-family: var(--font-mono); font-size: 13px; color: var(--text); white-space: nowrap;
+}
+
+/* Phase bar chart */
+.phase-bar-row {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+}
+.phase-bar-label {
+  width: 130px; flex-shrink: 0; font-size: 13px; font-weight: 600;
+  color: var(--text); text-align: right;
+}
+.phase-bar-sublabel {
+  font-size: 11px; font-weight: 400; color: var(--text-muted);
+  display: block; margin-top: 1px;
+}
+.phase-bar-container {
+  flex: 1; display: flex; height: 32px; border-radius: 4px; overflow: hidden;
+  border: 1px solid var(--border);
+}
+.phase-bar-segment {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-family: var(--font-mono); color: #fff;
+  white-space: nowrap; min-width: 0; overflow: hidden;
+}
+.phase-bar-total {
+  width: 80px; flex-shrink: 0; font-size: 12px; font-family: var(--font-mono);
+  color: var(--text-muted); text-align: right;
+}
+.phase-e { background: var(--blue); }
+.phase-c { background: var(--accent); }
+.phase-a { background: var(--red); }
+.phase-v { background: var(--green); }
+.phase-p { background: #7b68ee; }
+.phase-d { background: #a0a0a0; }
+
+.phase-legend {
+  display: flex; gap: 16px; font-size: 12px; color: var(--text-muted);
+  margin-top: 8px; justify-content: flex-end;
+}
+.phase-legend-item { display: flex; align-items: center; gap: 5px; }
+.phase-legend-dot {
+  width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0;
+}
+
+/* Pipeline */
+.pipeline { display: flex; align-items: center; gap: 0; flex-wrap: nowrap; overflow-x: auto; }
+.pipe-box {
+  flex-shrink: 0; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 18px; text-align: center;
+  min-width: 100px; box-shadow: var(--shadow);
+}
+.pipe-box .pipe-label { font-size: 13px; font-weight: 600; color: var(--text); display: block; }
+.pipe-box .pipe-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; font-family: var(--font-mono); display: block; }
+.pipe-arrow { flex-shrink: 0; font-size: 18px; color: var(--border); padding: 0 6px; user-select: none; }
+
+/* Check list */
+.check-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.check-list li { font-size: 15px; line-height: 1.5; color: var(--text-secondary); display: flex; align-items: flex-start; gap: 10px; }
+.check-list li .icon { flex-shrink: 0; font-style: normal; font-size: 14px; margin-top: 2px; }
+.check-list li .icon.done { color: var(--green); }
+.check-list li .icon.next { color: var(--accent); font-family: var(--font-mono); font-size: 12px; margin-top: 3px; }
+
+/* Center emphasis */
+.center-em {
+  text-align: center; padding: 20px 28px;
+  background: var(--surface-warm); border: 1px solid var(--border); border-radius: var(--radius);
+}
+.center-em .big { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.center-em .sub { font-size: 14px; color: var(--text-muted); line-height: 1.55; }
+
+/* Attention comparison */
+.attn-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; text-align: center; }
+.attn-cell { padding: 16px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+.attn-cell .metric { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+.attn-cell .before { font-size: 20px; font-weight: 700; color: var(--blue); }
+.attn-cell .arrow { font-size: 14px; color: var(--text-muted); margin: 4px 0; }
+.attn-cell .after { font-size: 20px; font-weight: 700; color: var(--red); }
+.attn-cell .label { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+/* Scaling dots */
+.scaling-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+}
+.scaling-row:last-child { border-bottom: none; }
+.scaling-name { width: 140px; font-size: 13px; font-weight: 600; color: var(--text); flex-shrink: 0; }
+.scaling-params { width: 70px; font-size: 12px; font-family: var(--font-mono); color: var(--text-muted); flex-shrink: 0; text-align: right; }
+.scaling-bar-wrap { flex: 1; height: 20px; background: var(--surface-warm); border-radius: 3px; overflow: hidden; position: relative; }
+.scaling-bar { height: 100%; border-radius: 3px; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; font-size: 10px; font-family: var(--font-mono); color: #fff; }
+.scaling-hz { width: 70px; font-size: 12px; font-family: var(--font-mono); color: var(--text-muted); flex-shrink: 0; text-align: right; }
+
+/* Planned (not yet profiled) bar style */
+.phase-bar-row.planned { opacity: 0.6; }
+.phase-bar-row.planned .phase-bar-container { border-style: dashed; }
+.phase-bar-row.planned .phase-bar-label { font-style: italic; }
+.planned-tag {
+  display: inline-block; font-size: 10px; font-family: var(--font-mono);
+  color: var(--accent); background: #fef6e6; border: 1px dashed #e8c87a;
+  border-radius: 3px; padding: 1px 6px; margin-left: 6px; vertical-align: middle;
+}
+
+/* Landscape table */
+.landscape-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.landscape-table th {
+  text-align: left; padding: 7px 12px; font-size: 11px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-muted); border-bottom: 2px solid var(--border);
+}
+.landscape-table td {
+  padding: 7px 12px; color: var(--text-secondary);
+  border-bottom: 1px solid var(--border); vertical-align: middle;
+}
+.landscape-table td:first-child { font-weight: 600; color: var(--text); }
+.landscape-table tr.ours td { background: #fef6e6; }
+.landscape-table tr.planned td { background: var(--surface-warm); font-style: italic; }
+
+/* Paradigm mini cards */
+.paradigm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.paradigm-mini {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px 18px; box-shadow: var(--shadow);
+}
+.paradigm-mini h3 { font-size: 14px; margin-bottom: 8px; }
+.paradigm-mini p { font-size: 12px; line-height: 1.5; color: var(--text-secondary); margin: 0; }
+.paradigm-mini .pm-tag { font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); }
+
+/* Design Space quadrant */
+.ds-wrap {
+  position: relative; width: 100%; aspect-ratio: 16/10;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
+}
+.ds-axis-x, .ds-axis-y {
+  position: absolute; background: var(--border);
+}
+.ds-axis-x { left: 60px; right: 20px; top: 50%; height: 1px; }
+.ds-axis-y { top: 20px; bottom: 40px; left: 60px; width: 1px; }
+.ds-label {
+  position: absolute; font-size: 11px; font-family: var(--font-mono);
+  color: var(--text-muted); letter-spacing: 0.04em;
+}
+.ds-label-x-lo { bottom: 8px; left: 60px; }
+.ds-label-x-hi { bottom: 8px; right: 20px; }
+.ds-label-y-lo { top: 50%; left: 8px; transform: translateY(8px); writing-mode: vertical-rl; text-orientation: mixed; }
+.ds-label-y-hi { top: 20px; left: 8px; writing-mode: vertical-rl; text-orientation: mixed; }
+.ds-xlabel { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+.ds-ylabel { position: absolute; top: 50%; left: 6px; transform: translateY(-50%) rotate(-90deg); font-size: 12px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; transform-origin: center center; }
+
+.ds-dot {
+  position: absolute; transform: translate(-50%, -50%);
+  border-radius: 50%; border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  z-index: 2; cursor: default;
+}
+.ds-dot-label {
+  position: absolute; transform: translate(-50%, 0);
+  font-size: 10px; font-family: var(--font-mono); font-weight: 600;
+  color: var(--text); white-space: nowrap; text-align: center;
+  pointer-events: none;
+}
+.ds-dot-sub {
+  font-weight: 400; color: var(--text-muted); display: block; font-size: 9px;
+}
+
+/* Quadrant labels */
+.ds-quad {
+  position: absolute; font-size: 11px; font-weight: 600;
+  color: var(--text-muted); opacity: 0.5; letter-spacing: 0.04em;
+}
+
+/* Zone highlights */
+.ds-zone {
+  position: absolute; border-radius: 8px; opacity: 0.08; z-index: 0;
+}
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 1 — Title
+  ══════════════════════════════════════════════ -->
+  <div class="slide active">
+    <div class="slide-inner" style="gap: 28px;">
+      <div>
+        <div class="title-tag">vlla — Phase 1 Results</div>
+        <h1 style="margin-top: 16px; max-width: 860px;">VLM/VLA Real-Time Inference<br>Profiling Results</h1>
+        <p style="font-size: 20px; margin-top: 14px; color: var(--text-muted); font-weight: 400;">
+          9 experiments · 7 models · 4 paradigms — first-party latency spectrum
+        </p>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="callout" style="max-width: 600px;">
+        <strong>核心问题:</strong> 不同范式的 VLM/VLA 瓶颈结构有什么不同? 系统优化策略如何分化?
+      </div>
+
+      <div style="display: flex; gap: 16px; align-items: center;">
+        <p class="title-date">Yuanbo Yang &middot; UCSD Hao AI Lab</p>
+        <p class="title-date">April 2026</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 2 — Why This Matters
+  ══════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div>
+        <div class="section-label">Background</div>
+        <h2>VLM/VLA Serving 处于 "pre-vLLM" 阶段</h2>
+      </div>
+
+      <div class="two-col">
+        <div class="card green-border">
+          <h3 class="green">LLM Serving — 已解决</h3>
+          <ul>
+            <li><strong>vLLM / TRT-LLM / SGLang</strong> — 成熟的 KV-cache, paged attention, continuous batching</li>
+            <li>Prefill/Decode 分离已标准化</li>
+            <li>Benchmark 完善 (Chatbot Arena, LMSYS)</li>
+          </ul>
+        </div>
+
+        <div class="card yellow-border">
+          <h3 class="yellow">VLM/VLA Serving — 空白</h3>
+          <ul>
+            <li><strong>无统一 serving system</strong> — 每个模型自带推理脚本</li>
+            <li><strong>Phase 定义不统一</strong> — VLM (E/P/D) vs VLA (E/C/A) vs WAM (E/V/A)</li>
+            <li><strong>无标准 benchmark</strong> — 延迟数字不可跨论文比较</li>
+            <li><strong>瓶颈结构未知</strong> — 不知道优化哪里</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout">
+        张昊路线: Parameter Server → Alpa → vLLM → FastVideo → <strong>VLM/VLA real-time systems</strong><br>
+        每一步都是 ML Systems 前沿的下一个自然问题。<strong>Measure first — 不凭直觉优化。</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 3 — Profiling Framework
+  ══════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div>
+        <div class="section-label">Framework</div>
+        <h2>Profiling Framework — 统一的 Phase Timing</h2>
+      </div>
+
+      <div class="card" style="padding: 28px 32px;">
+        <div class="pipeline">
+          <div class="pipe-box">
+            <span class="pipe-label">Hydra Config</span>
+            <span class="pipe-sub">model + task</span>
+          </div>
+          <span class="pipe-arrow">→</span>
+          <div class="pipe-box">
+            <span class="pipe-label">Controller</span>
+            <span class="pipe-sub">init_pipeline</span>
+          </div>
+          <span class="pipe-arrow">→</span>
+          <div class="pipe-box">
+            <span class="pipe-label">Warmup</span>
+            <span class="pipe-sub">5 runs</span>
+          </div>
+          <span class="pipe-arrow">→</span>
+          <div class="pipe-box">
+            <span class="pipe-label">Benchmark</span>
+            <span class="pipe-sub">20 runs</span>
+          </div>
+          <span class="pipe-arrow">→</span>
+          <div class="pipe-box">
+            <span class="pipe-label">PhaseTimer</span>
+            <span class="pipe-sub">CUDA Events</span>
+          </div>
+          <span class="pipe-arrow">→</span>
+          <div class="pipe-box">
+            <span class="pipe-label">JSON</span>
+            <span class="pipe-sub">mean ± std</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col" style="align-items: start;">
+        <div class="card accent-border">
+          <h3 style="margin-bottom: 12px;">Controller 继承链</h3>
+          <ul>
+            <li><strong>BaseVLMController</strong> (E/P/D) → Qwen2.5-VL, OpenVLA</li>
+            <li><strong>BaseVLAController</strong> (E/C/A) → ACT, LingBot-VLA, NitroGen, Pi-Zero</li>
+            <li><strong>WAM override</strong> (E/V/A) → LingBot-VA, Fast-WAM</li>
+            <li>Shared core: <span class="badge">model-probe-core</span> submodule</li>
+          </ul>
+        </div>
+
+        <div class="card green-border">
+          <h3 style="margin-bottom: 12px;">Phase 模型</h3>
+          <ul>
+            <li><strong>VLM:</strong> E (vision encode) → P (prefill) → D (decode) — autoregressive</li>
+            <li><strong>VLA:</strong> E (encode) → C (context/prefill) → A (action head) — flow/diffusion</li>
+            <li><strong>WAM:</strong> E (encode) → V (video denoise) → A (action denoise)</li>
+            <li>新模型只需: Controller class + YAML config</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 4 — The Latency Spectrum ★
+  ══════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div>
+        <div class="section-label">Core Result</div>
+        <h2>The Latency Spectrum — 4 个数量级</h2>
+        <p style="margin-top: 6px;">RTX 5880 Ada · bf16 · random-init (timing valid) · mean of 20 runs</p>
+      </div>
+
+      <div class="card" style="padding: 24px 28px;">
+        <!-- ACT -->
+        <div class="phase-bar-row">
+          <div class="phase-bar-label">ACT<span class="phase-bar-sublabel">VA · CVAE</span></div>
+          <div class="phase-bar-container" style="max-width: 60%;">
+            <div class="phase-bar-segment phase-e" style="flex: 80;" title="Encode 2.5ms">E 2.5ms</div>
+            <div class="phase-bar-segment phase-a" style="flex: 20;" title="Action 0.5ms">A</div>
+          </div>
+          <div class="phase-bar-total"><strong>3ms</strong> · 330Hz</div>
+        </div>
+
+        <!-- Diffusion Policy — planned -->
+        <div class="phase-bar-row planned">
+          <div class="phase-bar-label">Diffusion Policy<span class="phase-bar-sublabel">VA · DDIM 10-step</span></div>
+          <div class="phase-bar-container" style="max-width: 60%;">
+            <div class="phase-bar-segment phase-e" style="flex: 30;" title="Encode ~10ms">E</div>
+            <div class="phase-bar-segment phase-a" style="flex: 70;" title="Action ~25ms">A ~25ms</div>
+          </div>
+          <div class="phase-bar-total"><strong>~35ms</strong><span class="planned-tag">planned</span></div>
+        </div>
+
+        <!-- LingBot-VLA -->
+        <div class="phase-bar-row">
+          <div class="phase-bar-label">LingBot-VLA<span class="phase-bar-sublabel">Flow VLA · 4B</span></div>
+          <div class="phase-bar-container" style="max-width: 60%;">
+            <div class="phase-bar-segment phase-e" style="flex: 48;" title="Encode 35.7ms">E 36ms</div>
+            <div class="phase-bar-segment phase-c" style="flex: 51;" title="Context 38.3ms">C 38ms</div>
+            <div class="phase-bar-segment phase-a" style="flex: 1;" title="Action 0.48ms"></div>
+          </div>
+          <div class="phase-bar-total"><strong>74.5ms</strong> · 13Hz</div>
+        </div>
+
+        <!-- NitroGen k=16 -->
+        <div class="phase-bar-row">
+          <div class="phase-bar-label">NitroGen<span class="phase-bar-sublabel">VA · DiT · k=16</span></div>
+          <div class="phase-bar-container" style="max-width: 60%;">
+            <div class="phase-bar-segment phase-e" style="flex: 7;" title="Encode 8.7ms">E</div>
+            <div class="phase-bar-segment phase-c" style="flex: 1.5;" title="VL-SA 1.9ms"></div>
+            <div class="phase-bar-segment phase-a" style="flex: 91.5;" title="Action 115.4ms">A 115ms</div>
+          </div>
+          <div class="phase-bar-total"><strong>126ms</strong> · 7.9Hz</div>
+        </div>
+
+        <!-- DreamZero — planned -->
+        <div class="phase-bar-row planned">
+          <div class="phase-bar-label">DreamZero<span class="phase-bar-sublabel">WAM · Wan2.1 14B</span></div>
+          <div class="phase-bar-container" style="max-width: 60%;">
+            <div class="phase-bar-segment phase-e" style="flex: 5;" title="Encode ~7ms"></div>
+            <div class="phase-bar-segment phase-v" style="flex: 40;" title="Video ~57ms">V</div>
+            <div class="phase-bar-segment phase-a" style="flex: 55;" title="Action ~79ms">A ~79ms</div>
+          </div>
+          <div class="phase-bar-total"><strong>~143ms</strong><span class="planned-tag">planned</span></div>
+        </div>
+
+        <!-- OpenVLA — planned -->
+        <div class="phase-bar-row planned">
+          <div class="phase-bar-label">OpenVLA<span class="phase-bar-sublabel">AR-VLA · 7B</span></div>
+          <div class="phase-bar-container" style="max-width: 60%;">
+            <div class="phase-bar-segment phase-e" style="flex: 45;" title="Encode ~180ms">E ~180ms</div>
+            <div class="phase-bar-segment phase-p" style="flex: 40;" title="Prefill ~160ms">P ~160ms</div>
+            <div class="phase-bar-segment phase-d" style="flex: 15;" title="Decode ~60ms (7 tokens)">D</div>
+          </div>
+          <div class="phase-bar-total"><strong>~400ms</strong><span class="planned-tag">planned</span></div>
+        </div>
+
+        <!-- Qwen2.5-VL-7B -->
+        <div class="phase-bar-row">
+          <div class="phase-bar-label">Qwen2.5-VL-7B<span class="phase-bar-sublabel">VLM · AR</span></div>
+          <div class="phase-bar-container" style="max-width: 60%;">
+            <div class="phase-bar-segment phase-e" style="flex: 58;" title="Encode 253ms">E 253ms</div>
+            <div class="phase-bar-segment phase-p" style="flex: 36;" title="Prefill 156ms">P 156ms</div>
+            <div class="phase-bar-segment phase-d" style="flex: 6;" title="Decode 18.6ms/tok">D</div>
+          </div>
+          <div class="phase-bar-total"><strong>~430ms</strong></div>
+        </div>
+
+        <!-- Fast-WAM -->
+        <div class="phase-bar-row">
+          <div class="phase-bar-label">Fast-WAM<span class="phase-bar-sublabel">WAM-skip · 6.7B</span></div>
+          <div class="phase-bar-container" style="max-width: 60%;">
+            <div class="phase-bar-segment phase-e" style="flex: 2;" title="Encode 7.6ms"></div>
+            <div class="phase-bar-segment phase-c" style="flex: 9;" title="Context 36.7ms">C</div>
+            <div class="phase-bar-segment phase-a" style="flex: 89;" title="Action 362ms">A 362ms</div>
+          </div>
+          <div class="phase-bar-total"><strong>407ms</strong> · 2.5Hz</div>
+        </div>
+
+        <!-- LingBot-VA -->
+        <div class="phase-bar-row">
+          <div class="phase-bar-label">LingBot-VA<span class="phase-bar-sublabel">Full WAM · 5B DiT</span></div>
+          <div class="phase-bar-container" style="max-width: 60%;">
+            <div class="phase-bar-segment phase-e" style="flex: 3.6;" title="Encode 75.5ms">E</div>
+            <div class="phase-bar-segment phase-v" style="flex: 28.3;" title="Video 592ms">V 592ms</div>
+            <div class="phase-bar-segment phase-a" style="flex: 68.1;" title="Action 1423ms">A 1423ms</div>
+          </div>
+          <div class="phase-bar-total"><strong>2091ms</strong> · 0.5Hz</div>
+        </div>
+
+        <div class="phase-legend">
+          <div class="phase-legend-item"><div class="phase-legend-dot phase-e"></div> Encode</div>
+          <div class="phase-legend-item"><div class="phase-legend-dot phase-p"></div> Prefill</div>
+          <div class="phase-legend-item"><div class="phase-legend-dot phase-c"></div> Context</div>
+          <div class="phase-legend-item"><div class="phase-legend-dot phase-v"></div> Video</div>
+          <div class="phase-legend-item"><div class="phase-legend-dot phase-a"></div> Action</div>
+          <div class="phase-legend-item"><div class="phase-legend-dot phase-d"></div> Decode</div>
+          <div class="phase-legend-item" style="margin-left: 8px; border-left: 1px solid var(--border); padding-left: 12px;">
+            <span style="border: 1px dashed var(--accent); border-radius: 3px; padding: 1px 6px; font-size: 10px; color: var(--accent);">planned</span> = estimated
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>3ms → 2091ms:</strong> 同一块 GPU 上 700x 延迟差距。实线 = first-party 实测 (6 models)，虚线 = 待测 (3 models)。<strong>瓶颈 phase 因范式而异。</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 5 — Landscape: What's Out There
+  ══════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div>
+        <div class="section-label">Landscape</div>
+        <h2>开源 VLM/VLA/WAM 全景图</h2>
+        <p style="margin-top: 6px;">三大范式内的代表性开源模型 — 高亮 = 我们已有 first-party 数据</p>
+      </div>
+
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <table class="landscape-table">
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Paradigm</th>
+              <th>Params</th>
+              <th>Action Head</th>
+              <th>Latency</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="ours">
+              <td>ACT</td>
+              <td>VA (CVAE)</td>
+              <td>~10M</td>
+              <td>CVAE single-forward</td>
+              <td>3ms</td>
+              <td><span class="badge green">done</span></td>
+            </tr>
+            <tr>
+              <td>Diffusion Policy</td>
+              <td>VA (Diffusion)</td>
+              <td>~100M</td>
+              <td>DDIM 10-step</td>
+              <td>~35ms</td>
+              <td><span class="badge accent">next</span></td>
+            </tr>
+            <tr>
+              <td>Octo</td>
+              <td>VLA (DiT)</td>
+              <td>93M</td>
+              <td>Diffusion DiT head</td>
+              <td>~50-100ms</td>
+              <td><span style="font-size:11px;color:var(--text-muted)">low priority</span></td>
+            </tr>
+            <tr class="ours">
+              <td>LingBot-VLA</td>
+              <td>Flow VLA</td>
+              <td>4B</td>
+              <td>10-step flow head</td>
+              <td>74.5ms</td>
+              <td><span class="badge green">done</span></td>
+            </tr>
+            <tr class="ours">
+              <td>NitroGen</td>
+              <td>VA (DiT flow)</td>
+              <td>500M</td>
+              <td>12L DiT × k steps</td>
+              <td>126ms</td>
+              <td><span class="badge green">done</span></td>
+            </tr>
+            <tr class="planned">
+              <td>DreamZero</td>
+              <td>WAM (zero-shot)</td>
+              <td>14B (Wan2.1)</td>
+              <td>DiT video+action</td>
+              <td>~143ms</td>
+              <td><span class="badge accent">planned</span></td>
+            </tr>
+            <tr class="planned">
+              <td>OpenVLA</td>
+              <td>AR-VLA</td>
+              <td>7B</td>
+              <td>AR decode 7 tokens</td>
+              <td>~400ms</td>
+              <td><span class="badge accent">planned</span></td>
+            </tr>
+            <tr class="ours">
+              <td>Qwen2.5-VL-7B</td>
+              <td>VLM (AR)</td>
+              <td>7B</td>
+              <td>N/A (text output)</td>
+              <td>~430ms</td>
+              <td><span class="badge green">done</span></td>
+            </tr>
+            <tr class="ours">
+              <td>Fast-WAM</td>
+              <td>WAM (skip-imag.)</td>
+              <td>6.7B</td>
+              <td>30L ActionDiT MoT</td>
+              <td>407ms</td>
+              <td><span class="badge green">done</span></td>
+            </tr>
+            <tr class="ours">
+              <td>LingBot-VA</td>
+              <td>WAM (full)</td>
+              <td>5B DiT</td>
+              <td>30L WanDiT shared</td>
+              <td>2091ms</td>
+              <td><span class="badge green">done</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        <strong>最大结构性缺口:</strong> AR-VLA (OpenVLA) 和 VA-Diffusion (Diffusion Policy) — 两者开源可 profiling，优先补齐。DreamZero 已在计划中。
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 6 — Action Model Design Space
+  ══════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-inner" style="gap: 20px;">
+      <div>
+        <div class="section-label">Design Space</div>
+        <h2>Action Model Design Space</h2>
+        <p style="margin-top: 4px;">X = Latency (log scale) &nbsp;|&nbsp; Y = Generalization &nbsp;|&nbsp; Size = Model params &nbsp;|&nbsp; Color = Paradigm</p>
+      </div>
+
+      <div class="ds-wrap">
+        <!-- Axes -->
+        <div class="ds-axis-x"></div>
+        <div class="ds-axis-y"></div>
+
+        <!-- Axis labels -->
+        <div class="ds-xlabel">Latency (log scale)</div>
+        <div class="ds-label-x-lo">1ms</div>
+        <div class="ds-label-x-hi">2000ms</div>
+        <div class="ds-label" style="bottom: 8px; left: 28%;">10ms</div>
+        <div class="ds-label" style="bottom: 8px; left: 48%;">100ms</div>
+        <div class="ds-label" style="bottom: 8px; left: 70%;">500ms</div>
+
+        <!-- Y axis text -->
+        <div class="ds-label-y-lo">Task-specific</div>
+        <div class="ds-label-y-hi">Zero-shot</div>
+
+        <!-- Zone fills -->
+        <div class="ds-zone" style="left:62px; top:21px; width:30%; height:45%; background:var(--blue);"></div>
+        <div class="ds-zone" style="left:62px; top:52%; width:30%; height:44%; background:var(--green);"></div>
+        <div class="ds-zone" style="left:calc(30% + 62px); top:21px; width:35%; height:45%; background:var(--accent);"></div>
+        <div class="ds-zone" style="left:calc(65% + 62px); top:21px; width:calc(35% - 82px); height:45%; background:var(--red);"></div>
+
+        <!-- Quadrant labels -->
+        <div class="ds-quad" style="left:15%; top:26%;">Fast + General</div>
+        <div class="ds-quad" style="left:15%; top:56%;">Fast + Specific</div>
+        <div class="ds-quad" style="right:12%; top:26%;">Slow + General</div>
+        <div class="ds-quad" style="right:12%; top:56%;">Slow + Specific</div>
+
+        <!-- ====== DATA POINTS ====== -->
+        <!-- Paradigm colors: VA=blue, Flow-VLA=green, AR-VLA=purple, WAM=red, Emerging=accent -->
+
+        <!-- ACT — 3ms, task-specific, ~10M -->
+        <div class="ds-dot" style="left:12%; top:72%; width:14px; height:14px; background:var(--blue);"></div>
+        <div class="ds-dot-label" style="left:12%; top:calc(72% + 12px);">ACT<span class="ds-dot-sub">3ms · VA</span></div>
+
+        <!-- Action-to-Action Flow — 0.56ms, task-specific -->
+        <div class="ds-dot" style="left:8%; top:80%; width:10px; height:10px; background:var(--blue); opacity:0.5;"></div>
+        <div class="ds-dot-label" style="left:8%; top:calc(80% + 10px);">A2A Flow<span class="ds-dot-sub">0.56ms</span></div>
+
+        <!-- Diffusion Policy — ~35ms, task-specific, ~100M -->
+        <div class="ds-dot" style="left:24%; top:65%; width:16px; height:16px; background:var(--blue); border-style:dashed;"></div>
+        <div class="ds-dot-label" style="left:24%; top:calc(65% + 14px);">Diff. Policy<span class="ds-dot-sub">~35ms · VA</span></div>
+
+        <!-- LingBot-VLA — 74.5ms, medium generalization, 4B -->
+        <div class="ds-dot" style="left:40%; top:48%; width:22px; height:22px; background:var(--green);"></div>
+        <div class="ds-dot-label" style="left:40%; top:calc(48% + 16px);">LingBot-VLA<span class="ds-dot-sub">74.5ms · Flow VLA</span></div>
+
+        <!-- NitroGen k=16 — 126ms, medium-high, 500M -->
+        <div class="ds-dot" style="left:49%; top:40%; width:18px; height:18px; background:var(--blue);"></div>
+        <div class="ds-dot-label" style="left:49%; top:calc(40% - 18px);">NitroGen<span class="ds-dot-sub">126ms · VA DiT</span></div>
+
+        <!-- DreamZero — ~143ms, high generalization (zero-shot), 14B -->
+        <div class="ds-dot" style="left:51%; top:25%; width:26px; height:26px; background:var(--red); border-style:dashed;"></div>
+        <div class="ds-dot-label" style="left:51%; top:calc(25% - 22px);">DreamZero<span class="ds-dot-sub">~143ms · WAM</span></div>
+
+        <!-- FASTER / Mean-Flow — ~10ms, medium -->
+        <div class="ds-dot" style="left:17%; top:50%; width:12px; height:12px; background:var(--green); opacity:0.6;"></div>
+        <div class="ds-dot-label" style="left:17%; top:calc(50% - 16px);">FASTER<span class="ds-dot-sub">~10ms · 1-step</span></div>
+
+        <!-- OpenVLA — ~400ms, medium-high, 7B -->
+        <div class="ds-dot" style="left:69%; top:38%; width:24px; height:24px; background:#7b68ee; border-style:dashed;"></div>
+        <div class="ds-dot-label" style="left:69%; top:calc(38% + 18px);">OpenVLA<span class="ds-dot-sub">~400ms · AR-VLA</span></div>
+
+        <!-- Qwen2.5-VL — ~430ms, high (VLM), 7B -->
+        <div class="ds-dot" style="left:71%; top:30%; width:24px; height:24px; background:#7b68ee;"></div>
+        <div class="ds-dot-label" style="left:71%; top:calc(30% - 20px);">Qwen2.5-VL<span class="ds-dot-sub">~430ms · VLM</span></div>
+
+        <!-- Fast-WAM — 407ms, medium-high, 6.7B -->
+        <div class="ds-dot" style="left:68%; top:34%; width:24px; height:24px; background:var(--red);"></div>
+        <div class="ds-dot-label" style="left:68%; top:calc(34% - 20px);">Fast-WAM<span class="ds-dot-sub">407ms · WAM</span></div>
+
+        <!-- LingBot-VA — 2091ms, high, 5B -->
+        <div class="ds-dot" style="left:90%; top:28%; width:22px; height:22px; background:var(--red);"></div>
+        <div class="ds-dot-label" style="left:90%; top:calc(28% + 16px);">LingBot-VA<span class="ds-dot-sub">2091ms · WAM</span></div>
+
+        <!-- GR00T N1 fast path — ~20ms, medium, emerging -->
+        <div class="ds-dot" style="left:21%; top:42%; width:12px; height:12px; background:var(--accent); opacity:0.5;"></div>
+        <div class="ds-dot-label" style="left:21%; top:calc(42% - 16px);">GR00T fast<span class="ds-dot-sub">~20ms · Dual</span></div>
+
+        <!-- HY-Embodied — ~50ms, medium, MoE -->
+        <div class="ds-dot" style="left:33%; top:44%; width:14px; height:14px; background:var(--accent); opacity:0.5;"></div>
+        <div class="ds-dot-label" style="left:33%; top:calc(44% + 12px);">HY-Embodied<span class="ds-dot-sub">~50ms · MoE</span></div>
+      </div>
+
+      <div style="display: flex; gap: 20px; font-size: 12px; color: var(--text-muted); justify-content: center; flex-wrap: wrap;">
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:var(--blue);display:inline-block;"></span> VA (no language)</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:var(--green);display:inline-block;"></span> Flow VLA</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#7b68ee;display:inline-block;"></span> AR VLA / VLM</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:var(--red);display:inline-block;"></span> WAM</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block;"></span> Emerging</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;border:2px dashed var(--text-muted);display:inline-block;box-sizing:border-box;"></span> Planned</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:var(--text-muted);opacity:0.4;display:inline-block;"></span> Literature</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 7 — Emerging Paradigms Beyond the Big 3
+  ══════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div>
+        <div class="section-label">Beyond</div>
+        <h2>三大范式之外 — 新兴架构</h2>
+        <p style="margin-top: 6px;">VLM / Flow-VLA / WAM 之外，4 个值得关注的新方向</p>
+      </div>
+
+      <div class="paradigm-grid">
+        <div class="paradigm-mini" style="border-left: 3px solid var(--green);">
+          <h3 style="color: var(--green);">Dual-System Architecture</h3>
+          <p><strong>GR00T N1</strong> (NVIDIA), <strong>StreamVLA</strong><br>
+          VLM (慢, ~200ms, 低频 reasoning) + DiT (快, ~20ms, 高频 control)。<br>
+          分频协作: slow path 出目标, fast path 出动作。</p>
+          <div class="pm-tag" style="margin-top: 8px;">延迟不是单一数字 — 是 heterogeneous pipeline</div>
+        </div>
+
+        <div class="paradigm-mini" style="border-left: 3px solid var(--accent);">
+          <h3 style="color: var(--accent);">MoE / MoT VLA</h3>
+          <p><strong>HY-Embodied-0.5</strong> (Tencent+NVIDIA, 2B active)<br>
+          Mixture-of-Transformers: sparse activation → edge-friendly。<br>
+          2B active params 可能 ~30-60ms，开源可用。</p>
+          <div class="pm-tag" style="margin-top: 8px;">MoE 对 inference latency 的影响是 open question</div>
+        </div>
+
+        <div class="paradigm-mini" style="border-left: 3px solid var(--blue);">
+          <h3 style="color: var(--blue);">SSM / Linear Attention VLA</h3>
+          <p><strong>AnoleVLA</strong> (Mamba/RWKV backbone)<br>
+          O(n) decode 替代 O(n^2) — 理论上 sequence length 无关。<br>
+          3x faster than Transformer VLA baseline。</p>
+          <div class="pm-tag" style="margin-top: 8px;">Architecture paradigm shift — 待验证实际延迟</div>
+        </div>
+
+        <div class="paradigm-mini" style="border-left: 3px solid var(--red);">
+          <h3 style="color: var(--red);">1-Step Distilled Flow</h3>
+          <p><strong>FASTER</strong>, <strong>Mean-Flow VLA</strong><br>
+          把 multi-step Flow VLA 压缩到单步: 8.7-83.9x 加速。<br>
+          Action-to-Action Flow: <strong>0.56ms</strong> (理论下限)。</p>
+          <div class="pm-tag" style="margin-top: 8px;">Flow → VA 速度，保留 Flow 泛化 — 最有前景的加速路线</div>
+        </div>
+      </div>
+
+      <div class="callout green">
+        <strong>共同趋势:</strong> 所有新范式都在打破 "延迟 vs 泛化" 的 Pareto frontier。<br>
+        Serving system 层面的优化 (张昊实验室的强项) 是 <strong>所有范式都需要的</strong> — 无论哪个赢。
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 7 — Insight 1: Bottleneck Shifts
+  ══════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div>
+        <div class="section-label">Insight 1</div>
+        <h2>Phase Bottleneck 因范式完全不同</h2>
+      </div>
+
+      <div class="two-col" style="align-items: start;">
+        <div class="card blue-border">
+          <h3 class="blue" style="margin-bottom: 12px;">Encode-Dominated (VLM / Flow-VLA)</h3>
+          <ul>
+            <li><strong>Qwen2.5-VL-7B:</strong> Encode <span class="badge">58%</span> — ViT 处理 5000+ image tokens</li>
+            <li><strong>LingBot-VLA-4B:</strong> Encode ≈ Context <span class="badge">48% / 51%</span> — ViT 和 KV fill 几乎等价</li>
+            <li>优化方向: <strong>visual token pruning</strong>, <strong>EPD disaggregation</strong></li>
+            <li>文献支撑: FastV (95% pruning), ID-Selection (97.2%)</li>
+          </ul>
+        </div>
+
+        <div class="card red-border">
+          <h3 class="red" style="margin-bottom: 12px;">Action-Dominated (VA / WAM)</h3>
+          <ul>
+            <li><strong>NitroGen:</strong> Action <span class="badge red">91.6%</span> — 12-layer DiT × k steps</li>
+            <li><strong>Fast-WAM:</strong> Action <span class="badge red">89%</span> — 30-layer MoT × 10 steps</li>
+            <li><strong>LingBot-VA:</strong> Action <span class="badge red">68%</span> + Video 28% — 5B DiT shared</li>
+            <li>优化方向: <strong>step distillation</strong>, <strong>DiT caching</strong>, <strong>architecture search</strong></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="center-em">
+        <div class="big">两种完全不同的系统优化策略</div>
+        <div class="sub">VLM/VLA → token-level 优化 (pruning, scheduling) &nbsp;&nbsp;|&nbsp;&nbsp; VA/WAM → step-level 优化 (distillation, caching)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 6 — Insight 2: Attention Reshaping
+  ══════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div>
+        <div class="section-label">Insight 2</div>
+        <h2>VLA Fine-Tuning 彻底重塑 Attention</h2>
+        <p style="margin-top: 6px;">exp05a vs exp01b: 同架构 (Qwen2.5-VL), 不同训练目标 → 完全不同的 attention 结构</p>
+      </div>
+
+      <div class="attn-grid">
+        <div class="attn-cell">
+          <div class="metric">Gini Coefficient</div>
+          <div class="before">0.91</div>
+          <div class="arrow">VLM → VLA</div>
+          <div class="after">0.07</div>
+          <div class="label">sparse → near-uniform</div>
+        </div>
+        <div class="attn-cell">
+          <div class="metric">Attention Sink</div>
+          <div class="before">Pos 2</div>
+          <div class="arrow">VLM → VLA</div>
+          <div class="after">Pos 64</div>
+          <div class="label">first visual patch → boundary token</div>
+        </div>
+        <div class="attn-cell">
+          <div class="metric">Entropy Profile</div>
+          <div class="before">V-shape</div>
+          <div class="arrow">VLM → VLA</div>
+          <div class="after">Flat</div>
+          <div class="label">layer-dependent → layer-independent</div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card red-border">
+          <h3 class="red" style="margin-bottom: 10px;">结论</h3>
+          <ul>
+            <li><strong>VLM token pruning 不可迁移到 VLA</strong> — FastV, FlashVLM 等方法的假设在 VLA 上不成立</li>
+            <li><strong>Attention structure 是 training objective property</strong>, 不是 architecture property</li>
+            <li>VLA 需要全新的 efficiency 方法</li>
+          </ul>
+        </div>
+
+        <div class="card green-border">
+          <h3 class="green" style="margin-bottom: 10px;">消歧 (exp05b)</h3>
+          <ul>
+            <li>排除 model size 影响: Qwen2.5-VL-<strong>3B</strong> vanilla</li>
+            <li>3B vanilla Gini <strong>0.80-0.98</strong> (与 7B 一致)</li>
+            <li>Pos 9 sink, entropy V-shape — vanilla pattern 保持</li>
+            <li>确认: <strong>Gini 崩塌 = VLA fine-tuning 效应</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 7 — Insight 3: DiT Scaling
+  ══════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div>
+        <div class="section-label">Insight 3</div>
+        <h2>DiT Per-Step Scaling — Compute→BW 转换</h2>
+        <p style="margin-top: 6px;">从 0.048ms/step 到 32ms/step — per-step cost 跨越 667x</p>
+      </div>
+
+      <div class="card" style="padding: 20px 28px;">
+        <div class="scaling-row">
+          <div class="scaling-name">LingBot-VLA<br><span style="font-size:11px;color:var(--text-muted)">flow head</span></div>
+          <div class="scaling-params">~1M</div>
+          <div class="scaling-bar-wrap">
+            <div class="scaling-bar phase-e" style="width: 0.6%;">
+            </div>
+          </div>
+          <div class="scaling-hz">0.048 ms</div>
+        </div>
+
+        <div class="scaling-row">
+          <div class="scaling-name">NitroGen<br><span style="font-size:11px;color:var(--text-muted)">12L DiT</span></div>
+          <div class="scaling-params">174M</div>
+          <div class="scaling-bar-wrap">
+            <div class="scaling-bar phase-a" style="width: 22.5%;">7.2ms</div>
+          </div>
+          <div class="scaling-hz">7.2 ms</div>
+        </div>
+
+        <div class="scaling-row">
+          <div class="scaling-name">LingBot-VA<br><span style="font-size:11px;color:var(--text-muted)">30L WanDiT</span></div>
+          <div class="scaling-params">5B</div>
+          <div class="scaling-bar-wrap">
+            <div class="scaling-bar phase-a" style="width: 89%;">28.5ms</div>
+          </div>
+          <div class="scaling-hz">28.5 ms</div>
+        </div>
+
+        <div class="scaling-row">
+          <div class="scaling-name">Fast-WAM<br><span style="font-size:11px;color:var(--text-muted)">30L ActionDiT + MoT</span></div>
+          <div class="scaling-params">350M</div>
+          <div class="scaling-bar-wrap">
+            <div class="scaling-bar phase-a" style="width: 100%;">32ms</div>
+          </div>
+          <div class="scaling-hz">32 ms</div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card accent-border">
+          <h3 class="accent" style="margin-bottom: 10px;">DiT 线性 & 超线性</h3>
+          <ul>
+            <li><strong>NitroGen 174M:</strong> 7.2ms/step, k=1..16 完美线性 — compute-bound</li>
+            <li><strong>174M → 350M:</strong> 2x params, <strong>4.4x latency</strong> — 超线性</li>
+            <li>转换点在 174M-350M: compute-bound → memory-BW-bound</li>
+            <li>5B WanDiT: 28.5ms/step — BW-bound regime 下 layer 数主导</li>
+          </ul>
+        </div>
+
+        <div class="card green-border">
+          <h3 class="green" style="margin-bottom: 10px;">Step Distillation = 实时化杠杆</h3>
+          <ul>
+            <li>NitroGen k=16: 126ms (7.9Hz)</li>
+            <li>NitroGen <strong>k=1: 17.9ms (55.9Hz)</strong></li>
+            <li>文献: consistency distillation 可达 1-step</li>
+            <li><strong>k 是最强的延迟-质量旋钮</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 8 — Prediction Calibration
+  ══════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div>
+        <div class="section-label">Calibration</div>
+        <h2>预测 vs 实际 — 系统性偏差分析</h2>
+        <p style="margin-top: 6px;">9 个实验的 prediction calibration: 结构判断准, 量级常偏</p>
+      </div>
+
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>Exp</th>
+              <th>Model</th>
+              <th>Predicted</th>
+              <th>Actual</th>
+              <th>Miss</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>exp01a</td>
+              <td>Qwen2.5-VL-7B</td>
+              <td>E &gt;50%</td>
+              <td>E = 58%</td>
+              <td><span class="badge green">Accurate</span></td>
+            </tr>
+            <tr>
+              <td>exp02a</td>
+              <td>ACT</td>
+              <td>1-5ms</td>
+              <td>~3ms</td>
+              <td><span class="badge green">Accurate</span></td>
+            </tr>
+            <tr>
+              <td>exp03a</td>
+              <td>LingBot-VLA-4B</td>
+              <td>250-350ms</td>
+              <td>74.5ms</td>
+              <td><span class="badge red">Way Off</span> 3.4-4.7x</td>
+            </tr>
+            <tr>
+              <td>exp04a</td>
+              <td>Fast-WAM</td>
+              <td>A ~30-50ms</td>
+              <td>A = 362ms</td>
+              <td><span class="badge red">Way Off</span> 7-12x</td>
+            </tr>
+            <tr>
+              <td>exp05a</td>
+              <td>LingBot-VLA attn</td>
+              <td>Similar to VLM</td>
+              <td>Gini 0.91→0.07</td>
+              <td><span class="badge red">Opposite</span></td>
+            </tr>
+            <tr class="highlight">
+              <td>exp06a</td>
+              <td>NitroGen 500M</td>
+              <td>~100M, 5-10ms/step</td>
+              <td>174M, 7.2ms/step</td>
+              <td><span class="badge accent">Close</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="two-col">
+        <div class="card green-border" style="padding: 18px 22px;">
+          <h3 class="green" style="font-size: 14px; margin-bottom: 10px;">做对了什么</h3>
+          <ul>
+            <li>结构性判断 <strong>6/6 correct</strong>: 哪个 phase 是瓶颈</li>
+            <li>定性趋势全对: sink 存在, sparsity 可用, action dominates WAM</li>
+          </ul>
+        </div>
+        <div class="card red-border" style="padding: 18px 22px;">
+          <h3 class="red" style="font-size: 14px; margin-bottom: 10px;">系统性偏差</h3>
+          <ul>
+            <li>A100 文献 → RTX 5880: <strong>3-5x hardware gap</strong></li>
+            <li>Backbone scaling 用 param ratio 而非 FLOPs ratio</li>
+            <li>MoT cross-attn per-step cost 被严重低估</li>
+            <li>VLM→VLA attention 假设完全错误</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 9 — Next Steps
+  ══════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div>
+        <div class="section-label">Next</div>
+        <h2>Phase 2 — 从 Profiling 到 Optimization</h2>
+      </div>
+
+      <div class="two-col" style="align-items: start;">
+        <div class="stacked">
+          <div class="card accent-border">
+            <h3 style="margin-bottom: 12px;">短期 — 补齐数据点</h3>
+            <ul class="check-list" style="gap: 8px;">
+              <li><i class="icon done">&#10003;</i> Qwen2.5-VL-7B profiling + attention (exp01a/01b)</li>
+              <li><i class="icon done">&#10003;</i> ACT single-forward VA baseline (exp02a)</li>
+              <li><i class="icon done">&#10003;</i> LingBot-VLA + VLA attention analysis (exp03a/05a/05b)</li>
+              <li><i class="icon done">&#10003;</i> Fast-WAM + LingBot-VA WAM baselines (exp04a/04b)</li>
+              <li><i class="icon done">&#10003;</i> NitroGen 500M DiT scaling curve (exp06a)</li>
+              <li><i class="icon next">→</i> <strong>Diffusion Policy</strong> (VA-Diffusion, LeRobot)</li>
+              <li><i class="icon next">→</i> <strong>OpenVLA</strong> (AR-VLA, chart 结构性缺口)</li>
+              <li><i class="icon next">→</i> <strong>DreamZero</strong> (WAM flagship, DiT caching)</li>
+              <li><i class="icon next">→</i> Pi-Zero (flow VLA, denoise step trade-off)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="stacked">
+          <div class="card green-border">
+            <h3 class="green" style="margin-bottom: 12px;">中期 — 利用 Insight 做优化</h3>
+            <ul>
+              <li><strong>DiT caching:</strong> 分析 DreamZero layer activation variance → 确定哪些层可 cache</li>
+              <li><strong>Step distillation ROI:</strong> 定量 k vs quality (NitroGen 有 k=1..16 数据)</li>
+              <li><strong>EPD disaggregation:</strong> VLM Encode/Prefill/Decode 分离的实际吞吐收益</li>
+              <li><strong>VLA-native efficiency:</strong> 基于 exp05a 发现，设计 VLA-specific pruning</li>
+            </ul>
+          </div>
+
+          <div class="card" style="border-left: 3px solid var(--border);">
+            <h3 style="margin-bottom: 12px; color: var(--text-muted);">长期 — System Co-Design</h3>
+            <ul>
+              <li>Token pruning × scheduling × step distillation 联合优化</li>
+              <li>统一 VLM/VLA serving framework (vLLM for VLA)</li>
+              <li>Real-time constraint-aware serving</li>
+            </ul>
+          </div>
+
+          <div class="callout green">
+            <strong>9 experiments 建立了第一手数据。</strong><br>
+            下一步: 从 "瓶颈在哪" 到 "怎么解决"。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /deck -->
+
+<div class="counter" id="counter" aria-live="polite">1 / 12</div>
+
+<script>
+(function () {
+  var slides = Array.from(document.querySelectorAll('.slide'));
+  var counter = document.getElementById('counter');
+  var total = slides.length;
+  var current = 0;
+
+  function show(idx) {
+    slides[current].classList.remove('active');
+    current = (idx + total) % total;
+    slides[current].classList.add('active');
+    counter.textContent = (current + 1) + ' / ' + total;
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); show(current + 1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); show(current - 1); }
+  });
+
+  document.getElementById('deck').addEventListener('click', function (e) {
+    if (e.target.closest('a, button')) return;
+    show(current + 1);
+  });
+})();
+</script>
+</body>
+</html>

@@ -45,6 +45,7 @@ docs/papers/*.md
 
 # Instance-specific: generated slides
 slides/*.html
+!slides/vlla-phase1-results.html
 
 # Instance-specific: experiment plans & progress
 docs/plans/
