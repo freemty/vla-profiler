@@ -1120,6 +1120,90 @@ p  { font-size: 16px; line-height: 1.65; color: var(--text-secondary); }
   <!-- ══════════════════════════════════════════════
        SLIDE 9 — Next Steps
   ══════════════════════════════════════════════ -->
+  <!-- ══════════════════════════════════════════════
+       SLIDE 12 — Hao Co-Design 方法论 + 当前位置诊断
+  ══════════════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-inner">
+      <div>
+        <div class="section-label">Methodology alignment</div>
+        <h2>Hao 的 Co-Design 方法论 — 我们在哪一层？</h2>
+      </div>
+
+      <div class="two-col-wide">
+        <div>
+          <table class="compare-table" style="width: 100%;">
+            <thead>
+              <tr>
+                <th style="width: 52px;">Layer</th>
+                <th>Research activity</th>
+                <th style="width: 92px;">Co-design?</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>L0</td>
+                <td>读论文 / survey</td>
+                <td><span class="badge">No</span></td>
+              </tr>
+              <tr class="highlight">
+                <td>L1</td>
+                <td><strong>Profile 现有模型</strong> — latency, attention 分布, per-phase breakdown</td>
+                <td><span class="badge">No</span></td>
+              </tr>
+              <tr>
+                <td>L2</td>
+                <td>发现结构性矛盾 —"X 假设 vs Y 现实不匹配"</td>
+                <td><span class="badge accent">前提</span></td>
+              </tr>
+              <tr>
+                <td>L3</td>
+                <td>算法侧改动 — 新 sparsity / attention pattern</td>
+                <td><span class="badge">半个</span></td>
+              </tr>
+              <tr>
+                <td>L4</td>
+                <td>系统侧改动 — 新 scheduler / kernel / memory 抽象</td>
+                <td><span class="badge">半个</span></td>
+              </tr>
+              <tr class="highlight" style="background: #f0faf4;">
+                <td>L5</td>
+                <td><strong>L3 + L4 必须同时改才 work</strong> — vLLM / DistServe / FastVideo 都在这</td>
+                <td><span class="badge green">Co-design</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="stacked">
+          <div class="card accent-border">
+            <h3 class="accent" style="margin-bottom: 10px;">我们当前位置</h3>
+            <p style="font-size: 13px; line-height: 1.55; color: var(--text-secondary);">
+              <strong style="color: var(--text);">exp01-06 全部在 L1</strong>。exp05a 的 Gini 崩塌部分触及 L2，但未导向解法。
+            </p>
+            <p style="font-size: 12px; line-height: 1.5; color: var(--text-muted); margin-top: 8px;">
+              L1 积累是 Hao-style 工作的<strong>必要前提</strong> — 没有 "60-80% KV 浪费" 就没有 vLLM。但停在 L1 永远做不到 co-design。
+            </p>
+          </div>
+
+          <div class="card green-border">
+            <h3 class="green" style="margin-bottom: 10px;">下一步 — L1 → L2 跨越</h3>
+            <p style="font-size: 13px; line-height: 1.55; color: var(--text-secondary);">
+              exp07 的任务不是"再 profile 一个模型"，而是把现有 L1 素材 <strong style="color: var(--text);">缝合成一个 L2 结构性论证</strong>，然后 motivation 指向 L5 方向。
+            </p>
+            <p style="font-size: 12px; line-height: 1.5; color: var(--text-muted); margin-top: 8px;">
+              候选 D：EPDA 四阶段干扰量化 — 同时延伸 DistServe + FastVideo 两条主线。
+            </p>
+          </div>
+
+          <div class="callout">
+            <strong>见 Hao 的 one-liner:</strong> 不 pitch L1 的独立价值，pitch 对 L2→L5 的判断力。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="slide">
     <div class="slide-inner">
       <div>
@@ -1176,7 +1260,7 @@ p  { font-size: 16px; line-height: 1.65; color: var(--text-secondary); }
 
 </div><!-- /deck -->
 
-<div class="counter" id="counter" aria-live="polite">1 / 12</div>
+<div class="counter" id="counter" aria-live="polite">1 / 13</div>
 
 <script>
 (function () {

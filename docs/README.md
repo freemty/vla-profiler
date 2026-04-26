@@ -19,6 +19,7 @@ Project documentation map. All paths relative to repo root.
 | `survey/papers/hao-style-fastvideo.md` | FastVideo 深度 survey — STA/VSA/蒸馏 + Hao co-design 方法论提炼 + VLA 迁移启示 |
 | `survey/papers/hao-style-distserve.md` | DistServe 深度 survey — PD disaggregation, goodput 指标, EPD 三阶段 VLM 迁移启示 |
 | `survey/papers/hao-style-vllm.md` | vLLM/PagedAttention 深度 survey — OS 分页借用, BlockManager+Scheduler, Visual KV 迁移启示, co-design 方法论起点 |
+| `survey/papers/hao-style-synthesis.md` | **Hao 工作风格综合分析** — 三工作共享的 5-step co-design 模板, VLM/VLA 下一步实验候选 A/B/C/D 打分, 见 Hao 的 "一页话" |
 
 ## Experiment Results
 
@@ -33,6 +34,7 @@ Project documentation map. All paths relative to repo root.
 | `exp/exp05a/` | LingBot-VLA-4B (attention) | Done | VLA reshapes attention: Gini 0.91→0.07 |
 | `exp/exp05b/` | Qwen2.5-VL-3B (attention) | Done | Disambiguation: Gini collapse = VLA fine-tuning |
 | `exp/exp06a/` | NitroGen 500M DiT (profiling) | Done | 7.2ms/step, linear, k=1: 55.9Hz |
+| `exp/exp07a/` | Pi-Zero dual-stream (profiling) | Done | E=9-12ms/C=26-33ms/A=165-205ms, ~201ms (~5Hz) |
 | `exp/summary.md` | Flight recorder | — | All experiments, one row each |
 
 ## Design Specs & Plans
@@ -43,6 +45,7 @@ Project documentation map. All paths relative to repo root.
 | `docs/superpowers/specs/2026-04-15-attention-overlay-visualization-design.md` | Attention overlay 可视化设计 — Mixin 体系, TokenSpatialMap, OverlayRenderer |
 | `docs/superpowers/plans/2026-04-14-vlm-profiling-framework.md` | Framework 实施计划 — 12 tasks, 44 steps |
 | `docs/superpowers/plans/2026-04-15-attention-overlay-visualization.md` | Attention overlay 实施计划 |
+| `docs/specs/2026-04-26-epda-disaggregation-spec.md` | **exp08 spec** — EPDA 四阶段干扰量化 (L1→L2 跨越, DistServe-style motivation figure) |
 
 ## Knowhow (Operational Knowledge)
 
@@ -117,6 +120,6 @@ Project documentation map. All paths relative to repo root.
 | File | Description |
 |------|-------------|
 | `CLAUDE.md` | Project instructions + index for Claude Code |
-| `CHANGELOG.md` | Version history (v0.1.0 - v0.6.0) |
+| `CHANGELOG.md` | Version history (v0.1.0 - v0.7.0) |
 | `.pipeline-state.json` | LabMate pipeline state (current_exp, stage) |
-| `.claude/skills/project-skill/SKILL.md` | Project knowledge base (v5) |
+| `.claude/skills/project-skill/SKILL.md` | Project knowledge base (v6) |
