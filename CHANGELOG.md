@@ -28,6 +28,11 @@
 ### 削除
 - Physical Intelligence (openpi) 相关文件清理 — 只保留 allenzren/open-pi-zero 后端
 
+### 后续改进 (exp07a audit 驱动)
+- `scripts/_profiling_stats.py` — 新增 standalone 脚本共享的统计 helper，产出与 Hydra PhaseTimer 一致的 JSON (mean/median/std/p10/p90/p99/cv/all_ms)
+- `scripts/profile_fastwam.py` — 采用 shared helper，默认 warmup 5→15 以消除 exp07a 暴露的 GPU power-state bimodality
+- `docs/TODO.md` — 新增 exp07a audit 衍生的 P0/P1/P2 行动项：exp08 roofline 分析、stream-aware PhaseTimer、standalone 脚本统计口径统一、exp04b 重跑、phase 命名标准化、wall-clock vs phase-sum gap 跟踪
+
 ---
 
 ## v0.6.1 @freemty — 2026-04-23
