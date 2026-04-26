@@ -275,12 +275,10 @@ class PiZeroController(BaseVLAController):
         self, pipeline: Any, cfg: Any, inputs: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        Run Pi-Zero inference: E (SigLIP) + C (VLM prefill) + A (N denoise steps).
+        Run Pi-Zero inference with manual E/C/A phase timing.
 
-        Uses model.infer_action() which:
-        1. Runs SigLIP + projector (E)
-        2. Forwards VLM + proprio through joint_model, caches KV (C)
-        3. Runs N Euler denoise steps through action expert (A)
+        Mirrors infer_action() internals but wraps each phase with
+        PhaseTimer marks so profiling_task can report per-phase latency.
         """
         model = pipeline.model
         dtype = pipeline.dtype
@@ -297,22 +295,93 @@ class PiZeroController(BaseVLAController):
         image_text_proprio_mask, action_mask = (
             model.split_full_mask_into_submasks(causal_mask)
         )
+        image_text_proprio_mask = image_text_proprio_mask.to(device)
+        action_mask = action_mask.to(device)
+        vlm_pos_ids = vlm_pos_ids.to(device)
+        proprio_pos_ids = proprio_pos_ids.to(device)
+        action_pos_ids = action_pos_ids.to(device)
 
-        actions = model.infer_action(
-            input_ids=input_ids,
-            pixel_values=pixel_values,
-            image_text_proprio_mask=image_text_proprio_mask.to(device),
-            action_mask=action_mask.to(device),
-            vlm_position_ids=vlm_pos_ids.to(device),
-            proprio_position_ids=proprio_pos_ids.to(device),
-            action_position_ids=action_pos_ids.to(device),
-            proprios=proprios,
+        bsz = pixel_values.size(0)
+
+        # --- Phase E: SigLIP + text embedding + proprio encoder ---
+        self.timer.mark_start("encode")
+        torch.cuda.synchronize()
+
+        inputs_embeds = model._forward_siglip_and_text_embedding(
+            input_ids, pixel_values
+        )
+        proprio_embeds = model.proprio_encoder(proprios)
+
+        torch.cuda.synchronize()
+        self.timer.mark_end("encode")
+
+        # --- Phase C: VLM + proprio joint prefill → KV cache ---
+        self.timer.mark_start("context")
+        torch.cuda.synchronize()
+
+        kv_caches = model.joint_model.build_mixture_caches()
+        _, kv_caches = model.joint_model(
+            attention_mask=image_text_proprio_mask,
+            position_ids_all={
+                "vlm": vlm_pos_ids,
+                "proprio": proprio_pos_ids,
+            },
+            embeds_all={
+                "vlm": inputs_embeds,
+                "proprio": proprio_embeds,
+            },
+            kv_caches=kv_caches,
+            return_caches=True,
         )
 
+        torch.cuda.synchronize()
+        self.timer.mark_end("context")
+
+        # --- Phase A: Action Expert flow denoising × N steps ---
+        self.timer.mark_start("action")
+        torch.cuda.synchronize()
+
+        action = torch.randn(
+            (bsz, model.horizon_steps, model.action_dim),
+            device=device, dtype=dtype,
+        )
+        delta_t = 1.0 / model.num_inference_steps
+        t = torch.zeros(bsz, device=device, dtype=dtype)
+
+        for _ in range(model.num_inference_steps):
+            time_cond = model.time_embedding(t)
+            if model.action_expert_adaptive_mode:
+                action_embeds = model.action_encoder(action)
+            else:
+                action_embeds = model.action_encoder(action, time_cond)
+
+            action_embeds = model.joint_model(
+                attention_mask=action_mask,
+                position_ids_all={"action": action_pos_ids},
+                embeds_all={"action": action_embeds},
+                time_cond=time_cond,
+                kv_caches=kv_caches,
+                cache_mode="append_non_active",
+            )["action"]
+
+            action_vel = model.action_decoder(action_embeds)
+            action = action + delta_t * action_vel
+            t = t + delta_t
+
+        if model.final_action_clip_value is not None:
+            action = torch.clamp(
+                action,
+                -model.final_action_clip_value,
+                model.final_action_clip_value,
+            )
+
+        torch.cuda.synchronize()
+        self.timer.mark_end("action")
+
         return {
-            "actions": actions,
-            "action_shape": list(actions.shape),
-            "denoise_steps": pipeline.model.num_inference_steps,
+            "actions": action,
+            "action_shape": list(action.shape),
+            "denoise_steps": model.num_inference_steps,
         }
 
     def save_results(
