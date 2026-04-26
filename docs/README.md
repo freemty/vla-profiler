@@ -46,6 +46,7 @@ Project documentation map. All paths relative to repo root.
 | `docs/superpowers/plans/2026-04-14-vlm-profiling-framework.md` | Framework 实施计划 — 12 tasks, 44 steps |
 | `docs/superpowers/plans/2026-04-15-attention-overlay-visualization.md` | Attention overlay 实施计划 |
 | `docs/specs/2026-04-26-epda-disaggregation-spec.md` | **exp08 spec** — EPDA 四阶段干扰量化 (L1→L2 跨越, DistServe-style motivation figure) |
+| `docs/specs/2026-04-26-epda-roofline-analysis.md` | **exp08 roofline 分析** — E/P/D/A 在 RTX 5880 Ada 上的 AI/utilization 坐标, go/no-go 论证, 干扰矩阵预测 |
 
 ## Knowhow (Operational Knowledge)
 
