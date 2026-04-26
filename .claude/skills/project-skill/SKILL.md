@@ -2,16 +2,16 @@
 name: project-skill
 description: "Use when advising on project architecture, experiment history, codebase navigation, or research findings."
 user-invocable: false
-version: v5
-note: "v5 — exp05a/05b VLA attention analysis done, exp06a NitroGen 500M DiT profiling done, NitroGenController added. DiT per-step scaling curve established."
-updated_at: "2026-04-22"
+version: v6
+note: "v6 — exp07a Pi-Zero dual-stream flow VLA profiling done. PiZeroController (uv venv, allenzren backend). DiT scaling curve: 174M=7.2ms < 300M=18ms < 350M=32ms."
+updated_at: "2026-04-25"
 ---
 
 # vlla — Project Knowledge
 
 > VLM/VLA Real-Time Systems Survey & Research
 > UCSD PhD 方向调研项目 | 导师: 张昊 (Hao Zhang) — vLLM/FastVideo/Chatbot Arena 作者
-> v5 — exp05a/05b VLA attention analysis, exp06a NitroGen DiT profiling done. DiT per-step scaling curve.
+> v6 — exp07a Pi-Zero dual-stream flow VLA profiling done. 300M Expert per-step 18ms fills DiT scaling curve gap.
 
 ---
 
@@ -25,17 +25,17 @@ updated_at: "2026-04-22"
 张昊的技术路线: Parameter Server -> Alpa -> vLLM -> FastVideo -> **VLM/VLA real-time systems**。每一步都是 ML Systems 前沿的下一个自然问题。VLM/VLA serving 正处于 "pre-vLLM" 阶段，存在巨大的系统研究空间。
 
 **当前阶段:** Experiment (Phase 1 — VLM/VLA Profiling + Interpretability)
-- `current_exp`: exp06a (NitroGen 500M DiT profiling — **done**)
+- `current_exp`: exp07a (Pi-Zero dual-stream flow VLA profiling — **done**)
 - `stage`: experiment
-- `version`: v0.5.1
+- `version`: v0.6.1
 - Survey 产出: 4 份核心文档，覆盖 180+ 篇论文/项目 (2024-2026)
 - Framework 产出: VLM profiling + attention analysis + attention overlay 可视化 + VLA profiling 框架 (`src/`)
 - 新增模块: Interpretability Mixin 体系 (`src/interpretability/`)、OverlayRenderer (`src/viz/`)、Timing Cross-Validation (`src/tasks/validation_task.py`)
 - 共享核心: `model-probe-core` git submodule (`src/core/`)，同时被 rope2sink 消费
 - Presentation viewer: `viewer/` — Flask + 3 HTML pages (hub, presentation, experiments) for advisor meeting
-- 服务器: xdlab23 (8x RTX 5880 Ada 48GB)，9 个实验完成
-- **完成的实验:** exp01a (E/P/D profiling), exp01b (attention analysis), exp02a (ACT profiling), exp03a (LingBot-VLA-4B profiling), exp04a (Fast-WAM ActionDiT profiling), exp04b (LingBot-VA full WAM profiling), exp05a (LingBot-VLA attention analysis), exp05b (Qwen2.5-VL-3B attention analysis), exp06a (NitroGen 500M DiT profiling)
-- **下一步:** DreamZero profiling on RTX 5880 Ada、DreamZero DiT layer activation variance 分析、OpenVLA profiling (需 HF 下载)、Pi-Zero controller
+- 服务器: xdlab23 (8x RTX 5880 Ada 48GB)，10 个实验完成
+- **完成的实验:** exp01a (E/P/D profiling), exp01b (attention analysis), exp02a (ACT profiling), exp03a (LingBot-VLA-4B profiling), exp04a (Fast-WAM ActionDiT profiling), exp04b (LingBot-VA full WAM profiling), exp05a (LingBot-VLA attention analysis), exp05b (Qwen2.5-VL-3B attention analysis), exp06a (NitroGen 500M DiT profiling), exp07a (Pi-Zero dual-stream flow VLA profiling)
+- **下一步:** DreamZero profiling on RTX 5880 Ada、DreamZero DiT layer activation variance 分析、OpenVLA profiling (需 HF 下载)
 
 **核心数据汇总:**
 
@@ -50,6 +50,7 @@ updated_at: "2026-04-22"
 | exp05a | LingBot-VLA-4B (attention) | VLA fine-tuning reshapes attention: sink migrates Pos2→Pos64, Gini 0.91→0.07, entropy V-shape→flat |
 | exp05b | Qwen2.5-VL-3B (attention) | Disambiguation: Gini collapse is VLA fine-tuning effect, not model size. 3B vanilla Gini 0.80-0.98 |
 | exp06a | NitroGen 500M DiT | Per-step 7.2ms, linear scaling. 174M DiT compute-bound. 174M→350M = BW transition |
+| exp07a | Pi-Zero (dual-stream flow VLA) | E=9-12ms/C=26-33ms/A=165-205ms, total ~201ms ≈ 5Hz. Action Expert (300M) dominates 82%. Per-step ~18ms. Cross-attn makes 300M Expert ~2.5x pricier than pure DiT |
 
 ---
 
@@ -216,7 +217,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 **Environment strategy:**
 - `vit-probe` (conda) — shared with rope2sink, for Qwen2.5-VL / OpenVLA / ACT / LingBot-VA
 - `.venvs/lingbot-vla/` (uv) — LingBot-VLA specific (lerobot compat, PyTorch 2.8)
-- `openpi` (conda) — Pi-Zero (separate, requires openpi package)
+- `.venvs/pizero/` (uv) — Pi-Zero (allenzren/open-pi-zero, vendored `pizero_src/`)
 - `fastwam` (conda) — Fast-WAM (Python 3.10, PyTorch 2.7.1+cu128)
 
 ---
@@ -300,6 +301,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | ACT | VA (CVAE) | 3ms | 2.5ms | — | 0.5ms | 330 | E (80%) |
 | NitroGen @k16 | VA (flow DiT) | 126ms | 8.7ms | — | 115.4ms | 7.9 | A (91.6%) |
 | LingBot-VLA | Flow VLA | 74.5ms | 35.7ms | — | 38.8ms | 13 | E≈C (50/50) |
+| Pi-Zero @10step | Flow VLA (dual-stream) | ~201ms | 9-12ms | — | 165-205ms | ~5 | A (82%) |
 | Fast-WAM @10step | WAM (skip) | 407ms | 7.6ms | — | 362ms | 2.5 | A (89%) |
 | LingBot-VA (full) | WAM (full) | 2091ms | 75.5ms | 592ms | 1423ms | 0.5 | A (68%) |
 
@@ -326,7 +328,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 - [ ] VLM speculative decoding 中 visual token 对 acceptance rate 的影响
 - [ ] Per-layer attention entropy 分布的实际意义 (Layer 21 最低 → 是否是最佳 pruning 切入点?)
 - [ ] OpenVLA (AR VLA) profiling: E/P/D 与 Qwen2.5-VL 有多大差异?
-- [ ] Pi-Zero flow VLA profiling: denoise step count vs latency trade-off
+- [x] ~~Pi-Zero flow VLA profiling: denoise step count vs latency trade-off~~ → **exp07a: E=9-12ms/C=26-33ms/A=165-205ms, total ~201ms ≈ 5Hz. Per-step ~18ms, cross-attn to PaliGemma KV makes 300M Expert 2.5x pricier than pure DiT**
 - [ ] 3B→7B backbone scaling law: 是否线性? (exp01a vs exp03a 初步暗示 ~7x for 2.3x params)
 - [ ] Imagination value quantification: Full WAM 的 592ms video generation 带来多少 task success rate 提升?
 - [ ] DreamZero profiling: DiT caching 在 memory-BW-bound regime 的真实收益?
@@ -364,6 +366,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 - LingBot-VA WanDiT video (30L, 3072 hidden): ~29.6ms/step
 - LingBot-VA WanDiT action (30L, 3072 hidden): ~28.5ms/step
 - NitroGen DiT (12L, 1024 hidden, cross-attn to 256 tokens): ~7.2ms/step — compute-bound
+- Pi-Zero Action Expert (18L, 1024 hidden, Gemma + cross-attn to PaliGemma KV): ~18ms/step — cross-attn overhead
 - LingBot-VLA flow action head (small head, 10 steps): ~0.048ms/step
 
 ### 4.3 Pareto 前沿
@@ -377,6 +380,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | Mean-Flow VLA / FASTER | ~50ms | VLA 单步化 |
 | **LingBot-VLA-4B (our measurement)** | **74.5ms** | **Flow VLA baseline (first-party, 3B)** |
 | DreamZero | ~130ms, 7Hz | WAM zero-shot (A100) |
+| **Pi-Zero @10step (our measurement)** | **~201ms** | **Dual-stream flow VLA (first-party, 2.7B)** |
 | **Fast-WAM @10step (our measurement)** | **407ms** | **Skip-imagination WAM (first-party)** |
 | **LingBot-VA (our measurement)** | **2091ms** | **Full WAM baseline (first-party)** |
 | SAGE | 3.36x speedup | VLM SD 标杆 |
@@ -412,6 +416,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | exp05a | 2026-04-21 | **done** | VLA attention similar to VLM | Gini 0.91→0.07, sink migrates, entropy flat | VLA fine-tuning reshapes attention; VLM pruning not transferable | Way Off — opposite of prediction |
 | exp05b | 2026-04-21 | **done** | 3B model = different pattern | 3B vanilla Gini 0.80-0.98, consistent with 7B | Gini collapse from VLA fine-tuning, not model size | Confirmed — disambiguation successful |
 | exp06a | 2026-04-22 | **done** | ~100M DiT, 5-10ms/step | 174M DiT, 7.2ms/step, linear | Per-step 7.2ms, compute-bound, 174M→350M BW transition | Accurate on per-step, Off on param count (174M not 100M) |
+| exp07a | 2026-04-25 | **done** | E=15-25ms/C=40-80ms/A=30-80ms | E=9-12ms/C=26-33ms/A=165-205ms, total ~201ms | Action Expert (300M) dominates 82%. Per-step ~18ms. Cross-attn 2.5x pricier than pure DiT | E/C overestimated, A severely underestimated (2-3x) |
 
 ### 5.1 Prediction Calibration: exp01a
 
@@ -558,6 +563,13 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 45. **Compute-bound → memory-BW-bound 转换点在 174M-350M:** 2x params 导致 4.4x latency (super-linear) — 关键的系统设计参考点
 46. **Sparse clone + tar 比 git bundle 更适合第三方 repo:** git bundle 需要完整历史；sparse clone 只下载需要的文件
 
+### 2026-04-25: Pi-Zero Dual-Stream Flow VLA (exp07a)
+47. **Vendor namespace collision requires setup-time rename:** allenzren/open-pi-zero uses `from src.model...` internally — collides with our `src/`. Solution: `setup_pizero.sh` renames `vendor/open_pi_zero/src/` → `pizero_src/` and sed-rewrites all imports
+48. **Manual phase timing for opaque models:** Pi-Zero's dual-stream architecture doesn't fit base class hook-on-module pattern. Override `register_profiling_hooks` as no-op, use explicit `timer.mark_start/end` in `model_inference` (same pattern as NitroGenController)
+49. **Cross-attention makes per-step cost super-linear vs pure DiT:** 300M Gemma Expert with cross-attn to PaliGemma KV = ~18ms/step, vs naive linear extrapolation from 174M DiT (7.2ms) predicting ~12ms. Cross-attn overhead adds ~50%
+50. **5 warmup runs insufficient for GPU power state stabilization:** Clear bimodal distribution (runs 1-12 high, 13-20 low). Need 10-15 warmup or explicit GPU power state locking (`nvidia-smi -pm 1`)
+51. **uv venv works well for vendor-specific envs:** Pi-Zero needs specific torch/transformers versions incompatible with main env. `.venvs/pizero/` keeps it isolated without conda headaches on non-interactive SSH
+
 ---
 
 ## 8. Active Prompt Versions & Trade-offs
@@ -631,4 +643,4 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 
 ---
 
-*v5 — exp05a/05b VLA attention analysis done, exp06a NitroGen 500M DiT profiling done. DiT per-step scaling curve established (0.048ms→7.2ms→28.5ms→32ms). Updated: 2026-04-22*
+*v6 — exp07a Pi-Zero dual-stream flow VLA profiling done. DiT/Expert scaling curve: 0.048ms→7.2ms→18ms→28.5ms→32ms. 10 experiments completed. Updated: 2026-04-25*

@@ -1,5 +1,35 @@
 # Changelog
 
+## v0.7.0 @freemty — 2026-04-26
+
+### 新增
+- **exp07a 完成** — Pi-Zero dual-stream flow VLA E/C/A profiling on RTX 5880 Ada (20 iterations)
+  - E (SigLIP 400M) = 9-12ms, C (Gemma 2B prefill) = 26-33ms, A (300M Expert ×10 steps) = 165-205ms
+  - Total ~201ms (~5Hz). **Action Expert dominates 82%+ latency**
+  - Per-step ~18ms — cross-attn to PaliGemma KV makes 300M Expert ~2.5x pricier than pure DiT
+  - DiT scaling curve filled: 174M=7.2ms < **300M=18ms** < 350M=32ms
+  - Bimodal distribution observed (GPU power state warmup, cv>10%)
+- **PiZeroController** — allenzren/open-pi-zero backend, manual E/C/A phase decomposition
+  - Vendor namespace collision solved: `src/` → `pizero_src/` rename + sed rewrite at setup time
+  - `.pt` checkpoint loading support (state_dict `_orig_mod.` prefix stripping)
+  - `register_profiling_hooks` overridden as no-op (dual-stream requires manual timing)
+- **Pi-Zero uv environment** — `.venvs/pizero/` (Python 3.10, torch 2.5.0+cu121)
+  - `scripts/setup_pizero.sh` — clone, rename, rewrite imports, install deps
+  - `scripts/launch_pizero.sh` — dedicated launcher using pizero venv
+  - `scripts/download_pizero_ckpt.sh` — HF checkpoint download (4 variants)
+- `configs/pizero/profiling.yaml` — Pi-Zero profiling config with experiment metadata
+
+### 変更
+- Project skill v6 — exp07a findings, Pi-Zero in all tables, lessons #47-51
+- CLAUDE.md — current_exp 更新到 exp07a, 新增 exp07a key findings
+- docs/README.md — 新增 exp07a 行, 版本号更新
+- exp/summary.md — exp07a 从 pending → done
+
+### 削除
+- Physical Intelligence (openpi) 相关文件清理 — 只保留 allenzren/open-pi-zero 后端
+
+---
+
 ## v0.6.1 @freemty — 2026-04-23
 
 ### 新增

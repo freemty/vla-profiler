@@ -13,14 +13,14 @@ Advisor: Hao Zhang (UCSD) — vLLM / FastVideo / Chatbot Arena.
 |-----------|--------|---------|
 | **Framework core** | Done | `model-probe-core` submodule (shared with rope2sink), BaseController / StoreMixin / HookManager / Registry |
 | **VLM controller** | Done | BaseVLMController (E/P/D phases) -> QwenVLController (Qwen2.5-VL-7B) |
-| **VLA controller** | Done | BaseVLAController (E/C/A phases) -> ACTController, LingBotVLAController, PiZeroController |
+| **VLA controller** | Done | BaseVLAController (E/C/A phases) -> ACTController, LingBotVLAController, NitroGenController, PiZeroController |
 | **Profiling task** | Done | `epd_profiling` — CUDA event timing, median/P10/P90/P99/CV stats |
 | **Attention tasks** | Done | `visual_text_attention`, `sink_detection`, `per_layer_stats` |
 | **Attention overlay** | Done | Interpretability Mixin + OverlayRenderer (heatmap/strip/GIF) |
 | **Timing validation** | Done | `timing_validation` — PhaseTimer vs torch.profiler cross-check |
 | **PhaseTimer** | Done | CUDA event wrapper with CPU fallback, cumulative decode support |
 | **Server deployment** | Done | xdlab23 scripts (sync/launch/download/monitor) |
-| **Hydra configs** | Done | base.yaml + qwen_vl_7b/{profiling,attention,attention_overlay} + act/profiling + lingbot_vla_4b/profiling + pizero/profiling |
+| **Hydra configs** | Done | base.yaml + qwen_vl_{7b,3b}/* + act/profiling + lingbot_vla_4b/* + nitrogen/profiling + pizero/profiling |
 | **Survey** | Done | 180+ papers across 4 documents (landscape, recent-papers, va-world-models, va-world-models-web) |
 | **Profiling survey** | Done | 8-system ML profiling comparison (vLLM/SGLang/FastVideo/TensorRT-LLM/DeepSpeed/Triton/llama.cpp/MLC LLM) |
 | **Tests** | Done | Unit tests for timing, registry, attention task, overlay renderer, interpretability mixin, attention overlay task |
@@ -36,6 +36,9 @@ Advisor: Hao Zhang (UCSD) — vLLM / FastVideo / Chatbot Arena.
 | **exp03a** | LingBot-VLA-4B | Flow VLA | E=35.7ms/C=38.3ms/A=0.48ms (total 74.5ms ≈ 13Hz). 3B 7x faster than 7B. |
 | **exp04a** | Fast-WAM (6.7B) | WAM (skip) | @10step: E=7.6ms/C=36.7ms/A=362ms (total 407ms, 2.5Hz). Action 89%. |
 | **exp04b** | LingBot-VA (5B) | WAM (full) | E=75.5ms/V=592.5ms/A=1423ms (total 2091ms, 0.5Hz). Full WAM 5x slower. |
+| **exp05a** | LingBot-VLA-4B | Flow VLA | VLA fine-tuning reshapes attention: Gini 0.91→0.07, sink Pos2→64, entropy flat. |
+| **exp05b** | Qwen2.5-VL-3B | VLM (AR) | Disambiguation: Gini collapse = VLA fine-tuning, not model size. 3B Gini 0.80-0.98. |
+| **exp06a** | NitroGen 500M | VA (flow DiT) | Per-step 7.2ms, linear. k=1: 55.9Hz, k=16: 7.9Hz. BW transition at 174-350M. |
 | **pi-zero** | Pi-Zero (3.2B) | Flow VLA | Total 211ms ≈ 4.7Hz (random weights, bf16, 10 denoise steps). |
 
 Hardware: RTX 5880 Ada 48GB on xdlab23, 10 benchmark runs + 3 warmup.
@@ -46,7 +49,8 @@ Hardware: RTX 5880 Ada 48GB on xdlab23, 10 benchmark runs + 3 warmup.
 |------|----------|--------|-------|
 | **Attention overlay on server** | High | Not started | Config ready (`qwen_vl_7b/attention_overlay`), needs to run on xdlab23 |
 | **OpenVLA profiling** | High | Config ready | Controller + config done. Blocked: HF model weights download |
-| **LingBot-VLA attention analysis** | High | Not started | 3B attention patterns vs 7B (exp01b). Config: `lingbot_vla_4b/attention.yaml` |
+| **DreamZero profiling** | High | Not started | DiT caching in memory-BW-bound regime, Wan2.1-14B + DreamZero-DROID checkpoint |
+| **DreamZero DiT layer activation variance** | High | Not started | Which DiT layers can be cached? Activation change rate per layer |
 | **Imagination value quantification** | High | Not started | Full WAM (592ms video gen) vs skip — does imagination improve task success? |
 | **OpenVLA attention analysis** | Medium | Config ready | `openvla_7b/attention.yaml`, depends on profiling run |
 | **Pi-Zero E/C/A breakdown** | Medium | Baseline done | Total 211ms/4.7Hz (random). Need pretrained weights |
@@ -67,6 +71,7 @@ probe_core.BaseController           # Model-agnostic: hook lifecycle, StoreMixin
         +-> ACTController           # ACT (LeRobot): ResNet18 -> CVAE -> action chunk
         +-> LingBotVLAController    # LingBot-VLA-4B: Qwen2.5-VL-3B + 10-step flow action head
         +-> LingBotVAController     # LingBot-VA (full WAM): E/V/A phases, 5B shared DiT
+        +-> NitroGenController     # NitroGen 500M: SigLIP -> VL-SA -> DiT flow matching
         +-> PiZeroController        # Pi-Zero: SigLIP -> Gemma 2B + Gemma 300M Expert
 ```
 
@@ -202,6 +207,7 @@ Available configs:
 
 | Config | Model | Tasks |
 |--------|-------|-------|
+| `qwen_vl_3b/attention` | Qwen2.5-VL-3B | Attention analysis (vanilla 3B baseline for exp05b) |
 | `qwen_vl_7b/profiling` | Qwen2.5-VL-7B | E/P/D timing |
 | `qwen_vl_7b/attention` | Qwen2.5-VL-7B | Attention analysis (sink, sparsity, entropy) |
 | `qwen_vl_7b/attention_overlay` | Qwen2.5-VL-7B | Attention heatmap overlay on input images |
@@ -215,6 +221,7 @@ Available configs:
 | `lingbot_vla_4b/attention` | LingBot-VLA-4B | Attention analysis (3B backbone patterns) |
 | `lingbot_vla_4b/demo` | LingBot-VLA-4B | Demo reproduction (flow action verify) |
 | `fastwam/profiling` | Fast-WAM (6.7B) | E/C/A timing (standalone script, fastwam conda env) |
+| `nitrogen/profiling` | NitroGen (500M) | E/C/A timing + k sweep (SigLIP→VL-SA→DiT) |
 | `pizero/profiling` | Pi-Zero (3.2B) | E/C/A timing (open-pi-zero backend, vendored) |
 | `pizero/demo` | Pi-Zero (3.2B) | Demo reproduction (action shape + clip verify) |
 
