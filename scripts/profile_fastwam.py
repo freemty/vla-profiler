@@ -28,6 +28,9 @@ from pathlib import Path
 import torch
 import torch.cuda
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _profiling_stats import compute_phase_stats, print_phase_summary  # noqa: E402
+
 
 def sync_cuda():
     torch.cuda.synchronize()
@@ -195,7 +198,8 @@ def main():
     parser.add_argument("--checkpoint", type=str,
                         default="checkpoints/fastwam_release/libero_uncond_2cam224.pt")
     parser.add_argument("--gpu", type=int, default=0)
-    parser.add_argument("--warmup", type=int, default=5)
+    parser.add_argument("--warmup", type=int, default=15,
+                        help="Default 15 to absorb GPU power-state warmup bimodality (see exp07a audit 2026-04-26)")
     parser.add_argument("--iterations", type=int, default=20)
     parser.add_argument("--num-inference-steps", type=int, default=20)
     parser.add_argument("--action-horizon", type=int, default=10)
@@ -346,23 +350,17 @@ def main():
     results = {}
     for phase, measurements in times.items():
         if measurements:
-            mean_ms = sum(measurements) / len(measurements)
-            std_ms = (sum((x - mean_ms) ** 2 for x in measurements) / len(measurements)) ** 0.5
-            min_ms = min(measurements)
-            max_ms = max(measurements)
-            results[phase] = {
-                "mean_ms": round(mean_ms, 2),
-                "std_ms": round(std_ms, 2),
-                "min_ms": round(min_ms, 2),
-                "max_ms": round(max_ms, 2),
-                "n": len(measurements),
-            }
-            print(f"  {phase:>12s}: {mean_ms:7.2f} ms (std={std_ms:.2f}, min={min_ms:.2f}, max={max_ms:.2f})")
+            stats = compute_phase_stats(measurements)
+            results[phase] = stats
+            print_phase_summary(phase, stats, label_width=12)
 
-    total_mean = sum(total_times) / len(total_times)
-    total_std = (sum((x - total_mean) ** 2 for x in total_times) / len(total_times)) ** 0.5
-    print(f"  {'TOTAL(e2e)':>12s}: {total_mean:7.2f} ms (std={total_std:.2f})")
-    print(f"  {'Hz':>12s}: {1000 / total_mean:.1f}")
+    total_stats = compute_phase_stats(total_times)
+    total_mean = total_stats["mean_ms"]
+    total_median = total_stats["median_ms"]
+    total_std = total_stats["std_ms"]
+    print(f"  {'TOTAL(e2e)':>12s}: mean={total_mean:7.2f}ms median={total_median:.2f}ms "
+          f"p10/p90={total_stats['p10_ms']:.2f}/{total_stats['p90_ms']:.2f} cv={total_stats['cv_pct']:.1f}%")
+    print(f"  {'Hz':>12s}: {1000 / total_median:.1f} (from median)")
 
     phase_total = sum(r["mean_ms"] for r in results.values())
     print(f"\n--- Phase breakdown (sum={phase_total:.1f}ms) ---")
@@ -386,9 +384,10 @@ def main():
         "action_horizon": args.action_horizon,
         "input_shape": f"1x3x{height}x{width}",
         "phases": results,
-        "total_e2e_ms": round(total_mean, 2),
-        "total_e2e_std_ms": round(total_std, 2),
-        "hz": round(1000 / total_mean, 1),
+        "total_e2e": total_stats,
+        "total_e2e_ms": round(total_mean, 2),  # legacy alias
+        "total_e2e_std_ms": round(total_std, 2),  # legacy alias
+        "hz": round(1000 / total_median, 2),  # from median (more robust)
     }
     with open(output_path, "w") as f:
         json.dump(output_data, f, indent=2)
