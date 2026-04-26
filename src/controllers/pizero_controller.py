@@ -76,6 +76,13 @@ class PiZeroController(BaseVLAController):
 
     DEFAULT_DENOISE_STEPS = 10
 
+    def register_profiling_hooks(self) -> None:
+        self.logger.info(
+            "PiZero: skipping hook-based profiling — using manual E/C/A "
+            "timing in model_inference (dual-stream architecture requires "
+            "explicit phase decomposition)"
+        )
+
     def __init__(
         self,
         model_name: str,
