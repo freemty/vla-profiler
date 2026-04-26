@@ -1,25 +1,64 @@
-# Pi-Zero profiling configuration
-# Backend: open-pi-zero (allenzren/open-pi-zero)
-# Flow VLA: SigLIP → Gemma 2B (context, 1x) → Gemma 300M Expert (action, 10x)
+# Pi-Zero E/C/A profiling config
+# Model: SigLIP (encode) → PaliGemma/Gemma 2B (context) → Gemma 300M Expert (action)
+# Backend: allenzren/open-pi-zero (vendor/open_pi_zero/pizero_src)
+
 defaults:
   - /base
   - _self_
 
-model_name: ""  # empty = random weights (sufficient for profiling latency)
+experiment:
+  name: "exp07a_pizero_profiling"
+  description: "Pi-Zero dual-stream flow VLA E/C/A breakdown + per-step Action Expert cost"
+
+model:
+  name: "Pi-Zero"
+  type: "vla"
+  paradigm: "dual-stream-flow-matching"
+  repo: "https://github.com/allenzren/open-pi-zero"
+
+model_name: ""  # empty = random weights (sufficient for timing)
 controller_name: "pizero"
 
 controller_config:
-  mode: "profiling"
+  mode: profiling
 
 denoise_steps: 10
 use_bf16: true
 
-tasks:
-  - "epd_profiling"
+num_warmup_runs: 5
+num_benchmark_runs: 20
 
-num_warmup_runs: 3
-num_benchmark_runs: 10
+tasks:
+  - epd_profiling
+
+profiling:
+  gpu_id: 0
+  warmup: 5
+  iterations: 20
+  phases:
+    - encode    # SigLIP ViT-So400m/14
+    - context   # PaliGemma/Gemma 2B prefill → KV cache
+    - action    # Gemma 300M Action Expert × N Euler steps
 
 inputs:
   - name: "single_camera_224"
     image_shape: [3, 224, 224]
+
+notes: |
+  Pi-Zero is a dual-stream flow VLA:
+  - Stream 1 (PaliGemma, 2B): image + language → KV cache (run once)
+  - Stream 2 (Action Expert, 300M): flow denoising (run N times)
+  - Shared attention: Expert sees PaliGemma KV, not vice versa.
+
+  Key questions:
+  1. E/C/A breakdown (SigLIP / Gemma 2B prefill / Action Expert)
+  2. Per-step Action Expert cost at 300M params
+  3. Where does 300M land on DiT scaling curve?
+     Ref: 174M=7.2ms (exp06a), 350M=32ms (exp04a)
+  4. Total latency → real-time feasibility?
+
+  Predictions:
+  - E: 15-25ms (SigLIP ~400M)
+  - C: 40-80ms (Gemma 2B, 276 tokens)
+  - A: 30-80ms (300M Expert × 10 steps)
+  - Total: 85-185ms (5-12 Hz)
