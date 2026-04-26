@@ -10,7 +10,7 @@ Gemma 300M Action Expert 做 flow denoising。
 | Model | Backbone | Action Head | Total | Hz | Source |
 |-------|----------|-------------|-------|-----|--------|
 | LingBot-VLA-4B | Qwen2.5-VL-3B | 轻量 flow (0.48ms) | 74.5ms | 13 | exp03a |
-| **Pi-Zero** | **PaliGemma (SigLIP + Gemma 2B)** | **Gemma 300M Expert** | **201ms** | **~5** | **this** |
+| **Pi-Zero** | **PaliGemma (SigLIP + Gemma 2B)** | **Gemma 300M Expert** | **~200ms** (stable) | **~5** | **this** |
 
 Pi-Zero 独特之处：
 - **双 Gemma 并行**：VLM stream (2B) + Action Expert stream (300M)，共享 KV
@@ -23,7 +23,7 @@ Pi-Zero 独特之处：
 2. Per-step Action Expert cost at 300M params? **~16-21ms/step**
 3. Gemma 2B context prefill vs Qwen2.5-VL-3B context: 哪个更重? **Gemma 2B (26-33ms) < Qwen 3B (38ms)**
 4. 300M Action Expert 落在 DiT scaling curve 哪个位置? **Between 174M (7.2ms) and 350M (32ms)**
-5. Total latency → 实时可行性? **~201ms = ~5Hz, marginal for real-time**
+5. Total latency → 实时可行性? **~200ms (stable) = ~5Hz, marginal for real-time**
 
 ## Architecture
 
@@ -46,16 +46,18 @@ Total: ~2.7B params (SigLIP 400M + PaliGemma 2B + Action Expert 300M)
 
 ## Results
 
-### E/C/A Breakdown (20 runs, RTX 5880 Ada 48GB, bf16, random weights)
+### E/C/A Breakdown (RTX 5880 Ada 48GB, bf16, random weights)
 
-| Phase | Mean (ms) | Median (ms) | Std (ms) | CV | % Total |
-|-------|-----------|-------------|----------|-----|---------|
-| E (SigLIP) | 10.8 | 11.7 | 1.28 | 11.8% | 4.7% |
-| C (Gemma 2B prefill) | 30.3 | 32.7 | 3.24 | 10.7% | 13.2% |
-| A (Expert ×10 steps) | 189.1 | 204.1 | 20.7 | 11.0% | 82.1% |
-| **Total** | **~230** | **~248** | — | — | **100%** |
+> **Canonical baseline = stable-window (runs 13-20)**. 原始 20-run mean 被 GPU 功率爬坡污染（前 12 次慢 ~1.25x），aggregated mean/median 均不可直接使用，详见 [Bimodal Distribution](#bimodal-distribution) 一节。
 
-Single run (last iteration): E=9.5ms + C=26.2ms + A=165.3ms = **201ms (~5Hz)**
+| Phase | Stable mean (ms) | Stable median (ms) | Stable std (ms) | Stable CV | % Total |
+|-------|------------------|--------------------|-----------------|-----------|---------|
+| E (SigLIP) | **9.32** | 9.28 | ~0.09 | <1% | 4.6% |
+| C (Gemma 2B prefill) | **26.40** | 26.23 | ~0.34 | 1.3% | 13.2% |
+| A (Expert ×10 steps) | **164.76** | 164.75 | ~1.98 | 1.2% | 82.2% |
+| **Total** | **~200.5** | ~200.3 | — | — | **100%** |
+
+**Polluted aggregated mean (runs 1-20, 仅参考)**: E=10.83 / C=30.26 / A=189.07 / Total=230.2 ms — 不作为 canonical。
 
 ### Per-Step Action Expert Cost
 
@@ -77,12 +79,17 @@ Single run (last iteration): E=9.5ms + C=26.2ms + A=165.3ms = **201ms (~5Hz)**
 
 ### Bimodal Distribution
 
-所有 phase 呈双峰分布（runs 1-12 高，runs 13-20 低）：
-- E: ~11.7ms → ~9.3ms
-- C: ~32.7ms → ~26.2ms
-- A: ~205ms → ~165ms
+所有 phase 呈双峰分布（runs 1-12 高，runs 13-20 低），ratio 约 1.25-1.27x：
 
-可能原因：GPU 功率状态 warmup (5 次 warmup 不够)。稳定态（runs 13-20）数值更可靠。
+| Phase | Unstable (runs 1-12) | Stable (runs 13-20) | Ratio |
+|-------|---------------------|---------------------|-------|
+| E | 11.84 ms | 9.32 ms | 1.27x |
+| C | 32.83 ms | 26.40 ms | 1.24x |
+| A | 205.28 ms | 164.76 ms | 1.25x |
+
+**归因**：GPU 功率状态 warmup (5 次 warmup 不够)。跳变发生在 run 12→13，之后稳定态 CV < 2%。这是真实物理现象（SM clock 从节能态切换到高性能态），不是 timing code bug。
+
+**对后续实验的影响**：所有 profiling 实验应改用 **warmup=15 + `nvidia-smi -pm 1`** 锁定 persistence mode。现有 exp01-06 数据在 CV <5% 的场景下仍可信，但 exp04b (CV 21%) 和 exp07a (bimodal) 应以稳定态或重跑数据为准。
 
 ## Prediction Calibration
 

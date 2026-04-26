@@ -4,11 +4,11 @@
 
 ### 新增
 - **exp07a 完成** — Pi-Zero dual-stream flow VLA E/C/A profiling on RTX 5880 Ada (20 iterations)
-  - E (SigLIP 400M) = 9-12ms, C (Gemma 2B prefill) = 26-33ms, A (300M Expert ×10 steps) = 165-205ms
-  - Total ~201ms (~5Hz). **Action Expert dominates 82%+ latency**
-  - Per-step ~18ms — cross-attn to PaliGemma KV makes 300M Expert ~2.5x pricier than pure DiT
-  - DiT scaling curve filled: 174M=7.2ms < **300M=18ms** < 350M=32ms
-  - Bimodal distribution observed (GPU power state warmup, cv>10%)
+  - **Canonical = stable-window (runs 13-20)**: E=9.32ms / C=26.40ms / A=164.76ms / Total=200.5ms (~5Hz)
+  - Action Expert dominates 82% latency; per-step ~16.5ms (cross-attn to PaliGemma KV → 300M Expert ~2.3x pure DiT)
+  - DiT scaling curve filled: 174M=7.2ms < **300M=16.5ms** < 350M=32ms
+  - **Bimodal 污染**: runs 1-12 比 13-20 慢 1.25x (GPU 功率爬坡)，aggregated 20-run mean 不作为 canonical
+  - 下游约定: 后续 profiling 默认 `warmup=15` + `nvidia-smi -pm 1` 锁定 persistence mode
 - **PiZeroController** — allenzren/open-pi-zero backend, manual E/C/A phase decomposition
   - Vendor namespace collision solved: `src/` → `pizero_src/` rename + sed rewrite at setup time
   - `.pt` checkpoint loading support (state_dict `_orig_mod.` prefix stripping)

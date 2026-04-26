@@ -50,7 +50,7 @@ updated_at: "2026-04-25"
 | exp05a | LingBot-VLA-4B (attention) | VLA fine-tuning reshapes attention: sink migrates Pos2→Pos64, Gini 0.91→0.07, entropy V-shape→flat |
 | exp05b | Qwen2.5-VL-3B (attention) | Disambiguation: Gini collapse is VLA fine-tuning effect, not model size. 3B vanilla Gini 0.80-0.98 |
 | exp06a | NitroGen 500M DiT | Per-step 7.2ms, linear scaling. 174M DiT compute-bound. 174M→350M = BW transition |
-| exp07a | Pi-Zero (dual-stream flow VLA) | E=9-12ms/C=26-33ms/A=165-205ms, total ~201ms ≈ 5Hz. Action Expert (300M) dominates 82%. Per-step ~18ms. Cross-attn makes 300M Expert ~2.5x pricier than pure DiT |
+| exp07a | Pi-Zero (dual-stream flow VLA) | **stable** E=9.32/C=26.40/A=164.76ms, total 200.5ms ≈ 5Hz. Action Expert (300M) dominates 82%. Per-step ~16.5ms. Cross-attn makes 300M Expert ~2.3x pricier than pure DiT. Bimodal 污染 → warmup=15 + `nvidia-smi -pm 1` |
 
 ---
 
@@ -301,7 +301,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | ACT | VA (CVAE) | 3ms | 2.5ms | — | 0.5ms | 330 | E (80%) |
 | NitroGen @k16 | VA (flow DiT) | 126ms | 8.7ms | — | 115.4ms | 7.9 | A (91.6%) |
 | LingBot-VLA | Flow VLA | 74.5ms | 35.7ms | — | 38.8ms | 13 | E≈C (50/50) |
-| Pi-Zero @10step | Flow VLA (dual-stream) | ~201ms | 9-12ms | — | 165-205ms | ~5 | A (82%) |
+| Pi-Zero @10step | Flow VLA (dual-stream) | 200.5ms (stable) | 9.32ms | — | 164.76ms | ~5 | A (82%) |
 | Fast-WAM @10step | WAM (skip) | 407ms | 7.6ms | — | 362ms | 2.5 | A (89%) |
 | LingBot-VA (full) | WAM (full) | 2091ms | 75.5ms | 592ms | 1423ms | 0.5 | A (68%) |
 
@@ -328,7 +328,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 - [ ] VLM speculative decoding 中 visual token 对 acceptance rate 的影响
 - [ ] Per-layer attention entropy 分布的实际意义 (Layer 21 最低 → 是否是最佳 pruning 切入点?)
 - [ ] OpenVLA (AR VLA) profiling: E/P/D 与 Qwen2.5-VL 有多大差异?
-- [x] ~~Pi-Zero flow VLA profiling: denoise step count vs latency trade-off~~ → **exp07a: E=9-12ms/C=26-33ms/A=165-205ms, total ~201ms ≈ 5Hz. Per-step ~18ms, cross-attn to PaliGemma KV makes 300M Expert 2.5x pricier than pure DiT**
+- [x] ~~Pi-Zero flow VLA profiling: denoise step count vs latency trade-off~~ → **exp07a stable: E=9.32/C=26.40/A=164.76ms, total 200.5ms ≈ 5Hz. Per-step ~16.5ms, cross-attn to PaliGemma KV makes 300M Expert 2.3x pricier than pure DiT. Bimodal (runs 1-12 polluted by GPU power warmup)**
 - [ ] 3B→7B backbone scaling law: 是否线性? (exp01a vs exp03a 初步暗示 ~7x for 2.3x params)
 - [ ] Imagination value quantification: Full WAM 的 592ms video generation 带来多少 task success rate 提升?
 - [ ] DreamZero profiling: DiT caching 在 memory-BW-bound regime 的真实收益?
@@ -380,7 +380,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | Mean-Flow VLA / FASTER | ~50ms | VLA 单步化 |
 | **LingBot-VLA-4B (our measurement)** | **74.5ms** | **Flow VLA baseline (first-party, 3B)** |
 | DreamZero | ~130ms, 7Hz | WAM zero-shot (A100) |
-| **Pi-Zero @10step (our measurement)** | **~201ms** | **Dual-stream flow VLA (first-party, 2.7B)** |
+| **Pi-Zero @10step (our measurement)** | **200.5ms** (stable) | **Dual-stream flow VLA (first-party, 2.7B)** |
 | **Fast-WAM @10step (our measurement)** | **407ms** | **Skip-imagination WAM (first-party)** |
 | **LingBot-VA (our measurement)** | **2091ms** | **Full WAM baseline (first-party)** |
 | SAGE | 3.36x speedup | VLM SD 标杆 |
@@ -416,7 +416,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | exp05a | 2026-04-21 | **done** | VLA attention similar to VLM | Gini 0.91→0.07, sink migrates, entropy flat | VLA fine-tuning reshapes attention; VLM pruning not transferable | Way Off — opposite of prediction |
 | exp05b | 2026-04-21 | **done** | 3B model = different pattern | 3B vanilla Gini 0.80-0.98, consistent with 7B | Gini collapse from VLA fine-tuning, not model size | Confirmed — disambiguation successful |
 | exp06a | 2026-04-22 | **done** | ~100M DiT, 5-10ms/step | 174M DiT, 7.2ms/step, linear | Per-step 7.2ms, compute-bound, 174M→350M BW transition | Accurate on per-step, Off on param count (174M not 100M) |
-| exp07a | 2026-04-25 | **done** | E=15-25ms/C=40-80ms/A=30-80ms | E=9-12ms/C=26-33ms/A=165-205ms, total ~201ms | Action Expert (300M) dominates 82%. Per-step ~18ms. Cross-attn 2.5x pricier than pure DiT | E/C overestimated, A severely underestimated (2-3x) |
+| exp07a | 2026-04-25 | **done** | E=15-25ms/C=40-80ms/A=30-80ms | **stable** E=9.32/C=26.40/A=164.76ms, total 200.5ms | Action Expert (300M) dominates 82%. Per-step ~16.5ms. Cross-attn 2.3x pricier than pure DiT. Bimodal (runs 1-12 polluted). | E/C overestimated, A severely underestimated (2x) |
 
 ### 5.1 Prediction Calibration: exp01a
 

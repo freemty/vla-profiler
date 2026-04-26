@@ -34,7 +34,7 @@ Project documentation map. All paths relative to repo root.
 | `exp/exp05a/` | LingBot-VLA-4B (attention) | Done | VLA reshapes attention: Gini 0.91→0.07 |
 | `exp/exp05b/` | Qwen2.5-VL-3B (attention) | Done | Disambiguation: Gini collapse = VLA fine-tuning |
 | `exp/exp06a/` | NitroGen 500M DiT (profiling) | Done | 7.2ms/step, linear, k=1: 55.9Hz |
-| `exp/exp07a/` | Pi-Zero dual-stream (profiling) | Done | E=9-12ms/C=26-33ms/A=165-205ms, ~201ms (~5Hz) |
+| `exp/exp07a/` | Pi-Zero dual-stream (profiling) | Done | **stable**: E=9.32/C=26.40/A=164.76ms (200.5ms, ~5Hz) |
 | `exp/summary.md` | Flight recorder | — | All experiments, one row each |
 
 ## Design Specs & Plans
@@ -77,6 +77,7 @@ Project documentation map. All paths relative to repo root.
 | `docs/knowhow/debug-solutions/lingbotvla-integration.md` | LingBot-VLA flow VLA 集成 14 个问题汇总 |
 | `docs/knowhow/debug-solutions/lingbot-va-wam-integration.md` | LingBot-VA full WAM 集成 7 个陷阱 (构造参数, VAE, timestep, action_mode) |
 | `docs/knowhow/debug-solutions/nitrogen-controller-deployment.md` | NitroGen 部署 5 个问题 + Codex 审查发现 |
+| `docs/knowhow/debug-solutions/pizero-integration.md` | Pi-Zero 集成 5 个陷阱 — vendor src/ 命名冲突、manual timing vs hooks、opaque infer_action、uv-over-conda、cv2/matplotlib 依赖 |
 
 ### Infrastructure
 

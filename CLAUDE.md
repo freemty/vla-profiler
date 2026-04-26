@@ -185,6 +185,6 @@ Pipeline state tracked in .pipeline-state.json.
   - **exp05a (LingBot-VLA attention):** VLA fine-tuning reshapes attention: Gini 0.91→0.07, sink Pos2→Pos64, entropy flat. VLM pruning 不可迁移到 VLA。
   - **exp05b (Qwen2.5-VL-3B attention):** 消歧: Gini 崩塌归因于 VLA fine-tuning (非 model size)。3B vanilla Gini 0.80-0.98。
   - **exp06a (NitroGen 500M DiT):** Per-step 7.2ms (174M DiT), perfectly linear. 174M→350M: 2x params, 4.4x latency → compute-bound 到 memory-BW-bound 转换。k=1: 55.9Hz。
-- **exp07a (profiling):** E=9-12ms/C=26-33ms/A=165-205ms (total ~201ms, ~5Hz). **Action Expert (300M Gemma) dominates 82%+ latency.** Per-step ~18ms. Cross-attn to PaliGemma KV makes 300M Expert ~2.5x pricier than pure DiT. DiT scaling curve: 174M=7.2ms < 300M=18ms < 350M=32ms. Bimodal distribution (GPU power state warmup).
+- **exp07a (profiling):** **Canonical (stable-window runs 13-20)**: E=9.32ms/C=26.40ms/A=164.76ms (total 200.5ms, ~5Hz). **Action Expert (300M Gemma) dominates 82% latency.** Per-step ~16.5ms. Cross-attn to PaliGemma KV makes 300M Expert ~2.3x pricier than pure DiT. DiT scaling curve: 174M=7.2ms < 300M=16.5ms < 350M=32ms. Bimodal 污染: runs 1-12 慢 1.25x (GPU 功率爬坡) → warmup=15 + `nvidia-smi -pm 1` 为后续默认配置。
 - **latest (v0.6.1):** Pi-Zero controller + profiling, PiZeroController (uv venv, allenzren backend).
 - **next:** DreamZero profiling on RTX 5880 Ada. DreamZero DiT layer activation variance 分析. OpenVLA (need HF download).
