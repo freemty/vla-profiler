@@ -14,6 +14,11 @@ Project documentation map. All paths relative to repo root.
 | `survey/papers/ml-profiling-systems-comprehensive-survey.md` | 4-agent 并行调研综合报告 — PhaseTimer 审查, CUDA timing 最佳实践 |
 | `survey/papers/flashdrive-deep-dive.md` | FlashDrive 论文深度分析 |
 | `survey/papers/efficient-wam-va-profiling-targets.md` | WAM/VA profiling 目标模型筛选 |
+| `survey/papers/nitrogen-deep-dive.md` | NitroGen 500M VA gaming foundation model 精读 |
+| `survey/papers/dreamdojo-dreamzero-deep-dive.md` | DreamDojo + DreamZero 精读 (WAM, DiT caching, 7Hz on GB200) |
+| `survey/papers/hao-style-fastvideo.md` | FastVideo 深度 survey — STA/VSA/蒸馏 + Hao co-design 方法论提炼 + VLA 迁移启示 |
+| `survey/papers/hao-style-distserve.md` | DistServe 深度 survey — PD disaggregation, goodput 指标, EPD 三阶段 VLM 迁移启示 |
+| `survey/papers/hao-style-vllm.md` | vLLM/PagedAttention 深度 survey — OS 分页借用, BlockManager+Scheduler, Visual KV 迁移启示, co-design 方法论起点 |
 
 ## Experiment Results
 
@@ -25,6 +30,9 @@ Project documentation map. All paths relative to repo root.
 | `exp/exp03a/` | LingBot-VLA-4B (profiling) | Done | 74.5ms, 13Hz |
 | `exp/exp04a/` | Fast-WAM (profiling) | Done | 407ms@10step, 2.5Hz |
 | `exp/exp04b/` | LingBot-VA (profiling) | Done | 2091ms, 0.5Hz |
+| `exp/exp05a/` | LingBot-VLA-4B (attention) | Done | VLA reshapes attention: Gini 0.91→0.07 |
+| `exp/exp05b/` | Qwen2.5-VL-3B (attention) | Done | Disambiguation: Gini collapse = VLA fine-tuning |
+| `exp/exp06a/` | NitroGen 500M DiT (profiling) | Done | 7.2ms/step, linear, k=1: 55.9Hz |
 | `exp/summary.md` | Flight recorder | — | All experiments, one row each |
 
 ## Design Specs & Plans
@@ -43,7 +51,6 @@ Project documentation map. All paths relative to repo root.
 | File | Description |
 |------|-------------|
 | `docs/knowhow/runbooks/deploy-to-xdlab23.md` | xdlab23 首次部署 + 日常 sync 流程 |
-| `docs/knowhow/runbooks/setup-openpi-env.md` | Pi-Zero openpi conda 环境搭建 |
 | `docs/knowhow/runbooks/setup-uv-env-xdlab23.md` | uv venv 替代 conda (非交互 SSH 场景) |
 
 ### Toolchain
@@ -66,6 +73,13 @@ Project documentation map. All paths relative to repo root.
 | `docs/knowhow/debug-solutions/phasetimer-cpu-backend-bug.md` | PhaseTimer CPU backend record_end() no-op bug |
 | `docs/knowhow/debug-solutions/lingbotvla-integration.md` | LingBot-VLA flow VLA 集成 14 个问题汇总 |
 | `docs/knowhow/debug-solutions/lingbot-va-wam-integration.md` | LingBot-VA full WAM 集成 7 个陷阱 (构造参数, VAE, timestep, action_mode) |
+| `docs/knowhow/debug-solutions/nitrogen-controller-deployment.md` | NitroGen 部署 5 个问题 + Codex 审查发现 |
+
+### Infrastructure
+
+| File | Description |
+|------|-------------|
+| `docs/knowhow/runbooks/deploy-new-model-package.md` | GitHub 被防火墙封锁时 sparse clone→tar→scp 部署新模型包 |
 
 ### Infrastructure
 
@@ -79,7 +93,6 @@ Project documentation map. All paths relative to repo root.
 |------|-------------|
 | `docs/papers/landscape.md` | VLM/VLA inference landscape (early version, superseded by survey/) |
 | `docs/papers/starvla-framework-deep-dive.md` | StarVLA 模块化 VLA framework 架构分析 |
-| `docs/papers/openpi-pytorch-profiling-feasibility.md` | OpenPI (Pi-Zero) PyTorch profiling 可行性评估 |
 
 ## Research Notes
 
@@ -97,12 +110,13 @@ Project documentation map. All paths relative to repo root.
 | `viewer/static/presentation.html` | 5-section advisor meeting slides (hero, motivation, approach, experiments, roadmap) |
 | `viewer/static/experiments.html` | Expandable experiment detail tables + prediction calibration |
 | `viewer/static/survey-dashboard.html` | Interactive survey dashboard (Pareto, pipeline comparison, maturity matrix) |
+| `viewer/static/scaling-curve.html` | DiT scaling scatter (log-log), latency spectrum, NitroGen k-sweep, paradigm comparison |
 
 ## Other
 
 | File | Description |
 |------|-------------|
 | `CLAUDE.md` | Project instructions + index for Claude Code |
-| `CHANGELOG.md` | Version history (v0.1.0 - v0.5.1) |
+| `CHANGELOG.md` | Version history (v0.1.0 - v0.6.0) |
 | `.pipeline-state.json` | LabMate pipeline state (current_exp, stage) |
-| `.claude/skills/project-skill/SKILL.md` | Project knowledge base (v4) |
+| `.claude/skills/project-skill/SKILL.md` | Project knowledge base (v5) |

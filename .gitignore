@@ -61,3 +61,4 @@ output/
 outputs/
 logs/
 .gstack/
+vendor/

@@ -1,12 +1,11 @@
 ---
 name: Survey Project Status
-description: Status of VLM/VLA/VA/WAM inference efficiency landscape survey, updated 2026-04-11 with VA+World Model deep dive; OpenPI profiling feasibility assessed 2026-04-13
+description: Status of VLM/VLA/VA/WAM inference efficiency landscape survey, updated 2026-04-11 with VA+World Model deep dive
 type: project
 ---
 
 Completed comprehensive landscape survey at `survey/landscape.md` on 2026-04-11.
 Added VA + World Action Model deep dive at `survey/papers/va-world-models.md` on 2026-04-11.
-Added OpenPI PyTorch profiling feasibility report at `docs/papers/openpi-pytorch-profiling-feasibility.md` on 2026-04-13.
 
 **Coverage:**
 1. VLM Inference (architectures, visual token explosion, KV-cache, vision encoder bottleneck)

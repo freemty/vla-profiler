@@ -8,6 +8,17 @@ Phase model: E/C/A
   - A: Flow matching denoise (Action Expert, N Euler steps)
 
 Backend: vendor/open_pi_zero (vendored from github.com/allenzren/open-pi-zero)
+
+IMPORTANT (setup coordination):
+Upstream's package is laid out at `vendor/open_pi_zero/src/` and all internal
+imports use `from src.model...`. That would shadow *our* project's own `src/`
+package when this controller is imported. To avoid that collision, setup_pizero.sh
+MUST perform a one-time transformation at install time:
+  1. Rename `vendor/open_pi_zero/src` → `vendor/open_pi_zero/pizero_src`
+  2. sed-replace `from src.` → `from pizero_src.` in every .py under
+     `vendor/open_pi_zero/pizero_src/` (and any sibling scripts that import from it).
+After that rename, `from pizero_src.model.vla.pizero import PiZero` works cleanly
+without clobbering our own top-level `src` package.
 """
 
 from __future__ import annotations
@@ -34,13 +45,21 @@ VENDOR_PATH = os.path.join(
 
 
 def _ensure_vendor_on_path() -> None:
+    """
+    Ensure the renamed vendored upstream package (`pizero_src`) is importable.
+
+    Expects setup_pizero.sh to have renamed upstream's `src/` → `pizero_src/`
+    and rewritten its internal `from src.` imports to `from pizero_src.`.
+    We add `vendor/open_pi_zero/` itself to sys.path so that
+    `from pizero_src.model.vla.pizero import PiZero` resolves.
+    """
     abs_path = os.path.abspath(VENDOR_PATH)
-    expected_module = os.path.join(abs_path, "open_pi_zero", "__init__.py")
+    expected_module = os.path.join(abs_path, "pizero_src", "model", "vla", "pizero.py")
     if not os.path.exists(expected_module):
         raise ImportError(
-            f"Vendored open_pi_zero not found at {abs_path}. "
-            "Run: git clone https://github.com/allenzren/open-pi-zero vendor/open_pi_zero "
-            "and rename src/ to open_pi_zero/"
+            f"Vendored pizero_src not found at {abs_path}. "
+            "Run scripts/setup_pizero.sh (clones allenzren/open-pi-zero, "
+            "renames src/ → pizero_src/, and rewrites internal imports)."
         )
     if abs_path not in sys.path:
         sys.path.insert(0, abs_path)
@@ -128,7 +147,7 @@ class PiZeroController(BaseVLAController):
                 torch.backends.cudnn.enabled = False
                 logger.warning("cuDNN probe failed, disabling cuDNN for this session")
 
-        from open_pi_zero.model.vla.pizero import PiZero
+        from pizero_src.model.vla.pizero import PiZero
 
         model_path = getattr(cfg, "model_name", "")
         denoise_steps = getattr(cfg, "denoise_steps", 10)
@@ -153,14 +172,23 @@ class PiZeroController(BaseVLAController):
         model.tie_action_proprio_weights()
 
         if model_path:
-            if not os.path.isdir(model_path):
+            if os.path.isfile(model_path) and model_path.endswith(".pt"):
+                data = torch.load(model_path, weights_only=True, map_location="cpu")
+                state_dict = data["model"] if "model" in data else data
+                state_dict = {
+                    k.replace("_orig_mod.", ""): v
+                    for k, v in state_dict.items()
+                }
+                model.load_state_dict(state_dict, strict=True)
+                logger.info("Loaded .pt checkpoint from %s", model_path)
+            elif os.path.isdir(model_path):
+                model_cfg.pretrained_model_path = model_path
+                model.load_pretrained_weights()
+                logger.info("Loaded PaliGemma base weights from %s", model_path)
+            else:
                 raise ValueError(
-                    f"model_name '{model_path}' is not a local directory. "
-                    "Pi-Zero requires a local checkpoint path with .safetensors files."
+                    f"model_name '{model_path}' is neither a .pt file nor a directory."
                 )
-            model_cfg.pretrained_model_path = model_path
-            model.load_pretrained_weights()
-            logger.info("Loaded pretrained weights from %s", model_path)
 
         dtype = torch.bfloat16 if use_bf16 else torch.float32
         model = model.to(device).to(dtype)
@@ -333,7 +361,7 @@ def _default_pizero_config(pretrained_model_path: str = "") -> Any:
             "use_quantize": False,
             "use_lora": False,
             "adaptive_mode": None,
-            "rope_theta": 100.0,
+            "rope_theta": 10000.0,
         },
         "action": {
             "hidden_size": 1024,
@@ -343,7 +371,7 @@ def _default_pizero_config(pretrained_model_path: str = "") -> Any:
             "use_quantize": False,
             "use_lora": False,
             "adaptive_mode": None,
-            "rope_theta": 100.0,
+            "rope_theta": 10000.0,
         },
     }
 
@@ -364,10 +392,10 @@ def _default_pizero_config(pretrained_model_path: str = "") -> Any:
         "use_lm_head": False,
         "action_expert_adaptive_mode": None,
         "time_hidden_size": 256,
-        "time_max_period": 100.0,
+        "time_max_period": 10000.0,
         "mixture": mixture,
         "vision": {
-            "_target_": "open_pi_zero.model.paligemma.siglip.SiglipVisionModel",
+            "_target_": "pizero_src.model.paligemma.siglip.SiglipVisionModel",
             "config": {
                 "hidden_size": 1152,
                 "intermediate_size": 4304,
@@ -387,7 +415,7 @@ def _default_pizero_config(pretrained_model_path: str = "") -> Any:
         "quantize": False,
         "lora": False,
         "vision_projector": {
-            "_target_": "open_pi_zero.model.paligemma.siglip.PaliGemmaMultiModalProjector",
+            "_target_": "pizero_src.model.paligemma.siglip.PaliGemmaMultiModalProjector",
             "config": {
                 "vision_config": {
                     "hidden_size": 1152,
@@ -399,7 +427,7 @@ def _default_pizero_config(pretrained_model_path: str = "") -> Any:
             "use_lora": False,
         },
         "joint": {
-            "_target_": "open_pi_zero.model.vla.joint_model.JointModel",
+            "_target_": "pizero_src.model.vla.joint_model.JointModel",
             "config": {
                 "action_expert_adaptive_mode": None,
                 "time_hidden_size": 256,

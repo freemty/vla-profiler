@@ -144,10 +144,8 @@ vlla/
 |   |-- papers/
 |   |   |-- landscape.md
 |   |   |-- starvla-framework-deep-dive.md
-|   |   |-- openpi-pytorch-profiling-feasibility.md
 |   |-- knowhow/
 |       |-- runbooks/deploy-to-xdlab23.md
-|       |-- runbooks/setup-openpi-env.md
 |       |-- runbooks/setup-uv-env-xdlab23.md
 |       |-- toolchain/cuda-profiling-patterns.md
 |       |-- toolchain/hydra-config-patterns.md
@@ -615,7 +613,6 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | File | Topic |
 |------|-------|
 | `docs/knowhow/runbooks/deploy-to-xdlab23.md` | xdlab23 部署流程 |
-| `docs/knowhow/runbooks/setup-openpi-env.md` | Pi-Zero openpi 环境搭建 |
 | `docs/knowhow/runbooks/setup-uv-env-xdlab23.md` | uv venv 替代 conda (非交互 SSH) |
 | `docs/knowhow/toolchain/cuda-profiling-patterns.md` | CUDA Event vs torch.profiler 对比 |
 | `docs/knowhow/toolchain/hydra-config-patterns.md` | Hydra ListConfig/device gotchas |
@@ -631,7 +628,6 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | `docs/knowhow/toolchain/wam-standalone-profiling.md` | WAM standalone profiling 模式 |
 | `docs/knowhow/infrastructure/xdlab23-model-weights.md` | ModelScope 404 issue |
 | `docs/papers/starvla-framework-deep-dive.md` | StarVLA 模块化 VLA framework 深度分析 |
-| `docs/papers/openpi-pytorch-profiling-feasibility.md` | OpenPI profiling 可行性 |
 
 ---
 
