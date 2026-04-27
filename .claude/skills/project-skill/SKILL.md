@@ -28,7 +28,7 @@ updated_at: "2026-04-27"
 - `current_exp`: exp08a (PA/DA co-location interference pilot — **done**)
 - `stage`: experiment
 - `version`: v0.7.0
-- Survey 产出: 5 份核心文档 (新增 `multimodal-serving-systems-2026.md`)，覆盖 180+ 篇论文/项目 (2024-2026)
+- Survey 产出: 6 份核心文档 (新增 `vla-wam-efficiency-systems-deep-research.md` — 双轨对比 serving stacks vs robotics stacks)，覆盖 180+ 篇论文/项目 (2024-2026)
 - Framework 产出: VLM profiling + attention analysis + attention overlay + VLA profiling + stream-aware PhaseTimer + co-location probe (`src/`, `scripts/`)
 - 新增模块: Interpretability Mixin 体系 (`src/interpretability/`)、OverlayRenderer (`src/viz/`)、Timing Cross-Validation、stream-aware PhaseTimer (`src/utils/timing.py` 支持 `stream=` 参数)
 - 共享核心: `model-probe-core` git submodule (`src/core/`)
@@ -231,6 +231,24 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 1. **VLM serving 处于 "pre-vLLM" 阶段** — EPD disaggregation 类似 2022 年 PD 分离
 2. **VLA inference 处于 "wild west" 阶段** — 无统一 serving system/benchmark
 3. **Algorithm-System Co-design 是最大空白** — token pruning/quantization 未与 scheduling 整合
+
+### 3.1.1 系统选型三层心智模型 (from `vla-wam-efficiency-systems-deep-research.md`)
+
+**Serving 层级三分:**
+- **第一层 通用 serving 主干** (必进 shortlist): vLLM / SGLang / TensorRT-LLM — 覆盖 PagedAttention/RadixAttention/in-flight batching, 通用量化并行
+- **第二层 workload 专项加速器**: vLLM-Omni (any-to-any stage disaggregation, JCT ↓91.4%) / SGLang Diffusion (Cache-DiT + TeaCache + layerwise offload, Qwen-Image ≤5x)
+- **第三层 工程友好层**: LMDeploy (中文 VLM, vs vLLM 1.8x 吞吐, 4-bit 2.4x FP16)
+
+**Robotics 层级 (与 serving 不在同一 bucket):**
+- **LeRobot** (工作流基座, 23.6k★): Parquet+MP4 (LeRobotDataset v3), RTC 异步分块推理, policy_server, IsaacLab Arena GPU eval
+- **OpenVLA-OFT** (高效微调 recipe, 1.2k★): parallel decoding + action chunking + continuous actions + L1; LIBERO 76.5%→97.1%, A100 **4.2Hz/240ms → 109.7Hz/73ms** (25-50x)
+- **Fast-WAM** (WAM latency baseline, 579★): 项目页 190ms/单步 (vs exp04a 测 407ms total @10step = 补足了 per-step 视角), LIBERO 97.6 / RoboTwin 91.8
+
+**统一端点 benchmark**: GenAI-Perf — TTFT/ITL/TPS/RPS, 支持多模态 synthetic/BYOD, 交叉验证 vLLM / SGLang / TRT-LLM / vLLM-Omni; TRT-LLM H100 FP8 达 **10k tok/s + 100ms TTFT**
+
+**Benchmark 场景**: LIBERO (130 任务) / VLABench (100 类, 2000+ 物体, LeRobot 接入 43 cat) / IsaacLab Arena / RoboTwin
+
+**核心 anti-pattern**: 不要把 LeRobot/OpenVLA-OFT/Fast-WAM 与 vLLM/TRT-LLM 直接比 tok/s — 它们不同层次, 正确对比是"同任务成功率下的控制 Hz / 单步 latency / 显存 / 复现实用性"
 
 ### 3.2 已验证的假设
 
