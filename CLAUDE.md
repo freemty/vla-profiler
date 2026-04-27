@@ -66,6 +66,7 @@ slides/                # 演示文稿
   - `survey/papers/hao-style-distserve.md` — DistServe: PD disaggregation, goodput 指标, EPD/EPDA VLM+VLA 迁移
   - `survey/papers/hao-style-fastvideo.md` — FastVideo: STA/VSA 稀疏 attention + 蒸馏, Triton kernel co-design
   - `survey/papers/hao-style-synthesis.md` — **综合分析**: 5-step co-design 方法论模板, exp07 候选 A/B/C/D 打分, 见 Hao 的"一页话"
+- **Multimodal Serving Systems Survey (2026)**: `survey/papers/multimodal-serving-systems-2026.md` — vLLM-Omni (arXiv:2602.02204) + SGLang Diffusion 实地调研, **"EPDA framework"方向已被占**, exp08 必须降档到 mechanism study + robotics SLO benchmark
 - **Documentation index**: `docs/README.md` — 全项目文档结构索引 (survey, experiments, knowhow, specs, notes, viewer)
 
 ## Survey Dimensions

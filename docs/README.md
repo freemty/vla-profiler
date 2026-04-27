@@ -20,6 +20,7 @@ Project documentation map. All paths relative to repo root.
 | `survey/papers/hao-style-distserve.md` | DistServe 深度 survey — PD disaggregation, goodput 指标, EPD 三阶段 VLM 迁移启示 |
 | `survey/papers/hao-style-vllm.md` | vLLM/PagedAttention 深度 survey — OS 分页借用, BlockManager+Scheduler, Visual KV 迁移启示, co-design 方法论起点 |
 | `survey/papers/hao-style-synthesis.md` | **Hao 工作风格综合分析** — 三工作共享的 5-step co-design 模板, VLM/VLA 下一步实验候选 A/B/C/D 打分, 见 Hao 的 "一页话" |
+| `survey/papers/multimodal-serving-systems-2026.md` | **vLLM-Omni + SGLang Diffusion 实地调研** — 代码级 scope 对比, arXiv:2602.02204 解读, exp08 原计划方向被覆盖后的真正空白区 (B1-B4) |
 
 ## Experiment Results
 
