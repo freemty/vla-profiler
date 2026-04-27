@@ -119,10 +119,12 @@ def build_nitrogen_action_payload(gpu: int, k: int = 10):
     device = f"cuda:{gpu}"
     dtype = torch.bfloat16
 
-    # Try real NitroGen first.
+    # Try real NitroGen first. Requires repo root on sys.path (not src/).
     try:
-        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
-        from controllers.nitrogen_controller import NitroGenController  # type: ignore
+        _repo_root = Path(__file__).resolve().parent.parent
+        if str(_repo_root) not in sys.path:
+            sys.path.insert(0, str(_repo_root))
+        from src.controllers.nitrogen_controller import NitroGenController  # type: ignore
         ctrl = NitroGenController(
             controller_config={"device": device, "dtype": "bfloat16", "k": k,
                                "model_name": "", "action_dim": 7, "proprio_dim": 7},
