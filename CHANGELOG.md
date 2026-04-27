@@ -1,5 +1,50 @@
 # Changelog
 
+## v0.8.0 @freemty — 2026-04-27
+
+### 新增 (exp08a pilot 完成)
+- **exp08a — Pair-wise EPDA co-location interference pilot** (3 runs, RTX 5880 Ada, warmup=10, iter=30)
+  - `scripts/exp08a_interference.py` — 两 Python thread + 两 CUDA stream 并发 probe，strategy α (no mid-loop barrier)。支持 DA/PA/SMOKE 三种 pair，自动 fallback dummy DiT 若 NitroGen import 失败
+  - 真 NitroGen canonical 结果 (median-based)：
+    - **PA** (Qwen-VL-3B P + NitroGen 174M A)：P 27.3→85.9ms (**inflation 3.15×**), A 47.7→65.1ms (1.37×)
+    - **DA** (Qwen-VL-7B D + NitroGen 174M A)：D 22.1→77.6ms (**inflation 3.52×**), A 48.2→76.3ms (1.58×)
+  - **Roofline 严重低估 2-28×** — "P+A 弱 (<1.1×) / D+A 强 (1.4-1.7×)" 预测中，只有 DA·A 命中
+  - Contention 机制推断：GPU kernel launch queue / SM scheduler，不是 FLOPs 或 HBM BW peak
+  - LLM 侧 (P, D) 膨胀 >> A 侧 — 非对称干扰。P CV 14.9%→46.7% (compute-bound) vs D CV 7.7%→15.8% (BW-bound)，反直觉
+- **`exp/exp08a/FINDINGS.md`** — 完整 pilot 报告 + 见 Hao 一页话 (2026-04-27 版，诚实承认 vLLM-Omni)
+
+### 新増 (multimodal-serving scope audit)
+- **`survey/papers/multimodal-serving-systems-2026.md`** — vLLM-Omni + SGLang Diffusion 代码级调研
+  - 读了 `github.com/vllm-project/vllm-omni` (4.5k⭐, arXiv:2602.02204, 2026-02 paper) 和 `github.com/sgl-project/sglang/tree/main/python/sglang/multimodal_gen` (Hao 参与, blog 2025-11-07)
+  - **结论**：写新 EPDA framework 的空间已关闭
+    - vLLM-Omni 已有 `omni_ar_scheduler` + `omni_generation_scheduler` + `omni_scheduling_coordinator` + `omni_connectors` + `omni_coordinator/load_balancer`，JCT -91.4%
+    - SGLang Diffusion 的 `runtime/disaggregation/roles.py` 已有 ENCODER/DENOISER/DECODER/SERVER/MONOLITHIC 五 role，`DiffusionServer` N:M:K
+  - 剩余真空白：(B1) robotics/VLA SLO benchmark，(B2) GPU kernel-level contention model，(B3) FastVideo-style 加速迁移，(B4) Visual KV 压缩
+
+### 変更 (exp08 方向降档)
+- `survey/papers/hao-style-synthesis.md` — 候选 D **⭐⭐⭐⭐⭐ → ⭐⭐**，新增降档版候选 D' ⭐⭐⭐ (mechanism study + VLA SLO benchmark, 不做 framework)。推荐组合从 "D+C" 改为 **"C+D'"**。见 Hao 的"一页话"重写，开场承认 vLLM-Omni 占据 framework 空间
+- `docs/specs/2026-04-26-epda-disaggregation-spec.md` — §0 新增 scope 调整声明；产出清单从 "position paper / framework" 改为 "benchmark + mechanism study + VLA SLO suite"；明确 "不与 vLLM-Omni 竞争"
+- `slides/epda-roofline-motivation.html`:
+  - 加 EPDA 字母图例条 (E/P/D/A 4 色徽章 + 名字 + 描述) + DistServe → EPD → exp08 lineage callout
+  - 加 **exp08a pilot inflation bar chart** (4 pair × 蓝 alone + 红 coloc bar, color-coded ratio vs roofline prediction)
+  - 加 **Related serving systems section** (vLLM-Omni / SGLang / DistServe / EPD 4 行对比表 + 2 个 callout)
+  - Header 改为 "prediction & exp08a pilot falsification"
+
+### 変更 (project skill v6 → v7)
+- `.claude/skills/project-skill/SKILL.md`: current_exp=exp08a, stage=Phase 2 (Co-location Probing), survey 文档数 4→5, 新增重大方向变更段落, 核心数据表加 exp08a 行
+- Engineering Lessons APPEND-ONLY **#52-58** (7 新 lesson): GPU power bimodal → warmup=15+pm1, two-thread coloc probe (strategy α), roofline kernel-launch-level 失败 (2-28× 低估), NitroGen import 需 repo root, HF_HOME 布局 `org/repo`, sync_to_remote 静默失败, claim 新 framework 前必须 code-scan vLLM/SGLang
+
+### 実験データ (exp08a canonical median)
+
+| Pair | Phase | Alone (ms) | Coloc (ms) | Inflation | Roofline predicted |
+|------|-------|------------|------------|-----------|---------------------|
+| PA | P | 27.30 | 85.95 | **3.15×** | <1.1× ❌ |
+| PA | A | 47.70 | 65.13 | 1.37× | <1.1× ❌ |
+| DA | D | 22.07 | 77.64 | **3.52×** | 1.4-1.7× ❌ |
+| DA | A | 48.18 | 76.27 | 1.58× | 1.3-1.6× ✅ |
+
+---
+
 ## v0.7.0 @freemty — 2026-04-26
 
 ### 新增
