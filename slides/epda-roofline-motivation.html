@@ -41,6 +41,7 @@
     gap: 32px;
     align-items: start;
   }
+  .panel.full { grid-column: 1 / -1; }
 
   .panel {
     background: rgba(255,255,255,.03);
@@ -142,6 +143,53 @@
     margin-top: 14px;
   }
   .callout b { color: var(--accent); }
+  .callout.warn {
+    background: linear-gradient(90deg, rgba(255,102,102,.1), rgba(255,102,102,0));
+    border-left-color: #ff6666;
+  }
+  .callout.warn b { color: #ff9a9a; }
+
+  /* Inflation bar chart */
+  .inflation-chart {
+    display: grid;
+    grid-template-columns: 120px 1fr 70px 70px;
+    gap: 6px 12px;
+    align-items: center;
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  .ic-label { color: var(--fg); font-weight: 600; }
+  .ic-sub   { font-size: 10px; color: var(--muted); font-weight: 400; }
+  .ic-bar-wrap {
+    position: relative;
+    height: 22px;
+    background: rgba(255,255,255,.04);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .ic-bar-alone {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: rgba(92,200,255,.55);
+    border-right: 2px solid #7bd4ff;
+  }
+  .ic-bar-coloc {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: rgba(255,102,102,.35);
+    border-right: 2px solid #ff8787;
+  }
+  .ic-bar-alone-label, .ic-bar-coloc-label {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    font-size: 10px; color: var(--fg); padding: 0 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .ic-bar-alone-label { color: #0b1020; font-weight: 700; }
+  .ic-bar-coloc-label { color: #fff; font-weight: 700; }
+  .ic-ratio { font-variant-numeric: tabular-nums; font-weight: 700; }
+  .ic-ratio.bad { color: #ff8787; }
+  .ic-ratio.med { color: #ffdc80; }
+  .ic-ratio.ok  { color: #bfe5ff; }
+  .ic-pred { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 11px; }
+  .ic-pred.hit { color: #9be28d; }
 
   @media (max-width: 960px) {
     .grid { grid-template-columns: 1fr; }
@@ -153,7 +201,7 @@
 
 <header>
   <div class="kicker">exp08 motivation — one-pager for advisor meeting</div>
-  <h1>EPDA on the Roofline: four phases, three bottleneck classes</h1>
+  <h1>EPDA on the Roofline &mdash; prediction &amp; exp08a pilot falsification</h1>
   <div class="sub">
     Measured on RTX 5880 Ada (231.6 TFLOPS BF16, 960 GB/s, ridge @ 241 FLOPS/byte)
     &middot; data from exp01a / exp03a / exp04a / exp06a / exp07a
@@ -387,6 +435,113 @@
 
 </div><!-- /grid -->
 
+<!-- =========================================================
+     exp08a PILOT RESULTS — falsification section (2026-04-27)
+     ========================================================= -->
+<section class="panel full" style="margin-top: 32px; border-color: rgba(255,102,102,.28);">
+  <h2 style="color:#ff9a9a">exp08a pilot — measured inflation (2026-04-27)</h2>
+  <p style="color:var(--muted); font-size:13px; margin-top:-4px;">
+    Two co-located Python threads on separate CUDA streams, warmup=10, iter=30,
+    RTX 5880 Ada. <b style="color:#ff9a9a">All four measured scenarios exceed roofline predictions by 2-28&times;</b>.
+    Inflation &equiv; median(coloc) / median(alone).
+  </p>
+
+  <div class="inflation-chart" style="margin-top:18px;">
+    <div style="color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.08em;">Pair / Phase</div>
+    <div style="color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.08em;">Alone median &rarr; Co-located median (ms)</div>
+    <div style="color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.08em; text-align:center;">Actual</div>
+    <div style="color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.08em; text-align:center;">Roofline</div>
+
+    <!-- PA · P  (alone 27.3, coloc 85.9, scale=100ms) -->
+    <div>
+      <div class="ic-label">PA &middot; P</div>
+      <div class="ic-sub">Qwen-VL-3B prefill</div>
+    </div>
+    <div class="ic-bar-wrap">
+      <div class="ic-bar-alone" style="width: 27.3%;"></div>
+      <span class="ic-bar-alone-label" style="left: 4px;">27.3</span>
+      <div class="ic-bar-coloc" style="left: 27.3%; width: 58.6%;"></div>
+      <span class="ic-bar-coloc-label" style="left: calc(27.3% + 4px);">85.9</span>
+    </div>
+    <div class="ic-ratio bad" style="text-align:center;">3.15&times;</div>
+    <div class="ic-pred" style="text-align:center;">&lt;1.1&times;</div>
+
+    <!-- PA · A (alone 47.7, coloc 65.1) -->
+    <div>
+      <div class="ic-label">PA &middot; A</div>
+      <div class="ic-sub">NitroGen 174M DiT</div>
+    </div>
+    <div class="ic-bar-wrap">
+      <div class="ic-bar-alone" style="width: 47.7%;"></div>
+      <span class="ic-bar-alone-label" style="left: 4px;">47.7</span>
+      <div class="ic-bar-coloc" style="left: 47.7%; width: 17.4%;"></div>
+      <span class="ic-bar-coloc-label" style="left: calc(47.7% + 4px);">65.1</span>
+    </div>
+    <div class="ic-ratio med" style="text-align:center;">1.37&times;</div>
+    <div class="ic-pred" style="text-align:center;">&lt;1.1&times;</div>
+
+    <!-- DA · D (alone 22.1, coloc 77.6) -->
+    <div>
+      <div class="ic-label">DA &middot; D</div>
+      <div class="ic-sub">Qwen-VL-7B decode</div>
+    </div>
+    <div class="ic-bar-wrap">
+      <div class="ic-bar-alone" style="width: 22.1%;"></div>
+      <span class="ic-bar-alone-label" style="left: 4px;">22.1</span>
+      <div class="ic-bar-coloc" style="left: 22.1%; width: 55.5%;"></div>
+      <span class="ic-bar-coloc-label" style="left: calc(22.1% + 4px);">77.6</span>
+    </div>
+    <div class="ic-ratio bad" style="text-align:center;">3.52&times;</div>
+    <div class="ic-pred" style="text-align:center;">1.4-1.7&times;</div>
+
+    <!-- DA · A (alone 48.2, coloc 76.3) -->
+    <div>
+      <div class="ic-label">DA &middot; A</div>
+      <div class="ic-sub">NitroGen 174M DiT</div>
+    </div>
+    <div class="ic-bar-wrap">
+      <div class="ic-bar-alone" style="width: 48.2%;"></div>
+      <span class="ic-bar-alone-label" style="left: 4px;">48.2</span>
+      <div class="ic-bar-coloc" style="left: 48.2%; width: 28.1%;"></div>
+      <span class="ic-bar-coloc-label" style="left: calc(48.2% + 4px);">76.3</span>
+    </div>
+    <div class="ic-ratio med" style="text-align:center;">1.58&times;</div>
+    <div class="ic-pred hit" style="text-align:center;">1.3-1.6&times; &check;</div>
+  </div>
+
+  <div class="legend" style="margin-top:14px;">
+    <span><span class="legend-box" style="background:rgba(92,200,255,.55)"></span>Alone baseline</span>
+    <span><span class="legend-box" style="background:rgba(255,102,102,.35)"></span>Co-located</span>
+    <span style="color:#ff8787"><b>bad</b> &ge;2&times; inflation</span>
+    <span style="color:#ffdc80"><b>med</b> 1.2-2&times; inflation</span>
+    <span style="color:#9be28d"><b>&check;</b> roofline prediction matched</span>
+  </div>
+
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top:22px;">
+    <div class="callout warn" style="margin-top:0;">
+      <b>Roofline under-predicted 3 of 4 scenarios.</b>
+      Only DA&middot;A matches its range. LLM-side phases (P, D) inflated 3.15&times; and 3.52&times;,
+      i.e. 2-28&times; the predicted magnitude. The ordering D&gt;P is preserved
+      but the absolute gap roofline expected (low vs high) collapsed.
+    </div>
+    <div class="callout" style="margin-top:0;">
+      <b>LLM side inflates harder than A side.</b>
+      Asymmetric: 3.15-3.52&times; (LLM) vs 1.37-1.58&times; (DiT) under identical co-location.
+      Hypothesis: LLM attention kernels are larger and less-predictable in shape;
+      they are preempted by DiT&rsquo;s smaller regular kernels on the same SM.
+      Contention source is likely <em>kernel launch queue / SM scheduler</em>, not FLOPs/BW.
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top:14px;">
+    <b>Implication:</b> Roofline alone is not enough to rank EPDA co-location pairs.
+    But <em>every</em> measured pair shows material inflation (&ge;1.37&times;), so EPDA
+    disaggregation motivation is <em>strengthened</em>, not weakened. Next: extend to
+    full 6&times;6 matrix and propose a GPU-kernel-level contention model that closes the
+    roofline gap.
+  </div>
+</section>
+
 <footer>
   <span>
     Sources: exp01a (Qwen2.5-VL-7B E/P/D) &middot;
@@ -394,9 +549,10 @@
     exp04a (Fast-WAM ActionDiT) &middot;
     exp06a (NitroGen 174M DiT) &middot;
     exp07a (Pi-Zero dual-stream) &middot;
-    <code>docs/specs/2026-04-26-epda-roofline-analysis.md</code>
+    exp08a pilot (2026-04-27, PA + DA) &middot;
+    <code>exp/exp08a/FINDINGS.md</code>
   </span>
-  <span>Compiled 2026-04-27 &middot; vlla/exp08 motivation</span>
+  <span>Compiled 2026-04-27 &middot; vlla/exp08 motivation (pilot updated)</span>
 </footer>
 
 </div>
