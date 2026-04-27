@@ -22,6 +22,7 @@ Project documentation map. All paths relative to repo root.
 | `survey/papers/hao-style-synthesis.md` | **Hao 工作风格综合分析** — 三工作共享的 5-step co-design 模板, VLM/VLA 下一步实验候选 A/B/C/D 打分, 见 Hao 的 "一页话" |
 | `survey/papers/multimodal-serving-systems-2026.md` | **vLLM-Omni + SGLang Diffusion 实地调研** — 代码级 scope 对比, arXiv:2602.02204 解读, exp08 原计划方向被覆盖后的真正空白区 (B1-B4) |
 | `survey/papers/vla-wam-serving-systems-2026.md` | **VLA/WAM 专用 serving 系统现状** — 唯二真 system: OxyGen (arXiv:2603.14371) + VLAgents (arXiv:2601.11250); 18 arXiv ID 主进程校验零幻觉; 补 B5 (streaming VAE WAM) + B6 (OxyGen 扩 PD) 两个空白 |
+| `survey/papers/vla-acceleration-tricks-2026.md` | **9 篇 model-level VLA 加速汇总** — PD-VLA/Discrete Diffusion VLA/SnapFlow/FASTER/StreamingVLA/A1/NanoVLA/OpenVLA-OFT/Fast-WAM，按 parallel-decoding/one-step-flow/model-shrinking/ft-recipe 四族分类。SnapFlow 独立验证 "A 阶段 80%" 与 exp07a 82% 吻合。只推荐 PD-VLA + OpenVLA-OFT 做 deep-dive |
 
 ## Experiment Results
 
