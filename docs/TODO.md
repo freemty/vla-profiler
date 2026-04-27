@@ -1,32 +1,52 @@
 # TODO
 
 > Completed items moved to CHANGELOG (audit trail preserved there).
-> Last refresh: 2026-04-27 — closed exp08b pairs + exp08c v1.
+> Last refresh: 2026-04-27 — **"Fast VLA first, serving later" 战略转向**。
 
-## P0 — 学习补课 (unblocks 所有 exp08 决策)
+## 战略判断
 
-- [ ] **P0** 执行 `docs/learning-plan.md` 半天计划 — 上午 Horace He Brrrr + CUDA MODE L1 (L0+L1 解锁); 下午 vLLM PagedAttention + DistServe (L2 解锁)。完成判据: 能回答 "decode 为何 memory-bound" / "exp08 在 DistServe 基础上加了什么"。学完再决定 exp08 走 (C)/(A)/(D) 哪条路 — 2026-04-27 (new)
+VLA 推理现在卡在**单请求太慢** (Pi-Zero 200ms=5Hz, 需要 10-50Hz)，不是并发不够。
+这是 FastVideo 阶段 (单次加速)，不是 vLLM 阶段 (多用户 serving)。
+→ **候选 A (VLA 推理加速) 是最高优先级方向。**
+→ exp08 (contention/serving) 降档为 side project / 备用论文素材。
 
-## P0 — 见 Hao 前必做 (学习后启动)
+## P0 — 学习补课 (unblocks 方向决策)
 
-- [ ] **P0** 与 Hao 面谈准备 — 详见 `docs/hao-meeting-prep.md`。**核心问题 Q0: "VLA serving 是真需求吗？什么形态？什么时间点？"** 带 survey context 去请教，不是带答案去汇报。Q1 方向选择请他点评 (C vs D' vs 新方向)。Q2 展示 exp 数据 (Pareto + exp08 非对称 contention)。准备 checklist 见文档底部 — 2026-04-27 (重写)
+- [ ] **P0** 执行 `docs/learning-plan.md` 半天计划 — 上午 Horace He Brrrr + CUDA MODE L1; 下午 vLLM PagedAttention + DistServe 前 3 节。完成判据: 能回答 "decode 为何 memory-bound" / "PD disaggregation 为什么有效"。**学完后决定 Hao meeting 前是否还需要补更多** — 2026-04-27
 
-## P1 — exp08 主线 (blocked by P0 学习)
+## P0 — 见 Hao 前必做
 
-> 学完 learning-plan 后再决定是否启动, 以及走哪条路 (C/A/D)。
+- [ ] **P0** 画 7-model Pareto 图 (一页, 有 Hz 刻度) — 用 exp01-07 全部数据
+- [ ] **P0** 画 DiT scaling curve 图 (174M / 300M / 350M per-step, 含 cross-attn 标注)
+- [ ] **P0** 读 FastVideo 论文 (STA + VSA + 蒸馏, 至少前 4 节) — 理解哪些 technique 可迁移到 VLA Action DiT
+- [ ] **P0** 读 DistServe 前 3 节 — 作为 "为什么 serving later" 的背景 (能说清 PD disaggregation)
+- [ ] **P0** 更新 `slides/` 演示: 加 "Fast VLA First" framing + Pareto 图 + DiT scaling
+- [ ] **P0** 准备 exp08 一页总结 (备用, 只在 Hao 问时展开: EPDA 非对称 contention, D/P 脆弱 2.4-2.9x)
+- [ ] **P0** 详见 `docs/hao-meeting-prep.md` — 核心: Q0 亮出 "Fast VLA first" 判断请他校准, Q1 候选排序, Q2 展示数据
 
-- [ ] **P1** exp08b triple/quad combos (EPD/EPA/EDA/PDA/EPDA) — 脚本已就绪 (`launch_exp08b.sh 0 --multi-only`)，~3-4h server time。**目的: 验证 M4 从 pair 外推到 N>2 的能力**。仅在学完 P0 后、决定走 (A) 或 (D) 时启动 — 2026-04-27 (new)
-- [ ] **P1** M4 → M5 升级 — exp08c EP(E) 残差 -0.46 为最大误差，提示 tensor-core specific interaction 项缺失。若 triple R²<0.9 即启动 M5 (加 compute-channel-specific 二阶项) — 2026-04-27 (new)
-- [ ] **P1** exp08 mechanism-study 论文骨架 — 若 M4/M5 triple 外推 R²>0.9, 按 "EPDA interference 非对称 + 可预测 contention model" 动笔 outline，目标 workshop / short paper — 2026-04-27 (new, 后置)
-- [ ] **P1** 写 `docs/knowhow/exp08-mental-model.md` — 用 exp08 实测数字解释 L0–L2 关键概念 (kernel dispatch / SM scheduler / memory-bound vs compute-bound), 作为自己和 future Claude 的 anchor 参考 — 2026-04-27 (new)
+## P1 — 候选方向 (Hao meeting 后启动)
 
-## P2 — 候选方向细化 / 补充研究
+> 候选排序: **A > B > C >> D (too early) > E (side project)**
 
-- [ ] **P2** 候选 C 细化 spec (DiT caching for VLA) — FastVideo-style step caching 迁移到 Fast-WAM / DreamZero / NitroGen Action DiT; 测量 **DiT layer activation variance** (每层变化率 → 最优 cache 策略); 设计实时约束下的 step-aware cache scheduling — 2026-04-27 (合并了原 DreamZero DiT layer variance 项)
-- [ ] **P2** DreamZero baseline profiling on RTX 5880 Ada — 候选 C 的 WAM baseline 之一。需 Wan2.1-I2V-14B (~45GB) + DreamZero-DROID (~28GB) 下载。**仅在候选 C 确定为主线时启动** — 2026-04-21 (降档 2026-04-27)
-- [ ] **P2** vLLM-Omni / SGLang Diffusion 接触 — 阅读 vLLM-Omni paper 细节, 尝试在仓库 issue 或 slack (#diffusion) 联系维护者讨论 VLA/robotics SLO 方向是否有合作空间 — 2026-04-27
+- [ ] **P1** 候选 A: VLA 单次推理加速 — FastVideo 思路迁移到 VLA Action DiT (STA/蒸馏/step caching)。**直接 bottleneck**: Action 占 80-94% 延迟, DiT 越大越贵呈超线性增长。Hao meeting 后细化 spec
+- [ ] **P1** 候选 B: VLA inference benchmark — 统一 profiling 框架 + SLO benchmark (填 wild-west 空白)。配套 A，低风险。可复用 exp01-07 的 framework
+- [ ] **P1** 候选 C 细化 spec (DiT caching for VLA) — FastVideo-style step caching 迁移; 测量 DiT layer activation variance; 设计实时约束下的 step-aware cache scheduling。A 的子方向
+
+## P2 — exp08 收尾 (降档, 可选)
+
+> exp08 已完成 6-pair 干扰矩阵 + M4 模型 (R²=0.94)。Triple/quad 验证和论文动笔**暂停**。
+
+- [ ] **P2** exp08b triple/quad combos — 脚本已就绪 (`launch_exp08b.sh 0 --multi-only`)。仅在 Hao 认为 mechanism study 值得做时启动
+- [ ] **P2** M4 → M5 升级 — EP(E) 残差 -0.46 提示 tensor-core interaction 缺失。仅在 triple R²<0.9 时启动
+- [ ] **P2** exp08 mechanism-study 论文骨架 — workshop / short paper。仅在 M4 triple 外推 R²>0.9 且 Hao 支持时动笔
+
+## P2 — 补充研究 (可选)
+
+- [ ] **P2** DreamZero baseline profiling on RTX 5880 Ada — 候选 A/C 的 WAM baseline。需 Wan2.1-I2V-14B + DreamZero-DROID 下载
+- [ ] **P2** vLLM-Omni / SGLang Diffusion 接触 — 了解他们在 multimodal serving 的进展, 确认不重复
 
 ## P2 — 工程清洁 (可绕开)
 
-- [ ] **P2** phase 命名标准化 — exp04b JSON key `video_denoise`/`action_denoise` 统一到 `video`/`action`, 或在 exp08 代码加映射层 — 2026-04-26
-- [ ] **P2** wall-clock vs phase-sum gap tracking — timing_validation task 补充这个差值指标, 为 exp08 干扰量化提供 baseline noise floor — 2026-04-26
+- [ ] **P2** phase 命名标准化 — exp04b `video_denoise`/`action_denoise` → `video`/`action`
+- [ ] **P2** wall-clock vs phase-sum gap tracking — timing_validation 补差值指标
+- [ ] **P2** 写 `docs/knowhow/exp08-mental-model.md` — 用 exp08 数字解释 L0-L2 关键概念, 作为自己的 anchor 参考
