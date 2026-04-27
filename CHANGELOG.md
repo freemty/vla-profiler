@@ -1,5 +1,40 @@
 # Changelog
 
+## v0.8.2 @freemty — 2026-04-27
+
+### 新增 (exp08b/c 完成)
+- **exp08b — 6-pair EPDA interference matrix** (6/6 pair complete, RTX 5880 Ada)
+  - EP: E=1.70x/P=2.42x. ED: E=1.04x/D=2.59x. EA: E=0.97x/A=1.23x.
+  - PD: P=2.42x/D=2.48x. PA: P=2.88x/A=1.19x. DA: D=2.65x/A=1.16x.
+  - **D/P 极度脆弱 (2.4-2.9x) vs E/A 鲁棒 (<1.3x)** — 非对称干扰现象确认
+  - 产出: `exp/exp08b/interference_matrix.json` + 6 份 `results_XX.json` + `run.log`
+- **exp08c — M4 Asymmetric contention model** (R²=0.94)
+  - 公式: `inflation(X|Y) = 1 + vulnerability(X) * aggressiveness(Y)`
+  - 学到的参数: v=(D:1.52, P:1.61, E:0.23, A:0.20), a=(A:1.12, E:0.96, P:1.02, D:0.87)
+  - Baseline 对比: M1 additive R²=0.21, M2 bottleneck R²=-3.44, M3 empirical R²=1.00 (查表上界)
+  - 对称模型根本无法拟合该数据 — 不对称性是主信号
+  - **A 是"隐形破坏者"**: v=0.20 自身不受影响 + a=1.12 干扰别人最强 (bursty kernel dispatch)
+  - **E 是最安全 co-locate 候选**: v=0.23 + 中等 a=0.96
+  - EPDA 部署建议: {E,A} safe 同卡; {P,D} 必须 disaggregate; 最优拆分 {E,A} | {P} | {D}
+  - 产出: `scripts/exp08c_contention_model.py` (新增 `fit_m4_asymmetric` + 交替最小二乘); `exp/exp08c/FINDINGS.md`, `model_pairs.json`
+
+### Survey 入库
+- `survey/papers/vla-wam-efficiency-systems-deep-research.md` — VLA 双轨解读 (omni-multimodal serving vs robotics VLA)。
+  **三层心智模型**: 通用 serving 主干 (vLLM/SGLang/TRT-LLM) vs workload 加速器 (vLLM-Omni/SGLang-Diffusion) vs 工程友好层 (LMDeploy)。
+  **Robotics 层不同 bucket**: LeRobot (基座 23.6k★) / OpenVLA-OFT (recipe, LIBERO 76.5→97.1%, A100 4.2Hz→109.7Hz, 25-50x) / Fast-WAM (WAM baseline, 190ms/step)。
+  **关键数字**: LMDeploy vs vLLM 1.8x 吞吐 + 4-bit 2.4x FP16; TRT-LLM H100 10k tok/s + 100ms TTFT。
+  **统一 benchmark**: GenAI-Perf (TTFT/ITL/TPS/RPS 多模态 BYOD)。
+  **anti-pattern**: 不要把 LeRobot/OpenVLA-OFT/Fast-WAM tok/s 与 vLLM 直接比 — 不同层, 正确指标是"同任务成功率下的 Hz / 单步 latency / 显存"
+
+### 変更
+- `exp/summary.md`: exp08b `scaffolded` → `done (pairs)`; exp08c `scaffolded` → `done (v1)`，填入 M4 参数表
+- `.claude/skills/project-skill/SKILL.md`: survey 产出 5→6 份, §3.1.1 新增"系统选型三层心智模型"(serving 主干 / workload 加速器 / 工程层 + robotics 独立 bucket)
+- `CLAUDE.md`: Key References 加 `vla-wam-efficiency-systems-deep-research.md` 条目 (完整三层分类 + OpenVLA-OFT/LMDeploy/TRT-LLM/GenAI-Perf 关键数字)
+
+### 构建与工具链
+- `.gitignore`: 新增 `.playwright-mcp/` — per-session console/page YAML dumps, 非源码不追踪
+- `uv.lock`: 入库 — lingbot/pizero uv venv 复现锚
+
 ## v0.8.1 @freemty — 2026-04-27
 
 ### 新增
