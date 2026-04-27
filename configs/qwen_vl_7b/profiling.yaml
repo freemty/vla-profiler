@@ -14,8 +14,8 @@ tasks:
   - "epd_profiling"
   - "timing_validation"
 
-num_warmup_runs: 3
-num_benchmark_runs: 10
+num_warmup_runs: 15     # bumped from 3 (exp07a audit: GPU power-state bimodality)
+num_benchmark_runs: 20  # bumped from 10
 max_new_tokens: 128
 
 inputs:
