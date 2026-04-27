@@ -18,6 +18,12 @@
 ### 文档
 - 4 个 knowhow 文件更新: PyTorch 2.9 API 变更, hf-mirror 下载方案, NitroGen full-weight config mismatch, WAM demo reproduce API
 
+### Survey 入库 (同日产出 4 份，curl-based 一手源 + arXiv ID 全部反验)
+- `survey/papers/vla-wam-serving-systems-2026.md` — VLA/WAM 专用 serving 现状。18 arXiv ID curl 校验零幻觉。唯二真 system：**OxyGen** (2603.14371, KV shared + continuous batching) + **VLAgents** (2601.11250, policy server 协议层)。Hao AI Lab 未涉足 → 候选 D' 的 concurrent-work baseline
+- `survey/papers/vla-acceleration-tricks-2026.md` — 9 篇 model-level VLA 加速汇总 (PD-VLA / Discrete Diffusion VLA / SnapFlow / FASTER / StreamingVLA / A1 / NanoVLA / OpenVLA-OFT / Fast-WAM) 按 parallel-decoding / one-step-flow / model-shrinking / ft-recipe 四族分类。SnapFlow 独立验证 "A 阶段 80%" 与 exp07a 82% 吻合
+- `survey/papers/pi-series-evolution.md` — Physical Intelligence π 系列 (π0 / π0.5 / π*0.6 / **π0.7**) + Generalist **GEN-1** 演进。**2026-04 同月两家都承认 "model is a system"** — π0.7 四件套 (HLP + WM + VLA + Action Expert), GEN-1 blog 原话 "GEN-1 is a system"。exp07a 测的 π0 已是 2024-era single-model picture
+- `survey/papers/industrial-wam-landscape-2026.md` — 工业 WAM 全景。Binary 分类 (推理时 video-gen vs 仅 pretrain)。Runtime video-gen 少数派: **1X 1XWM** ("text-conditioned video generation") + **Rhoda FutureVision** ("video-predictive control", $450M Series A / $1.7B val, 2026-03-10 stealth exit) + NVIDIA DreamZero + World Labs RTFM。VLA 主流: PI / Figure Helix / Generalist / Wayve / Cosmos+GR00T。中国工业界无匹配旗舰。1XWM 原文显式点名 VLA 派为对立面
+
 ## v0.8.0 @freemty — 2026-04-27
 
 ### 新增 (exp08a pilot 完成)
