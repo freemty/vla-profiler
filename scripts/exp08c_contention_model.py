@@ -345,6 +345,50 @@ def predict_inflation(model: Dict, combo: str) -> Dict[str, float]:
 
 
 # --------------------------------------------------------------------------- #
+# Honest cross-validation                                                     #
+# --------------------------------------------------------------------------- #
+
+def _eval(records, preds):
+    obs = [r["inflation"] for r in records]
+    errors = [abs(o - p) for o, p in zip(obs, preds)]
+    mae = sum(errors) / len(errors)
+    mean_obs = sum(obs) / len(obs)
+    ss_res = sum((o - p) ** 2 for o, p in zip(obs, preds))
+    ss_tot = sum((o - mean_obs) ** 2 for o in obs)
+    r2 = 1 - ss_res / ss_tot if ss_tot else float("nan")
+    return {"mae": mae, "r2": r2, "errors": errors, "obs": obs, "preds": preds}
+
+
+def resubstitution(records, fit_fn, predict_fn):
+    """Evaluate on the training set (NOT valid for model selection)."""
+    model = fit_fn(records)
+    preds = [predict_fn(model, r["combo"])[r["phase"]] for r in records]
+    return _eval(records, preds)
+
+
+def leave_one_out(records, fit_fn, predict_fn):
+    """True leave-one-out CV: fit on N-1, predict the held-out record."""
+    preds = []
+    for i in range(len(records)):
+        train = records[:i] + records[i + 1:]
+        model = fit_fn(train)
+        pred = predict_fn(model, records[i]["combo"])[records[i]["phase"]]
+        preds.append(pred)
+    return _eval(records, preds)
+
+
+def format_report(stats, kind: str = "loo") -> str:
+    label = {"loo": "LEAVE-ONE-OUT", "resub": "RESUBSTITUTION (training-set only)"}[kind]
+    lines = [f"=== {label} ==="]
+    lines.append(f"MAE:  {stats['mae']:.3f}x")
+    lines.append(f"R²:   {stats['r2']:.3f}")
+    if stats["r2"] < 0:
+        lines.append("  ⚠  R² < 0 — model predicts WORSE than the dataset mean. NOT predictive.")
+    lines.append("  per-record abs errors: " + ", ".join(f"{e:.2f}" for e in stats["errors"]))
+    return "\n".join(lines)
+
+
+# --------------------------------------------------------------------------- #
 # Main                                                                        #
 # --------------------------------------------------------------------------- #
 
@@ -411,21 +455,13 @@ def main():
             for ph, val in model["aggressiveness"].items():
                 print(f"      {ph}: {val:.4f}")
 
-    # Cross-validation
+    # Honest evaluation: resubstitution + LOO
     print(f"\n{'='*60}")
-    print("CROSS-VALIDATION (predict vs observed)")
+    print("MODEL EVALUATION — M4 Asymmetric")
     print(f"{'='*60}")
-    print(f"  {'Combo':>6s} {'Phase':>5s} | {'Observed':>8s} | {'M1':>8s} {'M2':>8s} {'M4':>8s}")
-    print(f"  {'-'*6} {'-'*5}-+-{'-'*8}-+-{'-'*8} {'-'*8} {'-'*8}")
-
-    for rec in records:
-        combo = rec["combo"]
-        ph = rec["phase"]
-        obs = rec["inflation"]
-        pred_m1 = predict_inflation(m1, combo).get(ph, float("nan"))
-        pred_m2 = predict_inflation(m2, combo).get(ph, float("nan"))
-        pred_m4 = predict_inflation(m4, combo).get(ph, float("nan"))
-        print(f"  {combo:>6s} {ph:>5s} | {obs:>7.3f}x | {pred_m1:>7.3f}x {pred_m2:>7.3f}x {pred_m4:>7.3f}x")
+    print(format_report(resubstitution(records, fit_m4_asymmetric, predict_inflation), "resub"))
+    print()
+    print(format_report(leave_one_out(records, fit_m4_asymmetric, predict_inflation), "loo"))
 
     if args.output:
         out_path = Path(args.output)
