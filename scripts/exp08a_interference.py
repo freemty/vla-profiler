@@ -280,17 +280,19 @@ def main():
         import torch
         torch.cuda.set_device(args.gpu)
 
-    # Build payloads.
+    # Build payloads. Server HF_HOME defaults (exp01a/05b style paths).
+    _D_DEFAULT = "/data1/ybyang/huggingface/Qwen/Qwen2.5-VL-7B-Instruct"
+    _P_DEFAULT = "/data1/ybyang/huggingface/Qwen/Qwen2.5-VL-3B-Instruct"
     if args.pair == "DA":
         llm_name = "D"
         llm_fn = build_llm_decode_payload(
-            args.gpu, args.llm_model or "Qwen/Qwen2.5-VL-7B-Instruct"
+            args.gpu, args.llm_model or _D_DEFAULT
         )
         a_fn = build_nitrogen_action_payload(args.gpu, k=args.k)
     elif args.pair == "PA":
         llm_name = "P"
         llm_fn = build_llm_prefill_payload(
-            args.gpu, args.llm_model or "Qwen/Qwen2.5-VL-3B-Instruct"
+            args.gpu, args.llm_model or _P_DEFAULT
         )
         a_fn = build_nitrogen_action_payload(args.gpu, k=args.k)
     else:  # SMOKE
