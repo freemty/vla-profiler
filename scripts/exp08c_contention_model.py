@@ -187,6 +187,89 @@ def fit_m2_bottleneck(records: List[Dict]) -> Dict:
 
 
 # --------------------------------------------------------------------------- #
+# Model M4: Asymmetric vulnerability-aggressiveness                           #
+# --------------------------------------------------------------------------- #
+
+def fit_m4_asymmetric(records: List[Dict]) -> Dict:
+    """Fit: inflation(X|Y) = 1 + vulnerability(X) * aggressiveness(Y)
+
+    Key insight: interference is asymmetric. D is fragile (high vulnerability)
+    but low aggressiveness; A is robust (low vulnerability) but high aggressiveness.
+    Each phase has two learned scalars: v (how much it suffers) and a (how much
+    it disrupts others).
+
+    For N-phase combos: inflation(X|{Y,Z}) = 1 + v_X * Σ a_Y
+    """
+    n = len(records)
+    phases_seen = sorted(set(r["phase"] for r in records))
+    if n == 0:
+        return {"model": "M4_asymmetric", "vulnerability": {}, "aggressiveness": {}, "r2": 0.0}
+
+    phase_idx = {ph: i for i, ph in enumerate(phases_seen)}
+    n_phases = len(phases_seen)
+
+    # Build feature matrix: each row has v_X * a_Y features
+    # For pair (X, Y): feature[phase_idx[X], phase_idx[Y]] = 1
+    # Target: inflation(X) - 1
+    X = np.zeros((n, n_phases * 2))  # [v_0..v_N, a_0..a_N]
+    y = np.zeros(n)
+
+    for i, rec in enumerate(records):
+        ph = rec["phase"]
+        co_runners = rec["co_runners"]
+        y[i] = rec["inflation"] - 1.0
+
+    # Since inflation = 1 + v_X * Σ a_Y is nonlinear in (v, a),
+    # use alternating least squares:
+    # Init: v = ones, fit a. Then fix a, fit v. Repeat.
+    v = np.ones(n_phases)
+    a = np.ones(n_phases)
+
+    for iteration in range(20):
+        # Fix v, fit a: y_i = v_{X_i} * Σ_j a_{Y_j} → linear in a
+        A_mat = np.zeros((n, n_phases))
+        for i, rec in enumerate(records):
+            ph_i = phase_idx[rec["phase"]]
+            for co in rec["co_runners"]:
+                co_i = phase_idx[co]
+                A_mat[i, co_i] = v[ph_i]
+        a_new, _, _, _ = np.linalg.lstsq(A_mat, y, rcond=None)
+        a = np.maximum(a_new, 0.01)  # non-negative
+
+        # Fix a, fit v: y_i = v_{X_i} * Σ_j a_{Y_j} → linear in v
+        V_mat = np.zeros((n, n_phases))
+        for i, rec in enumerate(records):
+            ph_i = phase_idx[rec["phase"]]
+            aggr_sum = sum(a[phase_idx[co]] for co in rec["co_runners"])
+            V_mat[i, ph_i] = aggr_sum
+        v_new, _, _, _ = np.linalg.lstsq(V_mat, y, rcond=None)
+        v = np.maximum(v_new, 0.01)
+
+    # Predict
+    y_pred = np.zeros(n)
+    for i, rec in enumerate(records):
+        ph_i = phase_idx[rec["phase"]]
+        aggr_sum = sum(a[phase_idx[co]] for co in rec["co_runners"])
+        y_pred[i] = v[ph_i] * aggr_sum
+
+    y_actual = y
+    ss_res = np.sum((y_actual - y_pred) ** 2)
+    ss_tot = np.sum((y_actual - np.mean(y_actual)) ** 2)
+    r2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else 0.0
+
+    vuln = {phases_seen[i]: round(float(v[i]), 4) for i in range(n_phases)}
+    aggr = {phases_seen[i]: round(float(a[i]), 4) for i in range(n_phases)}
+
+    return {
+        "model": "M4_asymmetric",
+        "vulnerability": vuln,
+        "aggressiveness": aggr,
+        "r2": round(r2, 4),
+        "n_samples": n,
+    }
+
+
+# --------------------------------------------------------------------------- #
 # Model M3: Empirical interaction matrix                                      #
 # --------------------------------------------------------------------------- #
 
@@ -242,6 +325,16 @@ def predict_inflation(model: Dict, combo: str) -> Dict[str, float]:
             inflation = float(np.max(total * gammas))
             predictions[ph] = round(max(inflation, 1.0), 3)
 
+    elif model["model"] == "M4_asymmetric":
+        vuln = model["vulnerability"]
+        aggr = model["aggressiveness"]
+        for ph in phases:
+            co_runners = [p for p in phases if p != ph]
+            v = vuln.get(ph, 1.0)
+            a_sum = sum(aggr.get(c, 1.0) for c in co_runners)
+            inflation = 1.0 + v * a_sum
+            predictions[ph] = round(max(inflation, 1.0), 3)
+
     elif model["model"] == "M3_empirical":
         for ph in phases:
             co_runners = [p for p in phases if p != ph]
@@ -286,16 +379,17 @@ def main():
     print(f"Combos: {sorted(set(r['combo'] for r in records))}")
     print(f"Phases: {sorted(set(r['phase'] for r in records))}")
 
-    # Fit all three models
+    # Fit all four models
     m1 = fit_m1_additive(records)
     m2 = fit_m2_bottleneck(records)
+    m4 = fit_m4_asymmetric(records)
     m3 = fit_m3_empirical(records)
 
     output = {
         "experiment": "exp08c",
         "data_dir": args.data_dir,
         "n_records": len(records),
-        "models": [m1, m2, m3],
+        "models": [m1, m2, m4, m3],
         "data": records,
     }
 
@@ -303,19 +397,26 @@ def main():
     print(f"\n{'='*60}")
     print("CONTENTION MODEL FIT RESULTS")
     print(f"{'='*60}")
-    for model in [m1, m2, m3]:
+    for model in [m1, m2, m4, m3]:
         print(f"\n  {model['model']}:")
         print(f"    R² = {model['r2']:.4f}")
         if "coefficients" in model:
             for name, val in model["coefficients"].items():
                 print(f"    {name}: {val:.4f}")
+        if "vulnerability" in model:
+            print("    vulnerability (how fragile):")
+            for ph, val in model["vulnerability"].items():
+                print(f"      {ph}: {val:.4f}")
+            print("    aggressiveness (how disruptive):")
+            for ph, val in model["aggressiveness"].items():
+                print(f"      {ph}: {val:.4f}")
 
-    # Cross-validation: predict each observed pair
+    # Cross-validation
     print(f"\n{'='*60}")
     print("CROSS-VALIDATION (predict vs observed)")
     print(f"{'='*60}")
-    print(f"  {'Combo':>6s} {'Phase':>5s} | {'Observed':>8s} | {'M1':>8s} {'M2':>8s}")
-    print(f"  {'-'*6} {'-'*5}-+-{'-'*8}-+-{'-'*8} {'-'*8}")
+    print(f"  {'Combo':>6s} {'Phase':>5s} | {'Observed':>8s} | {'M1':>8s} {'M2':>8s} {'M4':>8s}")
+    print(f"  {'-'*6} {'-'*5}-+-{'-'*8}-+-{'-'*8} {'-'*8} {'-'*8}")
 
     for rec in records:
         combo = rec["combo"]
@@ -323,7 +424,8 @@ def main():
         obs = rec["inflation"]
         pred_m1 = predict_inflation(m1, combo).get(ph, float("nan"))
         pred_m2 = predict_inflation(m2, combo).get(ph, float("nan"))
-        print(f"  {combo:>6s} {ph:>5s} | {obs:>7.3f}x | {pred_m1:>7.3f}x {pred_m2:>7.3f}x")
+        pred_m4 = predict_inflation(m4, combo).get(ph, float("nan"))
+        print(f"  {combo:>6s} {ph:>5s} | {obs:>7.3f}x | {pred_m1:>7.3f}x {pred_m2:>7.3f}x {pred_m4:>7.3f}x")
 
     if args.output:
         out_path = Path(args.output)

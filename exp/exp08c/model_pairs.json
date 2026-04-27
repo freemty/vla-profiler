@@ -1,0 +1,193 @@
+{
+  "experiment": "exp08c",
+  "data_dir": "exp/exp08b/",
+  "n_records": 12,
+  "models": [
+    {
+      "model": "M1_additive",
+      "coefficients": {
+        "compute": 1.3502,
+        "hbm_bw": 9.5487,
+        "dispatch": 1.6206
+      },
+      "r2": 0.2068,
+      "n_samples": 12
+    },
+    {
+      "model": "M2_bottleneck",
+      "coefficients": {
+        "compute": 2.2849,
+        "hbm_bw": 4.1846,
+        "dispatch": 2.3653
+      },
+      "r2": -3.4412,
+      "n_samples": 12
+    },
+    {
+      "model": "M4_asymmetric",
+      "vulnerability": {
+        "A": 0.2042,
+        "D": 1.5196,
+        "E": 0.2333,
+        "P": 1.6055
+      },
+      "aggressiveness": {
+        "A": 1.1185,
+        "D": 0.8651,
+        "E": 0.9609,
+        "P": 1.0165
+      },
+      "r2": 0.9383,
+      "n_samples": 12
+    },
+    {
+      "model": "M3_empirical",
+      "matrix": {
+        "D": {
+          "A": 2.654,
+          "E": 2.586,
+          "P": 2.476
+        },
+        "A": {
+          "D": 1.162,
+          "E": 1.226,
+          "P": 1.192
+        },
+        "E": {
+          "A": 0.971,
+          "D": 1.035,
+          "P": 1.698
+        },
+        "P": {
+          "E": 2.42,
+          "A": 2.881,
+          "D": 2.415
+        }
+      },
+      "r2": 1.0,
+      "n_samples": 12
+    }
+  ],
+  "data": [
+    {
+      "combo": "DA",
+      "phase": "D",
+      "co_runners": [
+        "A"
+      ],
+      "isolated_ms": 23.909,
+      "colocated_ms": 63.466,
+      "inflation": 2.654
+    },
+    {
+      "combo": "DA",
+      "phase": "A",
+      "co_runners": [
+        "D"
+      ],
+      "isolated_ms": 36.848,
+      "colocated_ms": 42.832,
+      "inflation": 1.162
+    },
+    {
+      "combo": "EA",
+      "phase": "E",
+      "co_runners": [
+        "A"
+      ],
+      "isolated_ms": 70.465,
+      "colocated_ms": 68.416,
+      "inflation": 0.971
+    },
+    {
+      "combo": "EA",
+      "phase": "A",
+      "co_runners": [
+        "E"
+      ],
+      "isolated_ms": 51.205,
+      "colocated_ms": 62.767,
+      "inflation": 1.226
+    },
+    {
+      "combo": "ED",
+      "phase": "E",
+      "co_runners": [
+        "D"
+      ],
+      "isolated_ms": 70.397,
+      "colocated_ms": 72.877,
+      "inflation": 1.035
+    },
+    {
+      "combo": "ED",
+      "phase": "D",
+      "co_runners": [
+        "E"
+      ],
+      "isolated_ms": 23.712,
+      "colocated_ms": 61.325,
+      "inflation": 2.586
+    },
+    {
+      "combo": "EP",
+      "phase": "E",
+      "co_runners": [
+        "P"
+      ],
+      "isolated_ms": 70.629,
+      "colocated_ms": 119.952,
+      "inflation": 1.698
+    },
+    {
+      "combo": "EP",
+      "phase": "P",
+      "co_runners": [
+        "E"
+      ],
+      "isolated_ms": 30.366,
+      "colocated_ms": 73.481,
+      "inflation": 2.42
+    },
+    {
+      "combo": "PA",
+      "phase": "P",
+      "co_runners": [
+        "A"
+      ],
+      "isolated_ms": 30.104,
+      "colocated_ms": 86.722,
+      "inflation": 2.881
+    },
+    {
+      "combo": "PA",
+      "phase": "A",
+      "co_runners": [
+        "P"
+      ],
+      "isolated_ms": 51.228,
+      "colocated_ms": 61.079,
+      "inflation": 1.192
+    },
+    {
+      "combo": "PD",
+      "phase": "P",
+      "co_runners": [
+        "D"
+      ],
+      "isolated_ms": 29.98,
+      "colocated_ms": 72.395,
+      "inflation": 2.415
+    },
+    {
+      "combo": "PD",
+      "phase": "D",
+      "co_runners": [
+        "P"
+      ],
+      "isolated_ms": 23.942,
+      "colocated_ms": 59.276,
+      "inflation": 2.476
+    }
+  ]
+}

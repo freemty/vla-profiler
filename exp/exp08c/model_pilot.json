@@ -1,0 +1,106 @@
+{
+  "experiment": "exp08c",
+  "data_dir": "exp/exp08a/",
+  "n_records": 6,
+  "models": [
+    {
+      "model": "M1_additive",
+      "coefficients": {
+        "compute": -13.9662,
+        "hbm_bw": 10.2646,
+        "dispatch": 7.5329
+      },
+      "r2": 0.0892,
+      "n_samples": 6
+    },
+    {
+      "model": "M2_bottleneck",
+      "coefficients": {
+        "compute": 2.8511,
+        "hbm_bw": 5.2375,
+        "dispatch": 1.6614
+      },
+      "r2": -1.3257,
+      "n_samples": 6
+    },
+    {
+      "model": "M3_empirical",
+      "matrix": {
+        "D": {
+          "A": 3.518
+        },
+        "A": {
+          "D": 1.583,
+          "P": 1.365
+        },
+        "P": {
+          "A": 3.148
+        }
+      },
+      "r2": 1.0,
+      "n_samples": 6
+    }
+  ],
+  "data": [
+    {
+      "combo": "DA",
+      "phase": "D",
+      "co_runners": [
+        "A"
+      ],
+      "isolated_ms": 22.071,
+      "colocated_ms": 77.641,
+      "inflation": 3.518
+    },
+    {
+      "combo": "DA",
+      "phase": "A",
+      "co_runners": [
+        "D"
+      ],
+      "isolated_ms": 48.175,
+      "colocated_ms": 76.265,
+      "inflation": 1.583
+    },
+    {
+      "combo": "PA",
+      "phase": "P",
+      "co_runners": [
+        "A"
+      ],
+      "isolated_ms": 28.403,
+      "colocated_ms": 64.452,
+      "inflation": 2.269
+    },
+    {
+      "combo": "PA",
+      "phase": "A",
+      "co_runners": [
+        "P"
+      ],
+      "isolated_ms": 46.72,
+      "colocated_ms": 53.684,
+      "inflation": 1.149
+    },
+    {
+      "combo": "PA",
+      "phase": "P",
+      "co_runners": [
+        "A"
+      ],
+      "isolated_ms": 27.304,
+      "colocated_ms": 85.945,
+      "inflation": 3.148
+    },
+    {
+      "combo": "PA",
+      "phase": "A",
+      "co_runners": [
+        "P"
+      ],
+      "isolated_ms": 47.697,
+      "colocated_ms": 65.129,
+      "inflation": 1.365
+    }
+  ]
+}

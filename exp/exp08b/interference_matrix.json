@@ -1,0 +1,114 @@
+{
+  "experiment": "exp08b",
+  "description": "EPDA pair-wise interference matrix",
+  "combos": {
+    "EP": {
+      "phases": [
+        "E",
+        "P"
+      ],
+      "inflation": {
+        "E": 1.698,
+        "P": 2.42
+      },
+      "isolated_median": {
+        "E": 70.629,
+        "P": 30.366
+      },
+      "colocated_median": {
+        "E": 119.952,
+        "P": 73.481
+      }
+    },
+    "ED": {
+      "phases": [
+        "E",
+        "D"
+      ],
+      "inflation": {
+        "E": 1.035,
+        "D": 2.586
+      },
+      "isolated_median": {
+        "E": 70.397,
+        "D": 23.712
+      },
+      "colocated_median": {
+        "E": 72.877,
+        "D": 61.325
+      }
+    },
+    "EA": {
+      "phases": [
+        "E",
+        "A"
+      ],
+      "inflation": {
+        "E": 0.971,
+        "A": 1.226
+      },
+      "isolated_median": {
+        "E": 70.465,
+        "A": 51.205
+      },
+      "colocated_median": {
+        "E": 68.416,
+        "A": 62.767
+      }
+    },
+    "PD": {
+      "phases": [
+        "P",
+        "D"
+      ],
+      "inflation": {
+        "P": 2.415,
+        "D": 2.476
+      },
+      "isolated_median": {
+        "P": 29.98,
+        "D": 23.942
+      },
+      "colocated_median": {
+        "P": 72.395,
+        "D": 59.276
+      }
+    },
+    "PA": {
+      "phases": [
+        "P",
+        "A"
+      ],
+      "inflation": {
+        "P": 2.881,
+        "A": 1.192
+      },
+      "isolated_median": {
+        "P": 30.104,
+        "A": 51.228
+      },
+      "colocated_median": {
+        "P": 86.722,
+        "A": 61.079
+      }
+    },
+    "DA": {
+      "phases": [
+        "D",
+        "A"
+      ],
+      "inflation": {
+        "D": 2.654,
+        "A": 1.162
+      },
+      "isolated_median": {
+        "D": 23.909,
+        "A": 36.848
+      },
+      "colocated_median": {
+        "D": 63.466,
+        "A": 42.832
+      }
+    }
+  }
+}

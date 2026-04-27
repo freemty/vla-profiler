@@ -1,0 +1,142 @@
+
+############################################################
+exp08b — EPDA Interference Matrix
+Combos: ['EP', 'ED', 'EA', 'PD', 'PA', 'DA']
+Phases needed: ['A', 'D', 'E', 'P']
+GPU: 0, warmup: 15, iterations: 40
+############################################################
+
+Largest combo 'EP' estimated VRAM: ~11.0GB (48GB available)
+
+[init] Building E (vision encode) payload...
+🚨 `image_seq_length` is part of ImagesKwargs, but not documented. Make sure to add it to the docstring of the function in /data1/ybyang/vit-probe/third_party/transformers/src/transformers/image_processing_utils_fast.py.
+Loading checkpoint shards:   0%|          | 0/5 [00:00<?, ?it/s]Loading checkpoint shards:  20%|██        | 1/5 [00:00<00:03,  1.08it/s]Loading checkpoint shards:  40%|████      | 2/5 [00:01<00:02,  1.13it/s]Loading checkpoint shards:  60%|██████    | 3/5 [00:02<00:01,  1.21it/s]Loading checkpoint shards:  80%|████████  | 4/5 [00:03<00:00,  1.28it/s]Loading checkpoint shards: 100%|██████████| 5/5 [00:03<00:00,  1.72it/s]Loading checkpoint shards: 100%|██████████| 5/5 [00:03<00:00,  1.44it/s]
+The image processor of type `Qwen2VLImageProcessor` is now loaded as a fast processor by default, even if the model checkpoint was saved with a slow processor. This is a breaking change and may produce slightly different outputs. To continue using the slow processor, instantiate this class with `use_fast=False`. Note that this behavior will be extended to all models in a future release.
+`torch_dtype` is deprecated! Use `dtype` instead!
+  [VRAM] after E init: allocated=1.4GB, reserved=15.5GB
+[init] Building D (LLM decode) payload...
+🚨 `image_seq_length` is part of Qwen2VLImageProcessorKwargs, but not documented. Make sure to add it to the docstring of the function in /data1/ybyang/vit-probe/third_party/transformers/src/transformers/models/qwen2_vl/image_processing_qwen2_vl_fast.py.
+Loading checkpoint shards:   0%|          | 0/5 [00:00<?, ?it/s]Loading checkpoint shards:  20%|██        | 1/5 [00:00<00:03,  1.11it/s]Loading checkpoint shards:  40%|████      | 2/5 [00:01<00:02,  1.15it/s]Loading checkpoint shards:  60%|██████    | 3/5 [00:02<00:01,  1.23it/s]Loading checkpoint shards:  80%|████████  | 4/5 [00:03<00:00,  1.28it/s]Loading checkpoint shards: 100%|██████████| 5/5 [00:03<00:00,  1.73it/s]Loading checkpoint shards: 100%|██████████| 5/5 [00:03<00:00,  1.45it/s]
+  [VRAM] after D init: allocated=18.0GB, reserved=18.0GB
+[init] Building P (LLM prefill) payload...
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:14<00:14, 14.54s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:15<00:00,  6.68s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:15<00:00,  7.86s/it]
+  [VRAM] after P init: allocated=25.5GB, reserved=25.5GB
+[init] Building A (NitroGen DiT) payload...
+[warn] NitroGen controller unavailable (NitroGenController.__init__() got an unexpected keyword argument 'controller_config'); falling back to dummy DiT.
+  [VRAM] after A init: allocated=26.1GB, reserved=26.1GB
+
+[1/6] Running combo EP...
+
+============================================================
+COMBO: EP (E+P)
+============================================================
+  [1/4] E isolated...
+  [2/4] P isolated...
+  [3/4] E+P concurrent...
+
+   Phase |   Isolated |  Colocated |  Inflation
+  -------+------------+------------+-----------
+       E |    70.63ms |   119.95ms |    1.698x
+       P |    30.37ms |    73.48ms |    2.420x
+  [saved] exp/exp08b/results_EP.json
+
+[2/6] Running combo ED...
+
+============================================================
+COMBO: ED (E+D)
+============================================================
+  [1/4] E isolated...
+  [2/4] D isolated...
+  [3/4] E+D concurrent...
+
+   Phase |   Isolated |  Colocated |  Inflation
+  -------+------------+------------+-----------
+       E |    70.40ms |    72.88ms |    1.035x
+       D |    23.71ms |    61.33ms |    2.586x
+  [saved] exp/exp08b/results_ED.json
+
+[3/6] Running combo EA...
+
+============================================================
+COMBO: EA (E+A)
+============================================================
+  [1/4] E isolated...
+  [2/4] A isolated...
+  [3/4] E+A concurrent...
+
+   Phase |   Isolated |  Colocated |  Inflation
+  -------+------------+------------+-----------
+       E |    70.47ms |    68.42ms |    0.971x
+       A |    51.20ms |    62.77ms |    1.226x
+  [saved] exp/exp08b/results_EA.json
+
+[4/6] Running combo PD...
+
+============================================================
+COMBO: PD (P+D)
+============================================================
+  [1/4] P isolated...
+  [2/4] D isolated...
+  [3/4] P+D concurrent...
+
+   Phase |   Isolated |  Colocated |  Inflation
+  -------+------------+------------+-----------
+       P |    29.98ms |    72.39ms |    2.415x
+       D |    23.94ms |    59.28ms |    2.476x
+  [saved] exp/exp08b/results_PD.json
+
+[5/6] Running combo PA...
+
+============================================================
+COMBO: PA (P+A)
+============================================================
+  [1/4] P isolated...
+  [2/4] A isolated...
+  [3/4] P+A concurrent...
+
+   Phase |   Isolated |  Colocated |  Inflation
+  -------+------------+------------+-----------
+       P |    30.10ms |    86.72ms |    2.881x
+       A |    51.23ms |    61.08ms |    1.192x
+  [saved] exp/exp08b/results_PA.json
+
+[6/6] Running combo DA...
+
+============================================================
+COMBO: DA (D+A)
+============================================================
+  [1/4] D isolated...
+  [2/4] A isolated...
+  [3/4] D+A concurrent...
+
+   Phase |   Isolated |  Colocated |  Inflation
+  -------+------------+------------+-----------
+       D |    23.91ms |    63.47ms |    2.654x
+       A |    36.85ms |    42.83ms |    1.162x
+  [saved] exp/exp08b/results_DA.json
+
+[saved] Summary matrix: exp/exp08b/interference_matrix.json
+
+======================================================================
+INTERFERENCE MATRIX SUMMARY
+======================================================================
+ Combo | Phase |  Alone(ms) |  Coloc(ms) |  Inflation
+-------+-------+------------+------------+-----------
+    EP |     E |    70.63ms |   119.95ms |    1.698x
+    EP |     P |    30.37ms |    73.48ms |    2.420x
+-------+-------+------------+------------+-----------
+    ED |     E |    70.40ms |    72.88ms |    1.035x
+    ED |     D |    23.71ms |    61.33ms |    2.586x
+-------+-------+------------+------------+-----------
+    EA |     E |    70.47ms |    68.42ms |    0.971x
+    EA |     A |    51.20ms |    62.77ms |    1.226x
+-------+-------+------------+------------+-----------
+    PD |     P |    29.98ms |    72.39ms |    2.415x
+    PD |     D |    23.94ms |    59.28ms |    2.476x
+-------+-------+------------+------------+-----------
+    PA |     P |    30.10ms |    86.72ms |    2.881x
+    PA |     A |    51.23ms |    61.08ms |    1.192x
+-------+-------+------------+------------+-----------
+    DA |     D |    23.91ms |    63.47ms |    2.654x
+    DA |     A |    36.85ms |    42.83ms |    1.162x
+-------+-------+------------+------------+-----------
