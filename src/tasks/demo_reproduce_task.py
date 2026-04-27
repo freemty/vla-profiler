@@ -93,7 +93,11 @@ def _check_vla_action(result: Dict[str, Any], expected: Dict[str, Any]) -> List[
     """Validate VLA continuous action output (ACT/LingBot/Pi-Zero)."""
     checks = []
 
-    action_shape = result.get("action_shape", [])
+    actions_tensor = result.get("actions")
+    if isinstance(actions_tensor, torch.Tensor):
+        action_shape = list(actions_tensor.shape)
+    else:
+        action_shape = result.get("action_shape", result.get("actions_shape", []))
     if isinstance(action_shape, str):
         checks.append({
             "name": "action_shape_valid",

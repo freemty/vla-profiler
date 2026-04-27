@@ -71,9 +71,47 @@ ln -sf /data1/ybyang/modelscope/Robbyant/lingbot-vla-4b \
 | lingbot-vla-4b | `/data1/ybyang/huggingface/robbyant/lingbot-vla-4b` | symlink → modelscope | ~8GB | pending |
 | lingbot-vla-4b-posttrain-robotwin | — | — | ~8GB | pending |
 
+## hf-mirror.com 备选下载方案 (2026-04-27)
+
+ModelScope 对非 Chinese 模型覆盖有限（如 `google/siglip-large-patch16-256`、`nvidia/NitroGen`）。hf-mirror.com 是 HuggingFace 的国内镜像，xdlab23 可达。
+
+### 使用 huggingface_hub + HF_ENDPOINT
+```bash
+HF_ENDPOINT=https://hf-mirror.com python -c "
+from huggingface_hub import snapshot_download
+snapshot_download('google/siglip-large-patch16-256',
+                  local_dir='/data1/ybyang/huggingface/google/siglip-large-patch16-256')
+"
+```
+
+### 使用 hf_hub_download 单文件
+```bash
+HF_ENDPOINT=https://hf-mirror.com python -c "
+from huggingface_hub import hf_hub_download
+hf_hub_download('nvidia/NitroGen', 'ng.pt',
+                local_dir='/data1/ybyang/huggingface/nvidia/NitroGen')
+"
+```
+
+### 离线模式运行
+下载完成后用离线环境变量避免联网检查：
+```bash
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 python -m src.run_tasks ...
+```
+`from_pretrained()` 会直接读本地路径，不尝试联网。
+
+### 已有模型清单 (2026-04-27 更新)
+
+| 模型 | HF 路径 | 来源 | 大小 | 状态 |
+|------|---------|------|------|------|
+| Qwen2.5-VL-7B-Instruct | `/data1/ybyang/huggingface/Qwen/Qwen2.5-VL-7B-Instruct` | ModelScope | ~16GB | OK |
+| NitroGen ng.pt | `/data1/ybyang/huggingface/nvidia/NitroGen/ng.pt` | hf-mirror | 1.97GB | OK |
+| SigLIP-large-patch16-256 | `/data1/ybyang/huggingface/google/siglip-large-patch16-256` | hf-mirror | 2.6GB | OK |
+| lingbot-vla-4b | `/data1/ybyang/huggingface/robbyant/lingbot-vla-4b` | ModelScope | ~8GB | pending |
+
 ## Notes
-- Date: 2026-04-20 (updated)
+- Date: 2026-04-20 (original), updated 2026-04-27 (hf-mirror + NitroGen/SigLIP)
 - Environment: xdlab23, modelscope 1.35.3
 - HuggingFace 直连确认 ConnectTimeout (2026-04-20 实测)
+- hf-mirror.com 确认可达 (2026-04-27 实测: NitroGen + SigLIP 均成功)
 - ModelScope 下载速度: ~10MB/s (校园网)
-- 总下载时间 (Qwen2.5-VL-7B): ~11 分钟

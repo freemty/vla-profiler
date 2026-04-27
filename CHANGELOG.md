@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.8.1 @freemty — 2026-04-27
+
+### 新增
+- **WAM demo reproduce 全覆盖** — Fast-WAM / LingBot-VA / NitroGen 三模型 forward pass 验证
+  - `scripts/wam_demo_reproduce.py` — standalone 脚本，正确调用 FastWAM.infer_action + LingBot-VA transformer action loop
+  - `configs/nitrogen/demo_reproduce.yaml` — NitroGen 真权重 demo config (SigLIP-large + ng.pt)
+  - Fast-WAM PASS 2/2 [10,7], LingBot-VA PASS 2/2 [1,16,30], NitroGen PASS 3/3 [1,16,25]
+- **exp01a rerun** (warmup=15, iter=20) — 数据已下载到 `exp/exp01a/results_rerun3/`
+- **NitroGen ng.pt + SigLIP 权重下载** — via hf-mirror.com，NitroGen 真权重 demo reproduce 通过
+
+### 修复
+- **validation_task.py PyTorch 2.9 兼容** — `cuda_time_total` → `device_time_total` (renamed in torch 2.9)
+- **demo_reproduce_task.py 支持 tensor 提取** — 从 controller 返回的 dict 中提取 actions tensor，fallback 到 shape key
+- **nitrogen_controller.py** — `max_seq_len` 从硬编码 512 改为 config 读取 (默认 1024)；返回 dict 中加入 actions tensor
+
+### 文档
+- 4 个 knowhow 文件更新: PyTorch 2.9 API 变更, hf-mirror 下载方案, NitroGen full-weight config mismatch, WAM demo reproduce API
+
 ## v0.8.0 @freemty — 2026-04-27
 
 ### 新增 (exp08a pilot 完成)

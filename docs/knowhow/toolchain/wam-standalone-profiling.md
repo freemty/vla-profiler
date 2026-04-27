@@ -81,8 +81,47 @@ cd /data1/ybyang/lingbot-va
 python /data1/ybyang/vlla/scripts/profile_lingbot_va.py --mode random --gpu 0
 ```
 
+## 6. Demo Reproduce 模式 (2026-04-27)
+
+WAM 模型不走 Hydra demo_reproduce task（无 controller），使用独立 `scripts/wam_demo_reproduce.py`。验证 action tensor 的 shape/NaN/range。
+
+### Fast-WAM API
+```python
+# FastWAM.infer_action (base class, NOT FastWAMIDM)
+out = model.infer_action(
+    prompt=None,
+    input_image=dummy_image,        # [1, 3, H, W]
+    action_horizon=10,
+    proprio=dummy_proprio,          # [1, 7]
+    context=dummy_context,          # [1, 20, 4096] (pre-encoded text)
+    context_mask=dummy_context_mask, # [1, 20]
+    num_inference_steps=10,
+)
+actions = out["action"]  # [horizon, action_dim] (batch squeezed)
+```
+**注意:** `FastWAM.infer_action` 没有 `num_video_frames` 参数（那是 `FastWAMIDM.infer_action` 的）。
+
+### LingBot-VA API
+LingBot-VA 没有简单高层 API。需要手动调用 transformer + scheduler：
+```python
+from wan_va.modules.model import WanTransformer3DModel
+from wan_va.utils import FlowMatchScheduler, get_mesh_id
+
+# Action denoise loop (same as profile_lingbot_va.py)
+for step_i, t in enumerate(action_timesteps[:-1]):
+    action_pred = transformer(input_dict, update_cache=0, cache_name="pos", action_mode=True)
+    actions = action_scheduler.step(action_pred, t, actions, return_dict=False)
+```
+
+### 验证标准 (random init)
+| Check | 说明 |
+|-------|------|
+| action_ndim | FastWAM: 2 [H, A], LingBot-VA: 3 [B, H, A] |
+| action_no_nan_inf | 必须无 NaN/Inf |
+| action_value_range | random init 不检查（无 clip） |
+
 ## Notes
-- Date: 2026-04-21
-- Environment: xdlab23 (RTX 5880 Ada), fastwam conda env / vit-probe conda env
-- Related: `scripts/profile_fastwam.py`, `scripts/profile_lingbot_va.py`
+- Date: 2026-04-21 (original), updated 2026-04-27 (demo reproduce mode)
+- Environment: xdlab23 (RTX 5880 Ada), vit-probe conda env
+- Related: `scripts/profile_fastwam.py`, `scripts/profile_lingbot_va.py`, `scripts/wam_demo_reproduce.py`
 - Per-step cost baseline: Fast-WAM ActionDiT ~32ms/step, LingBot-VA WanDiT ~29ms/step

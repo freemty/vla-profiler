@@ -54,8 +54,9 @@ def _extract_phase_cuda_time(
     for evt in key_averages:
         if evt.key.startswith(phase_prefix):
             phase_name = evt.key[len(phase_prefix):]
-            # cuda_time_total is in microseconds
-            cuda_ms = evt.cuda_time_total / 1000.0
+            # device_time_total (PyTorch ≥2.9) or cuda_time_total (older), in μs
+            us = getattr(evt, "device_time_total", None) or getattr(evt, "cuda_time_total", 0)
+            cuda_ms = us / 1000.0
             # Accumulate if same phase appears multiple times (decode)
             existing = result.get(phase_name, 0.0)
             result[phase_name] = existing + cuda_ms

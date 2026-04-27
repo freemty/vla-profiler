@@ -69,6 +69,7 @@ slides/                # 演示文稿
 - **Multimodal Serving Systems Survey (2026)**: `survey/papers/multimodal-serving-systems-2026.md` — vLLM-Omni (arXiv:2602.02204) + SGLang Diffusion 实地调研, **"EPDA framework"方向已被占**, exp08 必须降档到 mechanism study + robotics SLO benchmark
 - **VLA/WAM Serving Systems Survey (2026)**: `survey/papers/vla-wam-serving-systems-2026.md` — VLA/WAM 专用 serving 系统现状，18 arXiv ID 全部 curl 校验零幻觉。唯二真 system: **OxyGen** (2603.14371, VLA continuous batching + shared KV) + **VLAgents** (2601.11250, policy server 协议层)。Hao AI Lab 未涉足 VLA 方向 → 候选 D' 的 baseline + 结构性机会
 - **π Series + GEN-1 Evolution (2024-2026)**: `survey/papers/pi-series-evolution.md` — π0/π0.5/π*0.6/π0.7 (PI) + GEN-1 (Generalist AI) 对照。**2026-04 同月两家都承认 "model is a system"** — π0.7 用 High-Level + World Model + VLA + Action Expert 四件套，GEN-1 blog 原话 "GEN-1 is a system"。exp07a 测的 π0 已是 2024 年代 picture，候选 D' 的 SLO benchmark 必须升级到 pipeline tier
+- **Industrial WAM Landscape (2024-2026)**: `survey/papers/industrial-wam-landscape-2026.md` — binary 分类(推理时video-gen vs pretrain only)。Runtime video-gen 少数派: **1X 1XWM** + **Rhoda FutureVision "Direct Video Action"** ($450M Series A, $1.7B val) + NVIDIA **DreamZero** + World Labs **RTFM**. VLA 主流: PI/Figure Helix/Generalist/Wayve/Cosmos+GR00T. 1XWM 原话显式批评 VLA, Rhoda "video-predictive control"。中国工业界无匹配旗舰，全走 VLA 路线
 - **Documentation index**: `docs/README.md` — 全项目文档结构索引 (survey, experiments, knowhow, specs, notes, viewer)
 
 ## Survey Dimensions

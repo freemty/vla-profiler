@@ -150,8 +150,37 @@ Rule: **always persist `all_ms` raw iteration array** (`_profiling_stats.compute
 - Cross-model comparison on the same GPU — unequal warmup = unfair comparison
 - Before committing a "canonical" number to a paper figure — rerun with warmup=15 + `-pm 1`
 
+## PyTorch 2.9 API Breaking Change: `cuda_time_total` → `device_time_total` (2026-04-27)
+
+### Symptom
+```
+AttributeError: 'FunctionEventAvg' object has no attribute 'cuda_time_total'. Did you mean: 'cpu_time_total'?
+```
+发生在 `torch.profiler.profile().key_averages()` 返回的事件对象上。
+
+### Cause
+PyTorch 2.9.0+cu128 将 `cuda_time_total` 重命名为 `device_time_total`（统一命名以支持非 CUDA 设备）。同时 `cuda_time` → `device_time`，`self_cuda_time_total` → `self_device_time_total`。
+
+### Fix — 向后兼容写法
+```python
+us = getattr(evt, "device_time_total", None) or getattr(evt, "cuda_time_total", 0)
+cuda_ms = us / 1000.0
+```
+
+### 可用属性对照 (PyTorch 2.9)
+```
+cpu_time, cpu_time_str, cpu_time_total, cpu_time_total_str,
+device_time, device_time_str, device_time_total, device_time_total_str,
+self_cpu_time_total, self_cpu_time_total_str,
+self_device_time_total, self_device_time_total_str
+```
+注意：`cuda_time` 和 `cuda_time_total` **均已移除**。
+
+### 受影响文件
+- `src/tasks/validation_task.py` — `_extract_phase_cuda_time()` 函数
+
 ## Notes
-- Date: 2026-04-15 (original), updated 2026-04-27 (bimodality section)
+- Date: 2026-04-15 (original), updated 2026-04-27 (bimodality + PyTorch 2.9 API change)
 - Source: 4-agent parallel survey of 8 ML inference systems (original); exp07a/exp04b rerun audit (bimodality)
 - Full report: `survey/papers/ml-profiling-systems-comprehensive-survey.md`
 - Related experiments: exp07a (Pi-Zero bimodal discovery), exp04b rerun (warmup=15 canonical)

@@ -151,7 +151,7 @@ class NitroGenController(BaseVLAController):
             diffusion_model_cfg=dit_config,
             vl_self_attention_cfg=vl_config,
             hidden_size=hidden_size,
-            max_seq_len=512,
+            max_seq_len=getattr(cc, "max_seq_len", 1024),
             action_dim=action_dim,
             action_horizon=action_horizon,
             num_inference_timesteps=num_inference_timesteps,
@@ -371,6 +371,7 @@ class NitroGenController(BaseVLAController):
         self.timer.mark_end("action")
 
         return {
+            "actions": actions,
             "actions_shape": list(actions.shape),
             "num_denoise_steps": num_steps,
             "per_step_ms": per_step_times,

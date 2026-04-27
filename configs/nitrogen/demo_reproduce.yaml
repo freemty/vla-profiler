@@ -1,0 +1,39 @@
+# NitroGen 500M demo reproduce — verify forward pass with real weights
+defaults:
+  - /base
+  - _self_
+
+model_name: "NitroGen-500M"
+controller_name: nitrogen
+controller_config:
+  mode: demo
+  weight_mode: full
+  repo_path: "/data1/ybyang/NitroGen"
+  checkpoint_path: "/data1/ybyang/huggingface/nvidia/NitroGen/ng.pt"
+  vision_encoder_name: "/data1/ybyang/huggingface/google/siglip-large-patch16-256"
+  vision_hidden_size: 1024
+  dit_num_layers: 12
+  dit_num_heads: 16
+  dit_head_dim: 64
+  vl_num_layers: 4
+  vl_num_heads: 16
+  vl_head_dim: 64
+  action_dim: 25
+  action_horizon: 16
+
+num_warmup_runs: 1
+num_benchmark_runs: 1
+
+tasks:
+  - demo_reproduce
+
+task_configs:
+  demo_reproduce:
+    expected:
+      model_type: "va"
+      action_ndim: 3
+      action_shape: [1, 16, 25]
+
+inputs:
+  - name: "default"
+    num_inference_steps: 16

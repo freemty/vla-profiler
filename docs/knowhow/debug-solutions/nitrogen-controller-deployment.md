@@ -98,8 +98,43 @@ YAML 写 `warmup: 5` + `iterations: 20`，但 runner 用 `base.yaml` 的 `num_wa
 
 **教训:** ML profiling 代码也应做安全审查。`torch.load(weights_only=False)` + `strict=False` 是常见但有风险的 pattern。
 
+## Problem 6: Full-weight mode config mismatch (2026-04-27)
+
+NitroGen ng.pt checkpoint 的实际配置与 profiling.yaml 硬编码值不匹配：
+
+| 参数 | profiling.yaml | ng.pt checkpoint |
+|------|---------------|------------------|
+| vision_hidden_size | 768 | 1024 |
+| action_dim | 20 | 25 |
+| max_seq_len | 512 (硬编码) | 1024 |
+| vl_num_heads | 12 | 16 |
+| vl_head_dim | 64 | 64 |
+
+`load_state_dict(strict=False)` 静默跳过了 shape mismatch 的 keys，但 `position_embedding.weight` 的 mismatch 报了 RuntimeError（因为 `strict=False` 只跳过 missing/extra keys，不跳过 shape mismatch）。
+
+**Fix (三步):**
+1. `max_seq_len` 从硬编码 512 改为 `getattr(cc, "max_seq_len", 1024)` — 匹配 NitroGen 原代码默认
+2. demo_reproduce.yaml 使用 checkpoint 实际值: `vision_hidden_size: 1024`, `action_dim: 25`, `vl_num_heads: 16`
+3. `vision_encoder_name` 指向本地路径: `/data1/ybyang/huggingface/google/siglip-large-patch16-256`
+
+**教训:** `strict=False` 不是万能的——它跳过 key presence mismatch 但不跳过 shape mismatch。Full mode 下**必须**让 config 与 checkpoint 完全匹配。Checkpoint 的 shape 信息可用以下方式反推：
+```python
+ckpt = torch.load('ng.pt', map_location='cpu', weights_only=False)
+for k, v in ckpt['model'].items():
+    if 'action_encoder' in k or 'position_embedding' in k:
+        print(f'{k}: {v.shape}')
+```
+
+## Problem 7: demo_reproduce task 无法提取 action tensor (2026-04-27)
+
+`model_inference()` 返回 `{"actions_shape": [...]}` 但 `demo_reproduce_task._check_vla_action()` 期望 `result.get("action_shape")` 或 action tensor。
+
+**Fix (两处):**
+1. `nitrogen_controller.py`: 在返回 dict 中加入 `"actions": actions` (tensor)
+2. `demo_reproduce_task.py`: 优先从 `result.get("actions")` 提取 tensor shape，fallback 到 `action_shape`/`actions_shape` string key
+
 ## Notes
 - Date: 2026-04-22
-- Updated: 2026-04-22 (Codex review findings)
-- Environment: xdlab23, conda vit-probe, PyTorch 2.x, RTX 5880 Ada
-- Model: NitroGen 500M (407M actual: Vision=199M, VL-SA=28M, DiT=174M)
+- Updated: 2026-04-27 (full-weight config mismatch + demo_reproduce fixes)
+- Environment: xdlab23, conda vit-probe, PyTorch 2.9.0+cu128, RTX 5880 Ada
+- Model: NitroGen 500M — random init: 407M (Vision=199M, VL-SA=28M, DiT=174M); real weights: 552M (Vision=316M SigLIP-large, VL-SA=50M, DiT=181M)

@@ -24,6 +24,7 @@ Project documentation map. All paths relative to repo root.
 | `survey/papers/vla-wam-serving-systems-2026.md` | **VLA/WAM 专用 serving 系统现状** — 唯二真 system: OxyGen (arXiv:2603.14371) + VLAgents (arXiv:2601.11250); 18 arXiv ID 主进程校验零幻觉; 补 B5 (streaming VAE WAM) + B6 (OxyGen 扩 PD) 两个空白 |
 | `survey/papers/vla-acceleration-tricks-2026.md` | **9 篇 model-level VLA 加速汇总** — PD-VLA/Discrete Diffusion VLA/SnapFlow/FASTER/StreamingVLA/A1/NanoVLA/OpenVLA-OFT/Fast-WAM，按 parallel-decoding/one-step-flow/model-shrinking/ft-recipe 四族分类。SnapFlow 独立验证 "A 阶段 80%" 与 exp07a 82% 吻合。只推荐 PD-VLA + OpenVLA-OFT 做 deep-dive |
 | `survey/papers/pi-series-evolution.md` | **Physical Intelligence π series + Generalist GEN-1 演进** — π0 (2024-10, 我们的 exp07a baseline) → π0.5 (2025-04, co-training) → π*0.6 (2025-11, Recap RL) → **π0.7 (2026-04, pipeline system)** + GEN-1 (2026-04, "model is a system" 原话)。两家同月承认 VLA 变 system，直接升级候选 D' 的 scope |
+| `survey/papers/industrial-wam-landscape-2026.md` | **工业 WAM 全景** — 用 binary 分类（推理时 video-gen vs 仅 pretrain）区分两派。runtime-video-gen 少数派 (1X 1XWM / Rhoda FutureVision "Direct Video Action" / NVIDIA DreamZero / World Labs RTFM) vs VLA 主流 (PI / Figure Helix / Generalist / Wayve / Cosmos)。关键引用逐字 curl 反验 |
 
 ## Experiment Results
 
