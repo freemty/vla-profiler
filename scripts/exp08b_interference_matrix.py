@@ -262,7 +262,12 @@ def run_loop(
     barrier: Optional[threading.Barrier] = None,
     use_cuda: bool = True,
 ) -> None:
-    """Loop step_fn, record per-iter time via CUDA events."""
+    """Loop step_fn, record per-iter time via CUDA events.
+
+    The barrier, if provided, synchronizes threads BEFORE EACH ITERATION so
+    the per-iter timing window covers true co-location, not a schedule-drifted
+    overlap.
+    """
     if use_cuda:
         import torch
         with torch.cuda.stream(stream):
@@ -270,10 +275,9 @@ def run_loop(
                 step_fn()
             torch.cuda.synchronize(stream.device)
 
-            if barrier is not None:
-                barrier.wait()
-
             for _ in range(n_iter):
+                if barrier is not None:
+                    barrier.wait()
                 e0 = torch.cuda.Event(enable_timing=True)
                 e1 = torch.cuda.Event(enable_timing=True)
                 e0.record(stream)
@@ -284,9 +288,9 @@ def run_loop(
     else:
         for _ in range(warmup):
             step_fn()
-        if barrier is not None:
-            barrier.wait()
         for _ in range(n_iter):
+            if barrier is not None:
+                barrier.wait()
             t0 = time.perf_counter()
             step_fn()
             times_out.append((time.perf_counter() - t0) * 1000.0)
