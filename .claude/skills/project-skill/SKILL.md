@@ -2,8 +2,8 @@
 name: project-skill
 description: "Use when advising on project architecture, experiment history, codebase navigation, or research findings."
 user-invocable: false
-version: v6
-note: "v6 — exp07a Pi-Zero profiling + exp04b rerun done (both canonical, warmup=15). DiT scaling curve: 174M=7.2ms < 300M=16.5ms < 350M=32ms. Pi-Zero 200.5ms ~5Hz; LingBot-VA 2518ms 0.40Hz."
+version: v7
+note: "v7 — exp08a co-location probe pilot done. PA P-inflation 3.15x, DA D-inflation 3.52x — Roofline 低估 2-28x, 机制在 kernel-launch/SM-scheduler 而非 FLOPs/BW peak. Scope audit: vLLM-Omni + SGLang Diffusion 已实现 disaggregated multimodal serving → exp08 降档为 mechanism study + VLA SLO benchmark (候选 D → D')."
 updated_at: "2026-04-27"
 ---
 
@@ -11,7 +11,7 @@ updated_at: "2026-04-27"
 
 > VLM/VLA Real-Time Systems Survey & Research
 > UCSD PhD 方向调研项目 | 导师: 张昊 (Hao Zhang) — vLLM/FastVideo/Chatbot Arena 作者
-> v6 — exp07a Pi-Zero dual-stream flow VLA profiling done. 300M Expert per-step 18ms fills DiT scaling curve gap.
+> v7 — exp08a co-location probe pilot done. PA/DA contention 打脸 Roofline。vLLM-Omni scope audit 关闭 "EPDA framework" 方向，改做 mechanism study + VLA SLO benchmark。
 
 ---
 
@@ -24,18 +24,19 @@ updated_at: "2026-04-27"
 **动机:**
 张昊的技术路线: Parameter Server -> Alpa -> vLLM -> FastVideo -> **VLM/VLA real-time systems**。每一步都是 ML Systems 前沿的下一个自然问题。VLM/VLA serving 正处于 "pre-vLLM" 阶段，存在巨大的系统研究空间。
 
-**当前阶段:** Experiment (Phase 1 — VLM/VLA Profiling + Interpretability)
-- `current_exp`: exp07a (Pi-Zero dual-stream flow VLA profiling — **done**)
+**当前阶段:** Experiment (Phase 2 — Co-location Probing & Scope Audit)
+- `current_exp`: exp08a (PA/DA co-location interference pilot — **done**)
 - `stage`: experiment
-- `version`: v0.6.1
-- Survey 产出: 4 份核心文档，覆盖 180+ 篇论文/项目 (2024-2026)
-- Framework 产出: VLM profiling + attention analysis + attention overlay 可视化 + VLA profiling 框架 (`src/`)
-- 新增模块: Interpretability Mixin 体系 (`src/interpretability/`)、OverlayRenderer (`src/viz/`)、Timing Cross-Validation (`src/tasks/validation_task.py`)
-- 共享核心: `model-probe-core` git submodule (`src/core/`)，同时被 rope2sink 消费
-- Presentation viewer: `viewer/` — Flask + 3 HTML pages (hub, presentation, experiments) for advisor meeting
-- 服务器: xdlab23 (8x RTX 5880 Ada 48GB)，10 个实验完成
-- **完成的实验:** exp01a (E/P/D profiling), exp01b (attention analysis), exp02a (ACT profiling), exp03a (LingBot-VLA-4B profiling), exp04a (Fast-WAM ActionDiT profiling), exp04b (LingBot-VA full WAM profiling), exp05a (LingBot-VLA attention analysis), exp05b (Qwen2.5-VL-3B attention analysis), exp06a (NitroGen 500M DiT profiling), exp07a (Pi-Zero dual-stream flow VLA profiling)
-- **下一步:** DreamZero profiling on RTX 5880 Ada、DreamZero DiT layer activation variance 分析、OpenVLA profiling (需 HF 下载)
+- `version`: v0.7.0
+- Survey 产出: 5 份核心文档 (新增 `multimodal-serving-systems-2026.md`)，覆盖 180+ 篇论文/项目 (2024-2026)
+- Framework 产出: VLM profiling + attention analysis + attention overlay + VLA profiling + stream-aware PhaseTimer + co-location probe (`src/`, `scripts/`)
+- 新增模块: Interpretability Mixin 体系 (`src/interpretability/`)、OverlayRenderer (`src/viz/`)、Timing Cross-Validation、stream-aware PhaseTimer (`src/utils/timing.py` 支持 `stream=` 参数)
+- 共享核心: `model-probe-core` git submodule (`src/core/`)
+- 共享统计 helper: `scripts/_profiling_stats.py` — standalone profiling scripts 统一的 median/percentile 口径
+- 服务器: xdlab23 (8x RTX 5880 Ada 48GB)，11 个实验完成 + 1 pilot
+- **完成的实验:** exp01a (E/P/D), exp01b (attention), exp02a (ACT), exp03a (LingBot-VLA-4B), exp04a (Fast-WAM ActionDiT), exp04b (LingBot-VA full WAM, **rerun 2026-04-27 canonical**), exp05a (LingBot-VLA attention), exp05b (Qwen2.5-VL-3B attention), exp06a (NitroGen 500M DiT), exp07a (Pi-Zero dual-stream), exp08a (PA/DA co-location pilot)
+- **重大方向变更 (2026-04-27 scope audit):** vLLM-Omni (arXiv:2602.02204) 已实现完整 any-to-any disaggregated serving；SGLang Diffusion 已有 ENCODER/DENOISER/DECODER/SERVER/MONOLITHIC 五 role + N:M:K DiffusionServer。"写新 EPDA framework" 空间**关闭** → 候选 D ⭐⭐⭐⭐⭐ 降档为 D' ⭐⭐⭐ (mechanism study + robotics SLO benchmark，不做 framework)
+- **下一步:** exp08b (full 6×6 PA/DA/VA matrix with canonical medians)、exp08c (contention mechanism model: kernel-launch queue vs SM scheduler vs memory BW)、候选 C (DiT caching for VLA) + 候选 D' (VLA SLO suite) 组合推进
 
 **核心数据汇总:**
 
@@ -51,6 +52,7 @@ updated_at: "2026-04-27"
 | exp05b | Qwen2.5-VL-3B (attention) | Disambiguation: Gini collapse is VLA fine-tuning effect, not model size. 3B vanilla Gini 0.80-0.98 |
 | exp06a | NitroGen 500M DiT | Per-step 7.2ms, linear scaling. 174M DiT compute-bound. 174M→350M = BW transition |
 | exp07a | Pi-Zero (dual-stream flow VLA) | **stable** E=9.32/C=26.40/A=164.76ms, total 200.5ms ≈ 5Hz. Action Expert (300M) dominates 82%. Per-step ~16.5ms. Cross-attn makes 300M Expert ~2.3x pricier than pure DiT. Bimodal 污染 → warmup=15 + `nvidia-smi -pm 1` |
+| exp08a | Co-location probe (two-thread + two-stream, pilot) | **PA (Qwen-VL-3B P + NitroGen 174M A) median: P 27.3→85.9ms (3.15x 膨胀), A 47.7→65.1ms (1.37x). DA (Qwen-VL-7B D + NitroGen A): D 22.1→77.6ms (3.52x), A 48.2→76.3ms (1.58x). Roofline 预测 PA "WEAK"(<1.1x) 被 3.15x 打脸 28x。LLM 侧膨胀 >> A 侧。机制在 kernel-launch/SM-scheduler，不是 FLOPs/BW peak rate。** |
 
 ---
 
@@ -570,6 +572,15 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 50. **5 warmup runs insufficient for GPU power state stabilization:** Clear bimodal distribution (runs 1-12 high, 13-20 low). Need 10-15 warmup or explicit GPU power state locking (`nvidia-smi -pm 1`)
 51. **uv venv works well for vendor-specific envs:** Pi-Zero needs specific torch/transformers versions incompatible with main env. `.venvs/pizero/` keeps it isolated without conda headaches on non-interactive SSH
 
+### 2026-04-27: Profiling Audit + exp08a Co-location Probe + Scope Audit
+52. **exp07a bimodal 归因 GPU 功率爬坡:** runs 1-12 受 GPU power ramp 污染，runs 13-20 稳态。新默认: warmup iterations = 15 (所有 standalone profiling scripts)，配合 `nvidia-smi -pm 1` 持续模式。profile_fastwam.py + profile_lingbot_va.py 已迁移到 shared helper `scripts/_profiling_stats.py` + default warmup=15
+53. **两 thread + 两 CUDA stream 做 co-location probe 有效 (strategy α):** no-barrier 并发 + per-phase CUDA events + 每 run median 口径。`scripts/exp08a_interference.py` 模式: 线程 A 在 stream A 跑 probe_A，线程 B 在 stream B 跑 probe_B，CV(inflation) 作为统计真信号。比 MIG/MPS 简单 10 倍，结果一致
+54. **Roofline 模型在 GPU kernel-launch-level 预测失败:** PA 预测 "WEAK" (<1.1x)，实测 P 3.15x 膨胀 — 低估 28x。DA 预测 "STRONG" 区间但仍低估 2-3x。LLM 侧 (P/D) 膨胀 >> diffusion A 侧 — contention 机制是 kernel launch queue / SM scheduler / L2 cache thrashing，不是 peak FLOPs/BW rate。**教训: Roofline 只管稳态吞吐，不管 co-location latency inflation**
+55. **NitroGen controller 的 `from src.controllers` 需要 repo root 在 sys.path:** `scripts/exp08a_interference.py` 必须 `sys.path.insert(0, str(Path(__file__).parent.parent))`，否则 import 失败且错误消息很隐晦
+56. **HF_HOME path = `/data1/ybyang/huggingface/Qwen/...`:** 直接是 org/repo 结构，不是 hub 的 `models--org--repo/snapshots/<hash>/` 格式。`from_pretrained(local_path)` 可直读，不要强制走 hub 布局
+57. **sync_to_remote.sh merge 在 server 有 untracked 冲突时静默失败:** `git pull` 遇到会被覆盖的 untracked file 会 abort，退出码 1 但脚本不打印清晰错误。必须手动 `ssh xdlab23 "mv <conflict> /tmp/"` 后再同步
+58. **Claim "写新 framework" 前必须 code-level 扫描 vLLM/SGLang 最新 tree:** 仅读摘要/博客会严重漏判成熟度。vLLM-Omni (arXiv:2602.02204) 的 `omni_ar_scheduler` + `omni_generation_scheduler` + `omni_connectors` + `omni_coordinator/load_balancer` 已实现 any-to-any disaggregated serving (JCT -91.4%)；SGLang Diffusion 的 `runtime/disaggregation/roles.py` 已有 ENCODER/DENOISER/DECODER/SERVER/MONOLITHIC 五 role + N:M:K DiffusionServer。**教训: scope audit 必须做到代码级别，不能停在 abstract**
+
 ---
 
 ## 8. Active Prompt Versions & Trade-offs
@@ -643,4 +654,4 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 
 ---
 
-*v6 — exp07a Pi-Zero dual-stream flow VLA profiling done. DiT/Expert scaling curve: 0.048ms→7.2ms→18ms→28.5ms→32ms. 10 experiments completed. Updated: 2026-04-25*
+*v7 — exp08a co-location probe pilot done (PA 3.15x / DA 3.52x LLM-side inflation — Roofline 低估 2-28x)。vLLM-Omni + SGLang Diffusion scope audit 关闭 "EPDA framework" 方向 → mechanism study + VLA SLO benchmark (候选 D → D')。exp04b rerun canonical 2518ms/0.40Hz (warmup=15)。11 experiments + 1 pilot completed. Updated: 2026-04-27*

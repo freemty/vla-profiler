@@ -1,5 +1,7 @@
 # Project Skill Changelog
 
+- v7 (2026-04-27): exp08a pilot done, vLLM-Omni scope audit, exp08 downgraded to mechanism study + VLA SLO
+
 ## 2026-04-21 — v4 WAM Profiling Complete (Fast-WAM + LingBot-VA)
 
 Incremental update: exp04a Fast-WAM done, exp04b LingBot-VA full WAM done, LingBotVAController added.
