@@ -9,7 +9,7 @@
 
 ## P0 — 见 Hao 前必做 (学习后启动)
 
-- [ ] **P0** 与 Hao 面谈准备 — 用 `slides/epda-roofline-motivation.html` 开场。**数据到齐版本**: exp08a 3.15×/3.52× pilot → exp08b 完整 6-pair 矩阵 (D/P 脆弱 2.4–2.9×, E/A 鲁棒 <1.3×) → exp08c M4 asymmetric model R²=0.94 (v=(D:1.52, P:1.61, E:0.23, A:0.20))。请教方向: 候选 C (DiT caching) vs D' (mechanism study + VLA SLO)，承认 vLLM-Omni 占据 framework 空间 — 2026-04-27
+- [ ] **P0** 与 Hao 面谈准备 — 详见 `docs/hao-meeting-prep.md`。**核心问题 Q0: "VLA serving 是真需求吗？什么形态？什么时间点？"** 带 survey context 去请教，不是带答案去汇报。Q1 方向选择请他点评 (C vs D' vs 新方向)。Q2 展示 exp 数据 (Pareto + exp08 非对称 contention)。准备 checklist 见文档底部 — 2026-04-27 (重写)
 
 ## P1 — exp08 主线 (blocked by P0 学习)
 

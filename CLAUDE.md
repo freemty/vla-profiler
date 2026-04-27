@@ -121,6 +121,7 @@ slides/                # 演示文稿
 - **Domain papers:** survey/papers/
 - **TODO:** `docs/TODO.md` — Project action items and task backlog
 - **Learning plan:** `docs/learning-plan.md` — GPU systems 补课路径 (L0–L4 分层, 为 exp08 决策服务)
+- **Hao meeting prep:** `docs/hao-meeting-prep.md` — 第一次 meeting 大纲 (Q0 核心问题: VLA serving 是否真需求)
 
 ## Knowhow
 
