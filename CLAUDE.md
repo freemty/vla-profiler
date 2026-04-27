@@ -121,7 +121,7 @@ slides/                # 演示文稿
 - **Domain papers:** survey/papers/
 - **TODO:** `docs/TODO.md` — Project action items and task backlog
 - **Learning plan:** `docs/learning-plan.md` — GPU systems 补课路径 (L0–L4 分层, 为 exp08 决策服务)
-- **Hao meeting prep:** `docs/hao-meeting-prep.md` — 第一次 meeting 大纲 (Q0 核心问题: VLA serving 是否真需求)
+- **Hao meeting prep:** `docs/hao-meeting-prep.md` — 第一次 meeting 大纲 (Action Model Design Space 四范式 + 7 实验版图, "Fast VLA first, serving later")
 
 ## Knowhow
 
@@ -181,9 +181,9 @@ Pipeline state tracked in .pipeline-state.json.
 
 ## Current state
 
-- **current_exp:** exp07a (Pi-Zero dual-stream flow VLA profiling — done)
-- **stage:** experiment
-- **skill_updated_at:** 2026-04-25
+- **current_exp:** profiling complete (exp01-07 done), exp08 deprioritized
+- **stage:** meeting prep + learning ("Fast VLA first, serving later")
+- **skill_updated_at:** 2026-04-27
 - **key findings:**
   - **exp01a (profiling):** text P=20ms/D=18ms; single_img E=253ms/P=156ms/D=18.6ms; multi_img E=541ms/P=332ms/D=21ms. Encode scales linearly.
   - **exp01b (attention):** Pos 2 (first visual patch) is universal attention sink (12K-18K received, 12-28x vs #2). Text→Visual Gini >0.91 (extreme sparsity → token pruning viable). Layer 21 entropy lowest (3.44).
@@ -195,5 +195,5 @@ Pipeline state tracked in .pipeline-state.json.
   - **exp05b (Qwen2.5-VL-3B attention):** 消歧: Gini 崩塌归因于 VLA fine-tuning (非 model size)。3B vanilla Gini 0.80-0.98。
   - **exp06a (NitroGen 500M DiT):** Per-step 7.2ms (174M DiT), perfectly linear. 174M→350M: 2x params, 4.4x latency → compute-bound 到 memory-BW-bound 转换。k=1: 55.9Hz。
 - **exp07a (profiling):** **Canonical (stable-window runs 13-20)**: E=9.32ms/C=26.40ms/A=164.76ms (total 200.5ms, ~5Hz). **Action Expert (300M Gemma) dominates 82% latency.** Per-step ~16.5ms. Cross-attn to PaliGemma KV makes 300M Expert ~2.3x pricier than pure DiT. DiT scaling curve: 174M=7.2ms < 300M=16.5ms < 350M=32ms. Bimodal 污染: runs 1-12 慢 1.25x (GPU 功率爬坡) → warmup=15 + `nvidia-smi -pm 1` 为后续默认配置。
-- **latest (v0.6.1):** Pi-Zero controller + profiling, PiZeroController (uv venv, allenzren backend).
-- **next:** DreamZero profiling on RTX 5880 Ada. DreamZero DiT layer activation variance 分析. OpenVLA (need HF download).
+- **latest (v0.8.2):** "Fast VLA first" strategic pivot. Action Model Design Space 四范式覆盖完成。
+- **next:** P0 学习补课 (GPU systems L0-L2) → P0 Hao meeting → P1 候选 A (Action DiT 加速). 详见 `docs/TODO.md`。

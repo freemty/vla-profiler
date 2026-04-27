@@ -2,8 +2,8 @@
 name: project-skill
 description: "Use when advising on project architecture, experiment history, codebase navigation, or research findings."
 user-invocable: false
-version: v7
-note: "v7.1 — exp08a/08b/08c INVALIDATED 2026-04-27. Harness bugs: A on dummy model, no per-iter barrier, KV cache drift, fake CV. Rescue plan in progress. Scope audit unchanged: mechanism study + VLA SLO benchmark (候选 D → D')."
+version: v8
+note: "v8 — 'Fast VLA first, serving later' strategic pivot. Action Model Design Space 四范式覆盖 (exp01-07). 候选 A (Action DiT 加速) > B (benchmark) > C (DiT caching) >> D (serving, too early). exp08 降档 P2."
 updated_at: "2026-04-27"
 ---
 
@@ -11,7 +11,7 @@ updated_at: "2026-04-27"
 
 > VLM/VLA Real-Time Systems Survey & Research
 > UCSD PhD 方向调研项目 | 导师: 张昊 (Hao Zhang) — vLLM/FastVideo/Chatbot Arena 作者
-> v7 — exp08a co-location probe pilot done. PA/DA contention 打脸 Roofline。vLLM-Omni scope audit 关闭 "EPDA framework" 方向，改做 mechanism study + VLA SLO benchmark。
+> v8 — **"Fast VLA first, serving later"** strategic pivot. Action Model Design Space 四范式 (single-forward / flow head / flow DiT / full WAM) 由 exp01-07 全覆盖。Action DiT 占 80-94% 延迟 = 核心瓶颈。候选 A (Action DiT 加速) 最高优先。exp08 contention 降档 P2。
 
 ---
 
@@ -24,10 +24,10 @@ updated_at: "2026-04-27"
 **动机:**
 张昊的技术路线: Parameter Server -> Alpa -> vLLM -> FastVideo -> **VLM/VLA real-time systems**。每一步都是 ML Systems 前沿的下一个自然问题。VLM/VLA serving 正处于 "pre-vLLM" 阶段，存在巨大的系统研究空间。
 
-**当前阶段:** Experiment (Phase 2 — Co-location Probing & Scope Audit)
-- `current_exp`: exp08a (PA/DA co-location interference pilot — **done**)
-- `stage`: experiment
-- `version`: v0.7.0
+**当前阶段:** Strategic Pivot — "Fast VLA first, serving later"
+- `current_exp`: profiling complete (exp01-07 done), exp08 deprioritized
+- `stage`: meeting prep + learning
+- `version`: v0.8.2
 - Survey 产出: 6 份核心文档 (新增 `vla-wam-efficiency-systems-deep-research.md` — 双轨对比 serving stacks vs robotics stacks)，覆盖 180+ 篇论文/项目 (2024-2026)
 - Framework 产出: VLM profiling + attention analysis + attention overlay + VLA profiling + stream-aware PhaseTimer + co-location probe (`src/`, `scripts/`)
 - 新增模块: Interpretability Mixin 体系 (`src/interpretability/`)、OverlayRenderer (`src/viz/`)、Timing Cross-Validation、stream-aware PhaseTimer (`src/utils/timing.py` 支持 `stream=` 参数)
@@ -38,8 +38,8 @@ updated_at: "2026-04-27"
 - **exp08a (PA/DA pilot 2026-04-26):** **INVALIDATED 2026-04-27** — same harness bug as exp08b (no per-iter barrier, A on dummy model). Numbers (PA 3.15x, DA 3.52x) are schedule artifacts. See `docs/superpowers/plans/2026-04-27-exp08bc-rescue.md`.
 - **exp08b (6-way matrix):** **INVALIDATED 2026-04-27** — see `exp/exp08b/INVALIDATED.md`.
 - **exp08c (contention model):** **INVALIDATED 2026-04-27** — fake CV (resubstitution, not LOO). True LOO R² = −12.69.
-- **重大方向变更 (2026-04-27 scope audit):** vLLM-Omni (arXiv:2602.02204) 已实现完整 any-to-any disaggregated serving；SGLang Diffusion 已有 ENCODER/DENOISER/DECODER/SERVER/MONOLITHIC 五 role + N:M:K DiffusionServer。"写新 EPDA framework" 空间**关闭** → 候选 D ⭐⭐⭐⭐⭐ 降档为 D' ⭐⭐⭐ (mechanism study + robotics SLO benchmark，不做 framework)
-- **下一步:** exp08bc rescue (harness 修复 + 重跑)、候选 C (DiT caching for VLA) + 候选 D' (VLA SLO suite) 组合推进
+- **战略转向 (2026-04-27 "Fast VLA first, serving later"):** 通过苏格拉底式 review 确认：VLA 单请求延迟 (Pi-Zero 200ms=5Hz, 需 10-50Hz) 是当前真瓶颈，serving/并发是模型够快后才浮现的需求。候选排序: **A (Action DiT 加速) > B (VLA benchmark) > C (DiT caching) >> D (serving, too early)**。exp08 contention 降档 P2 side project。
+- **下一步:** P0 学习补课 (GPU systems L0-L2) → P0 Hao meeting prep (Action Model Design Space 四范式叙事) → P1 候选 A/B/C (Hao meeting 后启动)
 
 **核心数据汇总:**
 
@@ -677,4 +677,4 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 
 ---
 
-*v7 — exp08a co-location probe pilot done (PA 3.15x / DA 3.52x LLM-side inflation — Roofline 低估 2-28x)。vLLM-Omni + SGLang Diffusion scope audit 关闭 "EPDA framework" 方向 → mechanism study + VLA SLO benchmark (候选 D → D')。exp04b rerun canonical 2518ms/0.40Hz (warmup=15)。11 experiments + 1 pilot completed. Updated: 2026-04-27*
+*v8 — "Fast VLA first, serving later" strategic pivot. Action Model Design Space 四范式 (single-forward / flow head / flow DiT / full WAM) 由 exp01-07 全覆盖. Action DiT 占 80-94% = 核心瓶颈. 候选 A (Action DiT 加速) 最高优先. exp08 降档 P2. 13 experiments completed. Updated: 2026-04-27*
