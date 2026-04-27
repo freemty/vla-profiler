@@ -33,6 +33,12 @@
 - `scripts/profile_fastwam.py` — 采用 shared helper，默认 warmup 5→15 以消除 exp07a 暴露的 GPU power-state bimodality
 - `docs/TODO.md` — 新增 exp07a audit 衍生的 P0/P1/P2 行动项：exp08 roofline 分析、stream-aware PhaseTimer、standalone 脚本统计口径统一、exp04b 重跑、phase 命名标准化、wall-clock vs phase-sum gap 跟踪
 
+### exp08 准备工作 (roofline 驱动)
+- `docs/specs/2026-04-26-epda-roofline-analysis.md` — RTX 5880 Ada 上 E/P/D/A 四阶段的 AI/achieved-utilization 坐标与 ceiling 对比。结论 **GO**：四阶段横跨 3 类 bottleneck (compute / BW-saturated / BW-moderate / latency)，A 阶段 latency-bound 是 LLM 域未研究的新 class
+- `slides/epda-roofline-motivation.html` — advisor meeting one-pager (SVG roofline + 4×4 预测干扰矩阵)
+- `docs/specs/2026-04-26-epda-disaggregation-spec.md` §1 — motivation 段注入 roofline utilization 表 (E 10% BW / P 17% TF / D 73% BW / A 2-5%)
+- `src/utils/timing.py` — PhaseTimer & `_CudaTimerBackend` 支持 `stream=` 参数，exp08a 多-stream 并发测量基础设施。CPU backend 接受并忽略 kwarg 保持 API 稳定。tests/test_timing.py +3 tests (14/14 pass)，现有调用点不受影响
+
 ---
 
 ## v0.6.1 @freemty — 2026-04-23
