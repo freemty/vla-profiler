@@ -110,13 +110,14 @@ slides/                # 演示文稿
 | What to do | Read first |
 |-----------|-----------|
 | Catch up on progress | .claude/skills/project-skill/SKILL.md |
+| Recall what each exp did | exp/summary.md (TLDR 卡片 + 汇总表) |
 | Check domain literature | survey/landscape.md |
 | Run current experiment | exp/{current_exp}/README.md |
 
 ## Project knowledge
 
 - **Skill hub:** .claude/skills/project-skill/SKILL.md
-- **Experiment log:** exp/summary.md
+- **Experiment TLDRs:** exp/summary.md (目的/方法/结果/下一步，每个 exp 一张卡)
 - **Domain papers:** survey/papers/
 - **TODO:** `docs/TODO.md` — Project action items and task backlog
 
