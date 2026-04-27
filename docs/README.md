@@ -30,7 +30,7 @@ Project documentation map. All paths relative to repo root.
 | `exp/exp02a/` | ACT (profiling) | Done | Total ~3ms, 850x vs VLM |
 | `exp/exp03a/` | LingBot-VLA-4B (profiling) | Done | 74.5ms, 13Hz |
 | `exp/exp04a/` | Fast-WAM (profiling) | Done | 407ms@10step, 2.5Hz |
-| `exp/exp04b/` | LingBot-VA (profiling) | Done | 2091ms, 0.5Hz |
+| `exp/exp04b/` | LingBot-VA (profiling) | Done (rerun 2026-04-27) | **canonical**: E=84.7/V=697/A=1708ms (2518ms, 0.40Hz) |
 | `exp/exp05a/` | LingBot-VLA-4B (attention) | Done | VLA reshapes attention: Gini 0.91→0.07 |
 | `exp/exp05b/` | Qwen2.5-VL-3B (attention) | Done | Disambiguation: Gini collapse = VLA fine-tuning |
 | `exp/exp06a/` | NitroGen 500M DiT (profiling) | Done | 7.2ms/step, linear, k=1: 55.9Hz |

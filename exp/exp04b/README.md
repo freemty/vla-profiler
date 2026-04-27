@@ -59,15 +59,19 @@ Reasoning for predictions:
 
 ## Results
 
-### E/V/A Breakdown (RTX 5880 Ada, random-init, bf16)
+### E/V/A Breakdown — Canonical (rerun 2026-04-27, warmup=15, 20 iter, RTX 5880 Ada, random-init, bf16)
 
-| Phase | Mean (ms) | Std | % of Total | Per-step |
-|-------|-----------|-----|------------|----------|
-| E (VAE encode) | 75.5 | 16.0 | 3.6% | — |
-| V (Video denoise, 20 steps) | 592.5 | 84.8 | 28.3% | ~29.6ms/step |
-| A (Action denoise, 50 steps) | 1423.1 | 232.5 | 68.1% | ~28.5ms/step |
-| **TOTAL** | **2091.2** | 330.5 | 100% | — |
-| **Hz** | **0.5** | | | |
+| Phase | Mean (ms) | Median (ms) | p10/p90 | CV | % of Total | Per-step |
+|-------|-----------|-------------|---------|-----|------------|----------|
+| E (VAE encode) | 89.15 | 84.73 | 68.14 / 109.59 | 19.9% | 3.6% | — |
+| V (Video denoise, 20 steps) | 689.96 | 697.37 | 598.05 / 766.41 | 10.2% | 27.8% | ~34.5ms/step |
+| A (Action denoise, 50 steps) | 1700.26 | 1708.37 | 1542.26 / 1870.19 | 9.2% | 68.6% | ~34.0ms/step |
+| **TOTAL (median)** | **2479.55** | **2517.76** | 2218.81 / 2689.87 | 9.1% | 100% | — |
+| **Hz (from median)** | | **0.40** | | | | |
+
+Data source: `results_lingbot_va_rerun_warmup15.json` (full `all_ms` + p10/p90/p99 preserved). Legacy `results_lingbot_va_gpu1.json` (warmup=3, 10 iter, CV>20%) deprecated.
+
+**Why the rerun** (2026-04-27): exp07a audit revealed the old warmup=3 was insufficient — GPU power-state bimodality was polluting aggregated mean. New protocol uses warmup=15 and reports median (robust to residual drift). Encode CV remains ~20% even after longer warmup, suggesting genuine per-iteration variance in the streaming VAE path (not a warmup issue).
 
 ### Comparison Table (updated)
 
@@ -76,15 +80,19 @@ Reasoning for predictions:
 | ACT (exp02a) | VA (CVAE) | 3ms | 2.5ms | — | 0.5ms | 330 |
 | LingBot-VLA (exp03a) | Flow VLA | 74.5ms | 35.7ms | — | 38.8ms | 13 |
 | Fast-WAM @10step (exp04a) | WAM (skip) | 407ms | 7.6ms | — | 399ms | 2.5 |
-| **LingBot-VA (this)** | **WAM (full)** | **2091ms** | **75.5ms** | **592.5ms** | **1423.1ms** | **0.5** |
+| **LingBot-VA (this, canonical)** | **WAM (full)** | **2518ms** | **84.7ms** | **697ms** | **1708ms** | **0.40** |
 
-## Key Findings
+## Key Findings (canonical data)
 
-1. **Full WAM is 5x slower than skip-imagination WAM** — video generation (592ms) adds massive overhead before action even starts.
-2. **Action still dominates at 68%** — same pattern as Fast-WAM. Consistent finding: diffusion action heads are the bottleneck in all WAM architectures.
-3. **Per-step cost remarkably similar for V and A** — ~29ms/step (video) vs ~28.5ms/step (action). Both use the same 5B DiT with 30 layers, just different token counts. Video tokens (4×4×8 = 128 patches) slightly more than action tokens (4×4×1 = 16), but the difference is absorbed by attention overhead being dominated by model width not sequence length at these scales.
-4. **VAE encode 75.5ms is 10x higher than Fast-WAM's 7.6ms** — likely because Fast-WAM uses a much lighter/pre-cached encode path, while LingBot-VA's streaming VAE with z_dim=48 does full spatial encoding.
-5. **0.5 Hz makes real-time control impossible** — 100x slower than VLA (13Hz), 660x slower than ACT (330Hz). Full imagination WAMs are research-grade, not deployment-grade.
+1. **Full WAM is ~6x slower than skip-imagination WAM** — video generation (697ms) adds massive overhead before action even starts.
+2. **Action still dominates at 69%** — same pattern as Fast-WAM. Consistent finding: diffusion action heads are the bottleneck in all WAM architectures.
+3. **Per-step cost remarkably similar for V and A** — ~34.5ms/step (video) vs ~34.0ms/step (action). Both use the same 5B DiT with 30 layers, just different token counts. Video tokens (4×4×8 = 128 patches) slightly more than action tokens (4×4×1 = 16), but the difference is absorbed by attention overhead being dominated by model width not sequence length at these scales.
+4. **VAE encode 84.7ms is 11x higher than Fast-WAM's 7.6ms** — likely because Fast-WAM uses a much lighter/pre-cached encode path, while LingBot-VA's streaming VAE with z_dim=48 does full spatial encoding. Encode CV ~20% even with adequate warmup indicates genuine per-iteration variance.
+5. **0.40 Hz makes real-time control impossible** — 100x slower than VLA (13Hz), 825x slower than ACT (330Hz). Full imagination WAMs are research-grade, not deployment-grade.
+
+### Delta vs. legacy (warmup=3) data
+
+Rerun numbers are uniformly ~15-20% higher (E: +18%, V: +16%, A: +19%). Legacy warmup=3 underestimated true latency by including partial GPU-warmup iterations in the aggregate. Median is now robust to the residual per-iteration variance (V/A CV dropped from 14%/11% to 10%/9%; E unchanged, confirming VAE variance is intrinsic).
 
 ## Prediction Calibration
 

@@ -46,7 +46,7 @@ updated_at: "2026-04-25"
 | exp02a | ACT (LeRobot) | Total ~3ms, 850x faster than VLM |
 | exp03a | LingBot-VLA-4B | E=35.7ms/C=38.3ms/A=0.48ms, total 74.5ms ≈ 13Hz |
 | exp04a | Fast-WAM (ActionDiT, 6.7B) | @10step: E=7.6ms/C=36.7ms/A=362ms, total 407ms, 2.5Hz |
-| exp04b | LingBot-VA (full WAM, 5B DiT) | E=75.5ms/V=592.5ms/A=1423.1ms, total 2091ms, 0.5Hz |
+| exp04b | LingBot-VA (full WAM, 5B DiT) | **canonical (rerun 2026-04-27)**: E=84.7/V=697/A=1708ms, total 2518ms, 0.40Hz (median). Legacy warmup=3 低估 18%. |
 | exp05a | LingBot-VLA-4B (attention) | VLA fine-tuning reshapes attention: sink migrates Pos2→Pos64, Gini 0.91→0.07, entropy V-shape→flat |
 | exp05b | Qwen2.5-VL-3B (attention) | Disambiguation: Gini collapse is VLA fine-tuning effect, not model size. 3B vanilla Gini 0.80-0.98 |
 | exp06a | NitroGen 500M DiT | Per-step 7.2ms, linear scaling. 174M DiT compute-bound. 174M→350M = BW transition |
@@ -267,7 +267,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 - **Architecture: 6.7B params:** "skip-imagination" 仍加载完整 5B video expert + 350M ActionDiT
 
 **From exp04b (first-party) — LingBot-VA full WAM profiling:**
-- **Full WAM 5x slower than skip-imagination WAM:** 2091ms vs 407ms
+- **Full WAM ~6x slower than skip-imagination WAM:** 2518ms vs 407ms
 - **Action still dominates at 68%:** 与 Fast-WAM 一致
 - **Per-step cost V≈A (~29ms/step):** 共享同一个 5B DiT
 - **VAE encode 75.5ms vs Fast-WAM 7.6ms (10x):** streaming VAE with z_dim=48 vs lightweight path
@@ -303,7 +303,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | LingBot-VLA | Flow VLA | 74.5ms | 35.7ms | — | 38.8ms | 13 | E≈C (50/50) |
 | Pi-Zero @10step | Flow VLA (dual-stream) | 200.5ms (stable) | 9.32ms | — | 164.76ms | ~5 | A (82%) |
 | Fast-WAM @10step | WAM (skip) | 407ms | 7.6ms | — | 362ms | 2.5 | A (89%) |
-| LingBot-VA (full) | WAM (full) | 2091ms | 75.5ms | 592ms | 1423ms | 0.5 | A (68%) |
+| LingBot-VA (full, rerun) | WAM (full) | 2518ms | 84.7ms | 697ms | 1708ms | 0.40 | A (69%) |
 
 **关键规律:**
 1. **Action head scaling 决定 WAM 瓶颈:** 小 action head (0.48ms) vs 大 MoT action (362ms) — 架构决定
@@ -350,7 +350,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 - ACT (single-forward VA): ~3ms total → VA 1-5ms 范围 ✓
 - LingBot-VLA-4B (flow VLA, 3B backbone): 74.5ms total ≈ 13Hz → VLA 高端
 - Fast-WAM @10step (skip-imagination, 6.7B): 407ms → 2.5Hz
-- LingBot-VA (full WAM, 5B DiT): 2091ms → 0.5Hz
+- LingBot-VA (full WAM, 5B DiT): 2518ms → 0.40Hz (rerun 2026-04-27, canonical)
 
 ### 4.2 WAM Benchmark Baselines (RTX 5880 Ada, bf16, random-init)
 
@@ -359,12 +359,12 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | Fast-WAM @5step | 7.1ms | — | 164ms | 205ms | 4.9 |
 | Fast-WAM @10step | 7.6ms | — | 362ms | 407ms | 2.5 |
 | Fast-WAM @20step | 7.0ms | — | 638ms | 677ms | 1.5 |
-| LingBot-VA @20V+50A | 75.5ms | 592.5ms | 1423ms | 2091ms | 0.5 |
+| LingBot-VA @20V+50A | 84.7ms | 697ms | 1708ms | 2518ms | 0.40 |
 
 **Per-step cost reference:**
 - Fast-WAM ActionDiT (30L, 1024 hidden, MoT cross-attn): ~32ms/step
-- LingBot-VA WanDiT video (30L, 3072 hidden): ~29.6ms/step
-- LingBot-VA WanDiT action (30L, 3072 hidden): ~28.5ms/step
+- LingBot-VA WanDiT video (30L, 3072 hidden): ~34.5ms/step (rerun)
+- LingBot-VA WanDiT action (30L, 3072 hidden): ~34.0ms/step (rerun)
 - NitroGen DiT (12L, 1024 hidden, cross-attn to 256 tokens): ~7.2ms/step — compute-bound
 - Pi-Zero Action Expert (18L, 1024 hidden, Gemma + cross-attn to PaliGemma KV): ~18ms/step — cross-attn overhead
 - LingBot-VLA flow action head (small head, 10 steps): ~0.048ms/step
@@ -382,7 +382,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | DreamZero | ~130ms, 7Hz | WAM zero-shot (A100) |
 | **Pi-Zero @10step (our measurement)** | **200.5ms** (stable) | **Dual-stream flow VLA (first-party, 2.7B)** |
 | **Fast-WAM @10step (our measurement)** | **407ms** | **Skip-imagination WAM (first-party)** |
-| **LingBot-VA (our measurement)** | **2091ms** | **Full WAM baseline (first-party)** |
+| **LingBot-VA (our measurement)** | **2518ms** (rerun) | **Full WAM baseline (first-party)** |
 | SAGE | 3.36x speedup | VLM SD 标杆 |
 | ID-Selection | 97.2% token reduction | Token pruning 上界 |
 
@@ -412,7 +412,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 | exp02a | 2026-04-15 | **done** | VA ~1-5ms (literature) | ~3ms total | ACT 850x faster than VLM; ResNet18 encode 80% of total | Accurate (range), Off (resolution insensitivity) |
 | exp03a | 2026-04-20 | **done** | 250-350ms (7B→3B ~2x scaling) | 74.5ms total | 3B backbone 7x faster than 7B; Context≈Encode; flow action 0.48ms; ≈13Hz | Way Off — actual 3.4-4.7x better than predicted |
 | exp04a | 2026-04-21 | **done** | E=15-25ms/C=100-130ms/A=30-50ms | @10step: E=7.6ms/C=36.7ms/A=362ms, total 407ms | Action dominates 89%; per-step 32ms; paper's 190ms is A100+5step | Way Off on A (predicted 30-50ms, got 362ms) |
-| exp04b | 2026-04-21 | **done** | E=10-15ms/V=600-900ms/A=500-750ms | E=75.5ms/V=592.5ms/A=1423ms, total 2091ms | Full WAM 5x skip-imagination; Action 68%; V≈A per-step (~29ms); 0.5Hz | V nailed, E 5-7x under, A 2x under |
+| exp04b | 2026-04-21 (rerun 2026-04-27) | **done** | E=10-15ms/V=600-900ms/A=500-750ms | **canonical** E=84.7/V=697/A=1708ms, total 2518ms | Full WAM ~6x skip-imagination; Action 69%; V≈A per-step (~34ms); 0.40Hz | V nailed, E 6-8x under, A 2.3x under |
 | exp05a | 2026-04-21 | **done** | VLA attention similar to VLM | Gini 0.91→0.07, sink migrates, entropy flat | VLA fine-tuning reshapes attention; VLM pruning not transferable | Way Off — opposite of prediction |
 | exp05b | 2026-04-21 | **done** | 3B model = different pattern | 3B vanilla Gini 0.80-0.98, consistent with 7B | Gini collapse from VLA fine-tuning, not model size | Confirmed — disambiguation successful |
 | exp06a | 2026-04-22 | **done** | ~100M DiT, 5-10ms/step | 174M DiT, 7.2ms/step, linear | Per-step 7.2ms, compute-bound, 174M→350M BW transition | Accurate on per-step, Off on param count (174M not 100M) |

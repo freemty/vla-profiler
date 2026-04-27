@@ -181,7 +181,7 @@ Pipeline state tracked in .pipeline-state.json.
   - **exp02a (ACT):** Total ~3ms (850x faster than VLM). Encode 80%, action 20%. VLA latency lower bound.
   - **exp03a (LingBot-VLA-4B):** single_img E=35.7ms/C=38.3ms/A=0.48ms (total 74.5ms). 3B backbone 比 7B 快 7x。Context ≈ Encode。Flow action head 0.48ms ≈ ACT。Total 74.5ms ≈ 13Hz。
   - **exp04a (Fast-WAM):** @10step: E=7.6ms/C=36.7ms/A=362ms (total 407ms, 2.5Hz). Action dominates 89%. Per-step ~32ms (30L MoT cross-attn).
-  - **exp04b (LingBot-VA):** E=75.5ms/V=592.5ms/A=1423ms (total 2091ms, 0.5Hz). Full WAM 5x slower than skip-imagination. Action 68%.
+  - **exp04b (LingBot-VA):** **Canonical (rerun 2026-04-27, warmup=15, median)**: E=84.7ms/V=697ms/A=1708ms (total 2518ms, 0.40Hz). Full WAM ~6x slower than skip-imagination. Action 69%. Legacy warmup=3 数据系统性低估 ~18%.
   - **exp05a (LingBot-VLA attention):** VLA fine-tuning reshapes attention: Gini 0.91→0.07, sink Pos2→Pos64, entropy flat. VLM pruning 不可迁移到 VLA。
   - **exp05b (Qwen2.5-VL-3B attention):** 消歧: Gini 崩塌归因于 VLA fine-tuning (非 model size)。3B vanilla Gini 0.80-0.98。
   - **exp06a (NitroGen 500M DiT):** Per-step 7.2ms (174M DiT), perfectly linear. 174M→350M: 2x params, 4.4x latency → compute-bound 到 memory-BW-bound 转换。k=1: 55.9Hz。
