@@ -126,3 +126,37 @@ class TestPhaseTimerSummary:
     def test_summary_empty_when_no_phases(self):
         timer = PhaseTimer()
         assert timer.summary() == {}
+
+
+class TestPhaseTimerStreamAware:
+    """Stream-aware timing for exp08 interference probe infrastructure.
+
+    CPU backend ignores the `stream` kwarg — these tests ensure the API
+    is stable on machines without CUDA. GPU-specific stream semantics
+    are exercised by exp08a integration tests (not runnable locally).
+    """
+
+    def test_cpu_backend_accepts_stream_kwarg(self):
+        timer = PhaseTimer(force_cpu=True)
+        timer.mark_start("P", stream=None)
+        time.sleep(0.005)
+        timer.mark_end("P", stream=None)
+        assert timer.elapsed_ms("P") > 0.0
+
+    def test_concurrent_phases_tracked_independently(self):
+        timer = PhaseTimer(force_cpu=True)
+        timer.mark_start("P", stream=None)
+        timer.mark_start("A", stream=None)
+        time.sleep(0.005)
+        timer.mark_end("P", stream=None)
+        time.sleep(0.005)
+        timer.mark_end("A", stream=None)
+        assert timer.elapsed_ms("P") > 0.0
+        assert timer.elapsed_ms("A") > timer.elapsed_ms("P")
+
+    def test_stream_kwarg_is_optional(self):
+        """Backward compat: existing callsites without stream keep working."""
+        timer = PhaseTimer(force_cpu=True)
+        timer.mark_start("encode")
+        timer.mark_end("encode")
+        assert "encode" in timer.summary()

@@ -9,7 +9,18 @@
 
 ## 1. Motivation（一段话）
 
-DistServe 在 LLM 上通过 PD disaggregation 拿到 7.4x goodput，核心是"prefill compute-bound vs decode memory-BW-bound 结构性干扰不可调和"。VLM 加入 Vision Encode (E) → 三阶段；WAM 类 VLA 再加 Action Denoising (A) → 四阶段 EPDA。**A 阶段 (Fast-WAM 89%, LingBot-VA 68%) 是 LLM 域从未出现过的新瓶颈**，且与 E/P/D 计算图完全独立，但被串行执行。
+DistServe 在 LLM 上通过 PD disaggregation 拿到 7.4x goodput，核心是"prefill compute-bound vs decode memory-BW-bound 结构性干扰不可调和"。VLM 加入 Vision Encode (E) → 三阶段；WAM 类 VLA 再加 Action Denoising (A) → 四阶段 EPDA。**A 阶段 (Fast-WAM 89%, LingBot-VA 68%, Pi-Zero 82%) 是 LLM 域从未出现过的新瓶颈**，且与 E/P/D 计算图完全独立，但被串行执行。
+
+**Roofline evidence（RTX 5880 Ada, 231.6 TFLOPS BF16 / 960 GB/s, ridge=241 FLOPS/byte, 详见 `docs/specs/2026-04-26-epda-roofline-analysis.md`）**：
+
+| Phase | Arithmetic Intensity | Achieved Resource Util | Bottleneck Class |
+|-------|---------------------|------------------------|------------------|
+| E (SigLIP/ViT) | ~200 (near ridge) | **~10% peak BW** | Moderate BW-bound |
+| P (LLM prefill, L=276) | ~276 (at ridge) | **11-19% peak TFLOPS** | Compute-bound (tensor core) |
+| D (LLM decode, per-tok) | ~1 (deep BW) | **73% peak BW** | **BW-saturated** |
+| A (DiT step) | 50-300 nominal / **2-5% achieved BW** | kernel dispatch dominated | **Latency-bound (novel class)** |
+
+四个阶段横跨 **3 种结构性不同的 bottleneck**——E/P 争 tensor core，D 已饱和 HBM，A 受限于 kernel dispatch。这是 DistServe (2-class) 和 EPD (3-class) 都没覆盖的 landscape。
 
 **待证明的结构性论证**（L2 命题）：
 > EPDA 四个阶段在同一 GPU 上共置时存在**不可调和的资源干扰**——四者的 compute/memory-BW/HBM 占用特征两两异构，任何共置方案都是对四者的妥协。

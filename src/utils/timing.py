@@ -2,8 +2,15 @@
 CUDA event-based phase timing with CPU fallback.
 
 Provides PhaseTimer for measuring inference phase durations
-(encode, prefill, decode) with sub-millisecond precision on GPU
+(encode, prefill, decode, action) with sub-millisecond precision on GPU
 and perf_counter fallback on CPU.
+
+Stream support (exp08 infrastructure):
+  mark_start/mark_end accept an optional `stream` argument (CUDA stream or
+  None for current stream). When timing concurrent phases on separate
+  streams, events are recorded on their respective streams and synchronized
+  independently, enabling interference measurement without cross-stream
+  serialization artifacts.
 """
 
 from __future__ import annotations
@@ -34,10 +41,10 @@ class _CpuTimerBackend:
         self._start_ns: float = 0.0
         self._end_ns: float = 0.0
 
-    def record_start(self) -> None:
+    def record_start(self, stream: Any = None) -> None:  # noqa: ARG002
         self._start_ns = time.perf_counter()
 
-    def record_end(self) -> None:
+    def record_end(self, stream: Any = None) -> None:  # noqa: ARG002
         self._end_ns = time.perf_counter()
 
     def elapsed_ms(self) -> float:
@@ -45,9 +52,15 @@ class _CpuTimerBackend:
 
 
 class _CudaTimerBackend:
-    """CUDA event-based timing backend."""
+    """CUDA event-based timing backend with optional stream targeting.
 
-    __slots__ = ("_start_event", "_end_event", "_synchronized")
+    When `stream` is passed to record_start/record_end, the event is
+    recorded on that stream (otherwise current stream). This is essential
+    for measuring per-stream phase latency under concurrent execution
+    (exp08a interference matrix).
+    """
+
+    __slots__ = ("_start_event", "_end_event", "_synchronized", "_stream")
 
     def __init__(self) -> None:
         import torch
@@ -55,13 +68,23 @@ class _CudaTimerBackend:
         self._start_event = torch.cuda.Event(enable_timing=True)
         self._end_event = torch.cuda.Event(enable_timing=True)
         self._synchronized = False
+        self._stream: Any = None
 
-    def record_start(self) -> None:
-        self._start_event.record()
+    def record_start(self, stream: Any = None) -> None:
+        self._stream = stream
+        if stream is not None:
+            self._start_event.record(stream)
+        else:
+            self._start_event.record()
         self._synchronized = False
 
-    def record_end(self) -> None:
-        self._end_event.record()
+    def record_end(self, stream: Any = None) -> None:
+        # Allow end stream override (rare); default to the start stream.
+        target = stream if stream is not None else self._stream
+        if target is not None:
+            self._end_event.record(target)
+        else:
+            self._end_event.record()
         self._synchronized = False
 
     def elapsed_ms(self) -> float:
@@ -78,6 +101,11 @@ class PhaseTimer:
     Uses CUDA events when available, falls back to CPU perf_counter.
     Tracks decode step count for per-token timing calculations.
 
+    Stream-aware timing (exp08 interference probe):
+        Pass `stream=` to mark_start/mark_end to record the event on a
+        specific CUDA stream. This lets a single PhaseTimer instance track
+        multiple concurrent phases without cross-stream serialization.
+
     Usage::
 
         timer = PhaseTimer()
@@ -85,6 +113,15 @@ class PhaseTimer:
         # ... run encoder ...
         timer.mark_end("encode")
         print(timer.elapsed_ms("encode"))  # milliseconds
+
+        # Concurrent phases on separate streams:
+        s1, s2 = torch.cuda.Stream(), torch.cuda.Stream()
+        timer.mark_start("P", stream=s1)
+        timer.mark_start("A", stream=s2)
+        with torch.cuda.stream(s1): run_prefill()
+        with torch.cuda.stream(s2): run_action()
+        timer.mark_end("P", stream=s1)
+        timer.mark_end("A", stream=s2)
     """
 
     def __init__(self, *, force_cpu: bool = False) -> None:
@@ -107,18 +144,29 @@ class PhaseTimer:
             return _CudaTimerBackend()
         return _CpuTimerBackend()
 
-    def mark_start(self, phase: str) -> None:
-        """Record the start of a named phase."""
+    def mark_start(self, phase: str, stream: Any = None) -> None:
+        """Record the start of a named phase.
+
+        Args:
+            phase: Phase name (e.g., "encode", "prefill", "decode", "action").
+            stream: Optional torch.cuda.Stream. If None, uses current stream.
+                CPU backend ignores this argument.
+        """
         backend = self._make_backend()
-        backend.record_start()
+        backend.record_start(stream=stream)
         self._active = {**self._active, phase: backend}
 
-    def mark_end(self, phase: str) -> None:
+    def mark_end(self, phase: str, stream: Any = None) -> None:
         """
         Record the end of a named phase.
 
         For phases that repeat (e.g., "decode" runs N times), elapsed times
         are accumulated. Increments decode_step_count when phase is "decode".
+
+        Args:
+            phase: Phase name to close. Must match a prior mark_start.
+            stream: Optional stream override for the end event. Defaults to
+                the stream used at mark_start.
         """
         if phase not in self._active:
             raise KeyError(
@@ -126,7 +174,7 @@ class PhaseTimer:
             )
 
         backend = self._active[phase]
-        backend.record_end()
+        backend.record_end(stream=stream)
 
         # Accumulate: store list of completed backends per phase
         existing = self._completed.get(phase, [])

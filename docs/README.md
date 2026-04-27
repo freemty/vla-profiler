@@ -116,6 +116,7 @@ Project documentation map. All paths relative to repo root.
 | `viewer/static/experiments.html` | Expandable experiment detail tables + prediction calibration |
 | `viewer/static/survey-dashboard.html` | Interactive survey dashboard (Pareto, pipeline comparison, maturity matrix) |
 | `viewer/static/scaling-curve.html` | DiT scaling scatter (log-log), latency spectrum, NitroGen k-sweep, paradigm comparison |
+| `slides/epda-roofline-motivation.html` | **exp08 one-pager** — EPDA roofline 可视化 + 干扰矩阵预测 (advisor meeting figure) |
 
 ## Other
 

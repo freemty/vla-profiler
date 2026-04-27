@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>EPDA Roofline — Motivation for exp08</title>
+<style>
+  :root {
+    --bg: #0b1020;
+    --fg: #e8eef7;
+    --muted: #9aa4b2;
+    --accent: #6cf0ff;
+    --e-color: #5cc8ff;      /* Encode — moderate BW */
+    --p-color: #ff9e6d;      /* Prefill — compute */
+    --d-color: #ff6666;      /* Decode — BW saturated */
+    --a-color: #c77dff;      /* Action — latency-bound */
+    --ridge: #ffd166;
+    --grid: rgba(255,255,255,.08);
+  }
+  html, body {
+    margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+    font-family: -apple-system, "SF Pro Display", Segoe UI, Inter, sans-serif;
+    min-height: 100vh;
+  }
+  .page {
+    max-width: 1280px; margin: 0 auto; padding: 32px 40px 60px;
+  }
+  header { margin-bottom: 28px; }
+  h1 {
+    font-size: 28px; font-weight: 600; margin: 0 0 6px;
+    letter-spacing: -.01em;
+  }
+  .sub { color: var(--muted); font-size: 14px; }
+  .kicker {
+    color: var(--accent); font-size: 12px; text-transform: uppercase;
+    letter-spacing: .08em; margin-bottom: 6px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  .panel {
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 14px;
+    padding: 20px 22px;
+  }
+  .panel h2 {
+    margin: 0 0 14px; font-size: 16px; font-weight: 600;
+    color: var(--fg);
+  }
+
+  /* Roofline svg styling */
+  svg.roofline {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .axis { stroke: var(--grid); stroke-width: 1; }
+  .axis-label { fill: var(--muted); font-size: 11px; }
+  .ceiling { stroke-width: 2.5; fill: none; }
+  .ceiling-label { font-size: 11px; font-weight: 600; }
+  .ridge-line { stroke: var(--ridge); stroke-dasharray: 4 4; stroke-width: 1.5; opacity: .8; }
+  .phase-point circle { stroke: #0b1020; stroke-width: 1.5; }
+  .phase-label {
+    font-size: 13px; font-weight: 700; text-anchor: middle;
+    paint-order: stroke; stroke: #0b1020; stroke-width: 4;
+  }
+  .phase-note {
+    font-size: 10px; fill: var(--muted); text-anchor: middle;
+  }
+
+  /* Data table */
+  table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+    margin-top: 4px;
+  }
+  th, td {
+    text-align: left; padding: 8px 10px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+  th { color: var(--muted); font-weight: 500; font-size: 11px;
+       text-transform: uppercase; letter-spacing: .06em; }
+  .phase-dot {
+    display: inline-block; width: 10px; height: 10px;
+    border-radius: 50%; margin-right: 8px; vertical-align: middle;
+  }
+  td.num { font-variant-numeric: tabular-nums; color: var(--fg); }
+  .verdict {
+    font-size: 11px; padding: 3px 8px; border-radius: 10px;
+    display: inline-block;
+  }
+  .v-compute { background: rgba(255,158,109,.15); color: #ffb38a; }
+  .v-bw { background: rgba(255,102,102,.15); color: #ff8787; }
+  .v-moderate { background: rgba(92,200,255,.15); color: #7bd4ff; }
+  .v-latency { background: rgba(199,125,255,.15); color: #d8a1ff; }
+
+  /* Interference matrix */
+  .matrix {
+    display: grid;
+    grid-template-columns: 80px repeat(4, 1fr);
+    gap: 4px;
+    margin-top: 12px;
+    font-size: 13px;
+  }
+  .mcell {
+    padding: 10px 6px;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 600;
+  }
+  .mhead { color: var(--muted); font-weight: 500; padding: 10px 6px; }
+  .m-diag { background: rgba(255,255,255,.04); color: var(--muted); }
+  .m-low { background: rgba(92,200,255,.18); color: #bfe5ff; }
+  .m-mid { background: rgba(255,209,102,.18); color: #ffdc80; }
+  .m-high { background: rgba(255,102,102,.22); color: #ff9a9a; }
+
+  .legend {
+    display: flex; gap: 18px; margin-top: 14px;
+    font-size: 11px; color: var(--muted); flex-wrap: wrap;
+  }
+  .legend span {
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .legend-box { width: 12px; height: 12px; border-radius: 3px; }
+
+  footer {
+    margin-top: 32px; padding-top: 18px;
+    border-top: 1px solid rgba(255,255,255,.06);
+    color: var(--muted); font-size: 12px;
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+
+  .callout {
+    background: linear-gradient(90deg, rgba(108,240,255,.08), rgba(108,240,255,0));
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px; border-radius: 6px;
+    font-size: 13px; line-height: 1.5; color: #dfe7f0;
+    margin-top: 14px;
+  }
+  .callout b { color: var(--accent); }
+
+  @media (max-width: 960px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <div class="kicker">exp08 motivation — one-pager for advisor meeting</div>
+  <h1>EPDA on the Roofline: four phases, three bottleneck classes</h1>
+  <div class="sub">
+    Measured on RTX 5880 Ada (231.6 TFLOPS BF16, 960 GB/s, ridge @ 241 FLOPS/byte)
+    &middot; data from exp01a / exp03a / exp04a / exp06a / exp07a
+  </div>
+</header>
+
+<div class="grid">
+
+<!-- LEFT: Roofline plot -->
+<section class="panel">
+  <h2>Roofline positions &mdash; where the phases live</h2>
+
+  <svg class="roofline" viewBox="0 0 700 470" preserveAspectRatio="xMidYMid meet">
+    <!-- Plot area: x log from 0.5 to 1000 FLOPS/byte, y log from 0.1 to 400 TFLOPS
+         Screen x: 70 .. 660 (590 px), y: 40 .. 400 (360 px, inverted)
+         log10 x: 0.5→-0.30, 1000→3  → span 3.30, 590/3.30 ≈ 178.8 per decade
+         log10 y: 0.1→-1, 400→2.6    → span 3.6, 360/3.6 = 100 per decade
+    -->
+    <!-- axes -->
+    <line class="axis" x1="70"  y1="400" x2="660" y2="400"/>
+    <line class="axis" x1="70"  y1="40"  x2="70"  y2="400"/>
+
+    <!-- x grid: 1, 10, 100, 1000 -->
+    <g opacity=".6">
+      <line class="axis" x1="249"  y1="40" x2="249"  y2="400"/>
+      <line class="axis" x1="428"  y1="40" x2="428"  y2="400"/>
+      <line class="axis" x1="607"  y1="40" x2="607"  y2="400"/>
+    </g>
+    <!-- y grid: 1, 10, 100 -->
+    <g opacity=".6">
+      <line class="axis" x1="70" y1="300" x2="660" y2="300"/>
+      <line class="axis" x1="70" y1="200" x2="660" y2="200"/>
+      <line class="axis" x1="70" y1="100" x2="660" y2="100"/>
+    </g>
+
+    <!-- x tick labels (log) -->
+    <text class="axis-label" x="70"  y="418">0.5</text>
+    <text class="axis-label" x="249" y="418">1</text>
+    <text class="axis-label" x="428" y="418">10</text>
+    <text class="axis-label" x="607" y="418">100</text>
+    <text class="axis-label" x="650" y="418">1000</text>
+
+    <!-- y tick labels -->
+    <text class="axis-label" x="38" y="404">0.1</text>
+    <text class="axis-label" x="50" y="304">1</text>
+    <text class="axis-label" x="42" y="204">10</text>
+    <text class="axis-label" x="36" y="104">100</text>
+    <text class="axis-label" x="36" y="44" >400</text>
+
+    <!-- axis titles -->
+    <text class="axis-label" x="365" y="445" text-anchor="middle" font-size="12">
+      Arithmetic Intensity (FLOPS / byte)  &mdash;  log scale
+    </text>
+    <text class="axis-label" x="-220" y="22" transform="rotate(-90)" font-size="12">
+      Performance (TFLOPS BF16)  &mdash;  log scale
+    </text>
+
+    <!-- BW slope ceiling: P = BW × AI ; 960 GB/s = 0.96 TFLOPS/(FLOPS/byte)
+         At AI=0.5: P = 0.48 TFLOPS → log10(.48) = -0.32 → y = 400-(-0.32+1)*100 = 332
+         At AI=241: P = 231.6 TFLOPS → ridge point: x=log10(241)*178.8+70+(0.3*178.8)
+            log10(241) ≈ 2.382, so x = 70 + (2.382+0.30)*178.8 = 70 + 479.5 = 549.5
+            y = 400 - (log10(231.6)+1)*100 = 400 - 3.365*100 = 63.5
+    -->
+    <line class="ceiling" stroke="var(--e-color)" x1="70"  y1="332" x2="549.5" y2="63.5"/>
+    <text class="ceiling-label" fill="var(--e-color)" x="180" y="255">
+      HBM BW ceiling (960 GB/s)
+    </text>
+
+    <!-- Compute ceiling: P = 231.6 TFLOPS horizontal from ridge onwards -->
+    <line class="ceiling" stroke="var(--p-color)" x1="549.5" y1="63.5" x2="660" y2="63.5"/>
+    <text class="ceiling-label" fill="var(--p-color)" x="560" y="54">
+      Tensor core peak (231.6 TF)
+    </text>
+
+    <!-- ridge indicator -->
+    <line class="ridge-line" x1="549.5" y1="63.5" x2="549.5" y2="400"/>
+    <text class="axis-label" fill="var(--ridge)" x="549.5" y="432" text-anchor="middle">
+      ridge = 241
+    </text>
+
+    <!-- Phase points.
+         coord(AI, TFLOPS) → x = 70 + (log10(AI)+0.3)*178.8
+                              y = 400 - (log10(TFLOPS)+1)*100
+
+         D (decode):  AI=1,    TFLOPS=0.7   → x=70+(0+.3)*178.8=123.6, y=400-(log10(.7)+1)*100=414... too low
+           Let's use achieved P for D: Qwen7B 14 GFLOPs / 20ms = 0.7 TFLOPS? That's the
+           correct achieved throughput. BW utilization is the interesting number but
+           plotting on FLOPS axis we use compute: 0.7 TFLOPS ≈ 10^-0.15 → y = 400-(1-0.15)*100 = 315
+         E (SigLIP):  AI=200, TFLOPS=10.8  → x=70+(2.301+.3)*178.8=535,  y=400-(1.033+1)*100=196.7
+         P (Qwen-7B): AI=276, TFLOPS=24.7  → x=70+(2.441+.3)*178.8=560,  y=400-(1.393+1)*100=160.7
+         A (Pi-Zero): AI=60 (nominal), TFLOPS=0.28 → x=70+(1.778+.3)*178.8=442, y=400-(log10(.28)+1)*100=444... out of range
+
+         Redo with simpler targets:
+         D: AI=1,     achieved=0.7 TFLOPS    x=249, y=400-(−0.155+1)*100=315
+         E: AI=200,   achieved=10.8 TFLOPS   x=535, y=400-(1.033+1)*100=197
+         P: AI=276,   achieved=24.7 TFLOPS   x=560, y=400-(1.393+1)*100=161
+         A: AI=60,    achieved=0.28 TFLOPS   x=442, y=400-(−0.553+1)*100=355 (still at bottom visible)
+    -->
+
+    <!-- D: BW saturated (at ceiling-ish on BW slope for AI=1) -->
+    <g class="phase-point">
+      <circle cx="249" cy="315" r="11" fill="var(--d-color)"/>
+      <text class="phase-label" fill="var(--d-color)" x="249" y="295">D</text>
+      <text class="phase-note" x="249" y="345">decode · 73% BW</text>
+    </g>
+
+    <!-- E: near ridge, BW side, 10% util -->
+    <g class="phase-point">
+      <circle cx="535" cy="197" r="11" fill="var(--e-color)"/>
+      <text class="phase-label" fill="var(--e-color)" x="535" y="185">E</text>
+      <text class="phase-note" x="535" y="227">SigLIP · 10% BW</text>
+    </g>
+
+    <!-- P: compute-bound, 17% -->
+    <g class="phase-point">
+      <circle cx="560" cy="161" r="11" fill="var(--p-color)"/>
+      <text class="phase-label" fill="var(--p-color)" x="560" y="149">P</text>
+      <text class="phase-note" x="600" y="164">prefill · 17% TF</text>
+    </g>
+
+    <!-- A: latency-bound, way under BW ceiling -->
+    <g class="phase-point">
+      <circle cx="442" cy="355" r="11" fill="var(--a-color)"/>
+      <text class="phase-label" fill="var(--a-color)" x="442" y="335">A</text>
+      <text class="phase-note" x="442" y="385">DiT step · 3% BW · latency-bound</text>
+    </g>
+
+    <!-- Ghost lines from each phase up to its ceiling to emphasize gap -->
+    <line stroke="var(--a-color)" stroke-width="1" stroke-dasharray="2 3" opacity=".5"
+          x1="442" y1="355" x2="442" y2="132"/>
+    <line stroke="var(--e-color)" stroke-width="1" stroke-dasharray="2 3" opacity=".5"
+          x1="535" y1="197" x2="535" y2="75"/>
+  </svg>
+
+  <div class="callout">
+    <b>The gap below each ceiling tells the story.</b>
+    D rides the BW ceiling (well-tuned decode). P sits 6&times; below tensor-core peak
+    &mdash; L=276 is too thin for GEMM saturation. A is two orders of magnitude below
+    its nominal BW ceiling: kernel dispatch, not compute or bandwidth, is the bottleneck.
+  </div>
+</section>
+
+<!-- RIGHT: data table + interference matrix -->
+<section class="panel">
+  <h2>Per-phase resource utilization</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Phase</th><th>AI</th><th>Measured</th><th>Achieved util</th><th>Verdict</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="phase-dot" style="background:var(--e-color)"></span>E (SigLIP)</td>
+        <td class="num">~200</td>
+        <td class="num">9.3 ms (exp07a)</td>
+        <td class="num">~10% peak BW</td>
+        <td><span class="verdict v-moderate">BW &middot; moderate</span></td>
+      </tr>
+      <tr>
+        <td><span class="phase-dot" style="background:var(--p-color)"></span>P (LLM prefill)</td>
+        <td class="num">~276</td>
+        <td class="num">156 ms · Qwen 7B (exp01a)</td>
+        <td class="num">17% peak TF</td>
+        <td><span class="verdict v-compute">Compute</span></td>
+      </tr>
+      <tr>
+        <td><span class="phase-dot" style="background:var(--d-color)"></span>D (LLM decode)</td>
+        <td class="num">~1</td>
+        <td class="num">20 ms/tok · Qwen 7B (exp01a)</td>
+        <td class="num"><b>73% peak BW</b></td>
+        <td><span class="verdict v-bw">BW saturated</span></td>
+      </tr>
+      <tr>
+        <td><span class="phase-dot" style="background:var(--a-color)"></span>A (DiT step)</td>
+        <td class="num">50-300</td>
+        <td class="num">18 ms/step · Pi-Zero (exp07a)</td>
+        <td class="num">2-5% peak BW</td>
+        <td><span class="verdict v-latency">Latency-bound (new)</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2 style="margin-top:22px">Predicted co-location interference (exp08a hypothesis)</h2>
+  <div class="matrix">
+    <div class="mhead"></div>
+    <div class="mhead">E</div>
+    <div class="mhead">P</div>
+    <div class="mhead">D</div>
+    <div class="mhead">A</div>
+
+    <div class="mhead" style="text-align:right">E</div>
+    <div class="mcell m-diag">&mdash;</div>
+    <div class="mcell m-low">low</div>
+    <div class="mcell m-mid">mid</div>
+    <div class="mcell m-low">low</div>
+
+    <div class="mhead" style="text-align:right">P</div>
+    <div class="mcell m-low">low</div>
+    <div class="mcell m-diag">&mdash;</div>
+    <div class="mcell m-mid">mid</div>
+    <div class="mcell m-low">low*</div>
+
+    <div class="mhead" style="text-align:right">D</div>
+    <div class="mcell m-mid">mid</div>
+    <div class="mcell m-mid">mid</div>
+    <div class="mcell m-diag">&mdash;</div>
+    <div class="mcell m-high">HIGH</div>
+
+    <div class="mhead" style="text-align:right">A</div>
+    <div class="mcell m-low">low</div>
+    <div class="mcell m-low">low*</div>
+    <div class="mcell m-high">HIGH</div>
+    <div class="mcell m-diag">&mdash;</div>
+  </div>
+
+  <div class="legend">
+    <span><span class="legend-box" style="background:rgba(92,200,255,.55)"></span>Low (&lt;1.2&times; slowdown)</span>
+    <span><span class="legend-box" style="background:rgba(255,209,102,.55)"></span>Mid (1.2-1.8&times;)</span>
+    <span><span class="legend-box" style="background:rgba(255,102,102,.55)"></span>High (&gt;1.8&times;)</span>
+    <span>* = <em>P+A potentially complementary</em> (tensor core vs dispatch slot)</span>
+  </div>
+
+  <div class="callout" style="margin-top:18px">
+    <b>Falsifiable prediction for exp08a:</b> D+A co-location will show the largest
+    mutual slowdown (both contend on the memory controller: D for bandwidth, A for
+    per-kernel launch serialization). If this matrix is confirmed, EPDA
+    disaggregation has a <em>structural</em> reason &mdash; not just an empirical one.
+  </div>
+</section>
+
+</div><!-- /grid -->
+
+<footer>
+  <span>
+    Sources: exp01a (Qwen2.5-VL-7B E/P/D) &middot;
+    exp03a (LingBot-VLA-4B C) &middot;
+    exp04a (Fast-WAM ActionDiT) &middot;
+    exp06a (NitroGen 174M DiT) &middot;
+    exp07a (Pi-Zero dual-stream) &middot;
+    <code>docs/specs/2026-04-26-epda-roofline-analysis.md</code>
+  </span>
+  <span>Compiled 2026-04-27 &middot; vlla/exp08 motivation</span>
+</footer>
+
+</div>
+</body>
+</html>
