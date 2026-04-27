@@ -1,113 +1,114 @@
 # 第一次 Meeting 大纲 — 与张昊
 
-> 定位：请教式 meeting，不是汇报式。带着 survey context + 数据 + 一个核心问题去，听他的判断。
+> **定调：Fast VLA first, serving later.**
+> 定位：请教式 meeting。带着 survey context + profiling 数据 + 自己的判断去，请他校准。
+
+## 我的判断 (meeting 前先亮出来)
+
+VLA 推理现在卡在**单请求太慢**，不是并发不够：
+
+```
+ACT          3ms    300Hz   ✅ 足够，但只能做窄任务
+LingBot-VLA  75ms    13Hz   ⚠️ 刚刚够简单抓取
+Pi-Zero     200ms     5Hz   ❌ 多数实时场景不够
+DreamZero  2518ms   0.4Hz   ❌ 完全不可用
+```
+
+机器人需要 10-50Hz。VLA 单次推理还差 2-10x。**这是 FastVideo 而不是 vLLM 的问题阶段。**
+
+同时：VLA 推理没有统一框架 — 5 个模型 5 套 env 5 个入口，连 profiling 都没有标准方式。领域处于 "wild west"。
+
+**Serving (高并发/多用户调度) 是模型够快之后才会浮现的需求。** 就像 FastVideo 先把视频生成从分钟压到秒，serving 需求才跟着来。
 
 ## 开场 (2 min)
 
-自我介绍 + 表达目前状态：
-- 拿到 offer 后立刻开始调研和实验，已有 13 个实验 + 6 份 survey
-- 对领域版图有大致了解，但对**方向选择**有一个需要他判断的核心问题
+- 拿到 offer 后立刻启动调研 — 13 个实验 (7 模型 profiling + 6 contention 测量) + 6 份 survey
+- 目前对 VLA inference 版图有大致认识，带了一个判断来请您校准
 
-## Q0 — 核心问题 (15 min)
+## Q0 — 我的判断对不对？(10 min)
 
-> **"机器人的通用操作能力，是否必须依赖一个端侧放不下的大模型？"**
+> **"VLA 现在更像 2022 年的 video generation（单请求太慢，需要 FastVideo 式加速），还是 2023 年的 LLM（并发爆发，需要 vLLM 式 serving）？"**
 
-这是一个 technical bet。答案决定 VLA serving 是真需求还是伪需求，进而决定我整个 PhD 的方向。
+**我认为是前者。理由：**
+1. 单次推理离实时差 2-10x（数据见上）
+2. 部署现状是一机一卡，不存在 batching 需求
+3. OxyGen 是唯一做 VLA serving 的，但 VLA 连单次推理都没优化好
+4. vLLM-Omni / SGLang Diffusion 已经在做 multimodal serving → 我们不该重复
 
-### The Bet
+**想请教：**
+1. 您同意 "fast first, serving later" 吗？还是您看到了我没看到的并发需求？
+2. 您做 FastVideo 时的核心 insight（STA/蒸馏）哪些能直接迁移到 VLA？
+3. VLA 推理加速最该先攻哪个阶段？我的数据说 **Action (DiT denoising) 占 80-90%** — 您同意从这里入手吗？
 
-```
-模型大小:  100M  →  1B  →  3B  →  7B  →  14B+系统
-泛化能力:   窄     中     ?     广     极广
-部署位置:  边缘    边缘   边缘   边缘勉强   必须云端
+## Q1 — 方向选择 (10 min)
 
-                         ↑
-               存不存在一个"能力悬崖"？
-               3B 以下能做到"足够通用"吗？
-```
+### 背后的 Technical Bet
 
-| 如果 YES (大模型不可避免) | 如果 NO (小模型够) |
-|--------------------------|-------------------|
-| VLA serving 是 vLLM 级别的刚需 | VLA serving 是伪问题 |
-| PhD = "做 VLA 的 vLLM" | PhD = model compression / on-device |
-| exp08 是 serving system 的 motivation | exp08 是 dead end |
-| Hao 的 vLLM 经验直接迁移 | 需要走蒸馏/量化路线 |
+> **"机器人通用操作是否必须依赖端侧放不下的大模型？"**
 
-### 我的 survey 看到的证据
+| 如果大模型不可避免 | 如果小模型够用 |
+|-------------------|--------------|
+| Fast VLA 做完后 serving 自然成为下一步 | Fast VLA 本身就是终局 |
+| PhD 路线: 加速 → serving → co-design | PhD 路线: 蒸馏 + 量化 + on-device |
 
-**YES 侧 (大模型趋势)**:
-- 每次泛化能力跳跃都伴随模型变大：ACT 5M (窄) → OpenVLA 7B → π0.7 四件套 → DreamZero 14B (zero-shot)
-- PI 和 Generalist 2026-04 同月承认 "model is a system" → 不是一个模型变大, 是多个组队 → 总量更大
-- 多机器人编队 (亚马逊 75 万 Kiva, 工厂产线) → 如果大模型, 则 N:M 集中推理服务器
-- OxyGen (2603.14371) 是唯一一篇 VLA continuous batching — 说明有人在赌 YES
+目前没有 VLA model-size vs generalization 的 scaling curve — 这件事本身是不是值得做？
 
-**NO 侧 (小模型够用)**:
-- OpenVLA-OFT 7B 量化到 INT4 → 可能 Jetson AGX Orin 跑 10-20Hz, 很多任务够了
-- NanoVLA / BitVLA 存在 (虽然目前窄)
-- **VLA 蒸馏还没被认真做过** — LLM 70B→7B 保留 80-90%能力已证明, VLA 没人系统做
-- 机器人动作空间远小于语言 — 只需预测 6-DOF 关节角, 不是生成莎士比亚
-- 关键：**还没有人做过 VLA 的 model-size vs generalization scaling curve**
+### 候选路线 (请他排序)
 
-### 想请教
+| 候选 | 一句话 | 我的评估 |
+|------|--------|---------|
+| **A: VLA 单次推理加速** | FastVideo 思路迁移到 VLA action denoising (STA/蒸馏/step caching) | ⭐ 最优先 — 直接 bottleneck |
+| **B: VLA inference benchmark** | 统一 profiling 框架 + SLO benchmark (填 wild-west 空白) | 配套 A，低风险 |
+| **C: DiT caching for VLA** | 逐层 activation variance → 最优 cache 策略 | A 的子方向 |
+| D: Serving system | EPDA disaggregation | 太早 — 等 A/B 做完再说 |
+| E: Mechanism study | exp08 contention 分析发 workshop paper | side project |
 
-1. 您觉得机器人通用操作，最终会落在多大的模型上？存不存在"3B 以下够用"的可能？
-2. 您做 vLLM 时 LLM serving 的需求已经很明确了吗？还是也有赌的成分？
-3. 如果 VLA serving 是真需求, 它更像 **LLM serving** (stateless 请求) 还是 **游戏服务器** (有状态 session)？
-4. VLA model-size scaling curve 这件事本身是不是值得做？(作为判断 bet 的实证基础)
+## Q2 — 展示数据 (5 min)
 
-### 为什么这个问题重要
-
-这不只是 exp08 的 motivation, 是**整个 PhD 方向级别的 bet**:
-- 如果 YES → 做 serving system (vLLM for VLA), exp08 是 motivation
-- 如果 NO → 做 model-level 加速 (蒸馏/量化/caching), exp08 只是 mechanism study
-- 如果 unclear → 做 VLA scaling curve 本身就是 contribution (帮领域判断这个 bet)
-
-## Q1 — 方向选择请教 (10 min)
-
-根据 Q0 的回答，展示候选方向请他点评：
-
-| 候选 | 一句话 | 风险 |
-|------|--------|------|
-| **C: DiT caching for VLA** | FastVideo 蒸馏迁移到 VLA action denoising | 可能太 incremental |
-| **D': Mechanism study + VLA SLO** | GPU contention 分析 + VLA benchmark | vLLM-Omni 已占 framework 空间 |
-| **新: VLA Serving System** | 做"VLA 的 vLLM" | 需求可能不存在 (Q0 核心) |
-
-**诚实地承认**：
-- vLLM-Omni (4.5k★, arXiv:2602.02204) 已有 EPDA framework → 我们不该重复做
-- exp08 的实验数据有价值 (非对称 contention, M4 模型)，但 packaging 方式取决于方向
-
-## Q2 — 展示实验数据 (5 min)
-
-不用说太多原理，直接展示**最有冲击力的数字**：
+**7-model Pareto 图** — 一张图展示全部 profiling：
 
 ```
-exp01a-07a: 7 个模型的延迟 Pareto 图
-            ACT 3ms → LingBot-VLA 75ms → Pi-Zero 200ms → Full WAM 2518ms
-
-exp08:      两个阶段放一张卡 → D 慢 3.5 倍、P 慢 2.9 倍
-            但 E 和 A 几乎不受影响
-            → 能预测 (M4 R²=0.94)
-            → 实际部署建议: {E,A} 同卡, {P,D} 必须拆
+           延迟 →
+ACT  ■ 3ms
+NitroGen  ■■ 18ms (k=1)
+LingBot-VLA  ■■■■■ 75ms
+NitroGen  ■■■■■■■■ 126ms (k=16)
+Pi-Zero  ■■■■■■■■■■■■ 200ms
+Fast-WAM  ■■■■■■■■■■■■■■■■■■■■■ 407ms
+Full WAM  ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ 2518ms
 ```
 
-**关键一句话**："DistServe 说 P+D 要拆，我们把这个结论扩展到了 VLA 的 4 个阶段，发现分法不一样 — E 和 A 可以合在一起。"
+**一个核心发现**：Action 阶段 (DiT denoising) 占 80-94% 延迟 — 这是加速最该攻的地方。
 
-## Q3 — 听他建议 (5 min)
+**DiT scaling curve** (exp06a + exp07a):
+```
+174M (NitroGen)  →  7.2ms/step
+300M (Pi-Zero)   → 16.5ms/step  (cross-attn 使 300M 比纯 DiT 贵 2.3x)
+350M (Fast-WAM)  → 32ms/step
+```
 
-开放式收尾：
-1. 您觉得我目前缺什么能力？需要先补什么课？
-2. 入学前这几个月，您建议我做什么？
-3. 组里有没有做相关方向的 senior student 可以指导我？
+**关键一句话**："Action 占 80%+，而且 DiT 越大越贵呈超线性增长 — FastVideo 的 STA/蒸馏在这里有巨大空间。"
+
+**exp08 附带提一句** (不展开)：
+- EPDA 四阶段 co-location 时 D/P 脆弱 2.4-2.9x，E/A 鲁棒
+- 将来做 serving 时可直接用，目前 park
+
+## Q3 — 听建议 (5 min)
+
+1. 入学前这几个月，您建议我先做什么？直接上手 VLA 加速实验还是先补系统课？
+2. 组里谁在做 VLA 或 FastVideo 相关的？可以对接？
+3. 您觉得我目前最缺什么能力？
 
 ## 准备 checklist
 
-- [ ] `slides/epda-roofline-motivation.html` 更新: 加 Q0 的 serving 讨论页
-- [ ] 打印 exp08b 6-pair heatmap (一页纸)
-- [ ] 准备 7-model Pareto 图 (一页纸)
-- [ ] 读完 DistServe 论文（至少前 3 节，能说清 goodput 和 PD disaggregation）
-- [ ] 准备问 vLLM-Omni: 您组里是否有人参与/关注？
+- [ ] 画 7-model Pareto 图 (一页, 有 Hz 刻度)
+- [ ] 画 DiT scaling curve 图 (174M / 300M / 350M per-step, 含 cross-attn 标注)
+- [ ] 读 FastVideo 论文 (STA + VSA + 蒸馏, 至少前 4 节)
+- [ ] 读 DistServe 前 3 节 (能说清 PD disaggregation, 作为"为什么 serving later"的背景)
+- [ ] `slides/epda-roofline-motivation.html` 更新: 加 "Fast VLA First" framing
+- [ ] 准备 exp08 一页总结 (备用, 只在他问时展开)
 
 ## 时间控制
 
-总 35min 左右。**Q0 是最重要的环节**，如果只聊一件事就聊它。
-实验数据是锦上添花，不是主菜 — 导师看的不是你跑了多少实验，是你的问题意识和判断力。
+总 ~30min。**Q0 + Q1 是主菜 (20min)**。数据是论据不是主角。
+展示的重点是 **你的判断力和问题意识**，不是你跑了多少实验。
