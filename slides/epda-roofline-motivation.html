@@ -637,6 +637,88 @@
   </div>
 </section>
 
+<!-- =========================================================
+     Related work section — vLLM-Omni / SGLang Diffusion
+     (scope audit 2026-04-27, positions exp08 relative to existing
+     serving frameworks so the reader doesn't think we're duplicating)
+     ========================================================= -->
+<section class="panel full" style="margin-top: 32px;">
+  <h2 style="color:var(--accent)">Related serving systems &mdash; what's already built (2026-Q1/Q2)</h2>
+  <p style="color:var(--muted); font-size:13px; margin-top:-4px;">
+    We read <code>github.com/vllm-project/vllm-omni</code> and
+    <code>github.com/sgl-project/sglang/.../multimodal_gen</code> on
+    2026-04-27. The any-to-any disaggregation framework space is <b>already
+    covered</b>; exp08 positions as <em>complementary mechanism study</em>,
+    not a competing framework.
+    Full audit: <code>survey/papers/multimodal-serving-systems-2026.md</code>.
+  </p>
+
+  <table style="margin-top:14px;">
+    <thead>
+      <tr>
+        <th>System</th>
+        <th>Scope</th>
+        <th>Implemented primitives</th>
+        <th style="text-align:center">Overlaps exp08?</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>vLLM-Omni</b><br><span style="font-size:10px;color:var(--muted)">arXiv:2602.02204, 4.5k&star;</span></td>
+        <td>Any-to-any AR+DiT pipelines as DAG of stages. Qwen-Omni, Bagel, Qwen-Image, Hunyuan, etc.</td>
+        <td>
+          <code>omni_scheduling_coordinator</code> (cross-stage),
+          <code>omni_connectors</code> (KV/tensor transfer),
+          <code>omni_coordinator/load_balancer</code>,
+          JCT -91.4%
+        </td>
+        <td style="text-align:center; color:#ff8787; font-weight:700">Yes &mdash; occupies "framework" lane</td>
+      </tr>
+      <tr>
+        <td><b>SGLang Diffusion</b><br><span style="font-size:10px;color:var(--muted)">blog 2025-11-07, Hao Zhang on author list</span></td>
+        <td>Single-diffusion E/Denoiser/D disaggregation. T2I / T2V. Enhanced fork of FastVideo.</td>
+        <td>
+          <code>RoleType</code>={encoder, denoiser, decoder, server},
+          <code>DiffusionServer</code> N:M:K,
+          transport (codec/buffer/engine)
+        </td>
+        <td style="text-align:center; color:#ffdc80; font-weight:700">Partial &mdash; no LLM backbone</td>
+      </tr>
+      <tr>
+        <td><b>DistServe</b> (OSDI '24)</td>
+        <td>LLM P/D disaggregation</td>
+        <td>placement algo, goodput</td>
+        <td style="text-align:center; color:#bfe5ff;">Referenced, not overlapping</td>
+      </tr>
+      <tr>
+        <td><b>EPD Disaggregation</b> (ICML '25)</td>
+        <td>VLM E/P/D three-stage</td>
+        <td>multimedia token cache, intra-req encode parallel</td>
+        <td style="text-align:center; color:#bfe5ff;">Subsumed by vLLM-Omni</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top:22px;">
+    <div class="callout">
+      <b>What's still open in 2026-Q2:</b>
+      (1) <em>Pair-wise co-location interference quantification</em> &mdash; no
+      predictive model for which stages can safely share a GPU.
+      (2) <em>Robotics/VLA closed-loop SLO</em> &mdash; vLLM-Omni examples are all
+      chat/T2I/T2V, no action-chunk semantics.
+      (3) <em>GPU kernel-level contention model</em> &mdash; our pilot shows roofline
+      underestimates by 2-28&times;.
+    </div>
+    <div class="callout warn">
+      <b>What exp08 is no longer:</b>
+      a new EPDA serving framework. vLLM-Omni already did that. Instead,
+      exp08 becomes a <em>benchmark + mechanism study on top of vLLM-Omni /
+      SGLang Diffusion</em>, with robotics SLO as the unique scene and the
+      kernel-contention model as the unique theoretical contribution.
+    </div>
+  </div>
+</section>
+
 <footer>
   <span>
     Sources: exp01a (Qwen2.5-VL-7B E/P/D) &middot;

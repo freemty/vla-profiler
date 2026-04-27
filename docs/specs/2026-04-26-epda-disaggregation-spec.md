@@ -1,9 +1,26 @@
-# exp08 Spec — EPDA 四阶段干扰量化
+# exp08 Spec — EPDA 四阶段干扰量化（v2 降档后，2026-04-27）
 
-> **方向**: 从 L1 (profile) 跳到 L2 (结构性论证)，对标 DistServe Figure 1 + FastVideo Figure 1。
-> **日期**: 2026-04-26
-> **前置文档**: `survey/papers/hao-style-synthesis.md`（候选 D）；`survey/papers/hao-style-distserve.md` §5
+> **方向**: 从 L1 (profile) 跳到 L2 (mechanism study)，**不** 做 framework。
+> **日期**: 2026-04-26 初稿 / 2026-04-27 scope audit 降档
+> **前置文档**:
+> - `survey/papers/hao-style-synthesis.md`（候选 D' 降档版）
+> - `survey/papers/multimodal-serving-systems-2026.md`（**必读**：解释为什么 framework 路线已关闭）
+> - `docs/specs/2026-04-26-epda-roofline-analysis.md`（roofline 预测）
+> - `exp/exp08a/FINDINGS.md`（pilot 数据：roofline 低估 2-28x）
 > **命名**: 这是 **exp08 系列**（新 major direction），exp07 已被 Pi-Zero profiling 占用
+
+## 0. 2026-04-27 Scope 调整声明
+
+**重要变更**（对原 spec 的修正）：
+
+1. **不再 claim "propose an EPDA disaggregation framework"** —— vLLM-Omni (arXiv:2602.02204) 已在 2026-02 实现完整的 any-to-any disaggregated serving，包括 AR+DiT 跨 model pipeline、inter-stage connector、coordinator load balancer
+2. **不再与 vLLM-Omni / SGLang Diffusion 竞争** —— 两者已占据 framework 层（SGLang 的 `roles.py` 已有 ENCODER/DENOISER/DECODER 分离）
+3. **重新定位为 mechanism + benchmark study**:
+   - (a) GPU kernel-level contention model——补 roofline 的预测空白
+   - (b) Robotics/VLA SLO benchmark——补 vLLM-Omni examples 的场景空白
+4. **产出目标**:
+   - 从 "position paper / framework" 降为 "benchmark paper + measurement study"（SIGMETRICS / NSDI / MLSys measurement track 级别）
+   - 或作为 vLLM-Omni/SGLang 的 **profile/benchmark extension** 贡献 PR
 
 ---
 
@@ -79,20 +96,22 @@ DistServe 在 LLM 上通过 PD disaggregation 拿到 7.4x goodput，核心是"pr
 
 ## 4. 产出物
 
-### exp08 必须产出（对齐 Hao-style 模板）
-| 产出 | 目的 | 对应方法论 Step |
-|------|------|---------------|
-| 干扰矩阵图（6×6 或 EPDA 四阶段两两） | Motivation figure | Step 1 (profile) + Step 2 (结构性论证) |
-| SLO 违反率曲线 | Co-located baseline 坏在哪 | Step 2 (结构性论证) |
-| "EPDA-goodput" 指标定义 | 新指标 | Step 5 (指标 reframe) |
-| Position paper / workshop paper draft | 向 Hao 展示方向 | — |
+### exp08 必须产出（v2 降档后）
+| 产出 | 目的 |
+|------|------|
+| 6×6 pair-wise interference matrix | Benchmark table，补 vLLM-Omni paper 没量化的空白 |
+| GPU kernel-level contention model（拟合 pilot + 6×6 数据） | 新机制模型，预测"哪些 stage 可以安全 coloc" |
+| Robotics/VLA SLO benchmark suite | 补 vLLM-Omni examples 缺失的 closed-loop control 场景 |
+| Measurement paper draft（非 framework paper） | SIGMETRICS / MLSys measurement track |
 
-### exp08 **不**做的事
-- ❌ 实现 disaggregation scheduler（是 L4+L5 的工作，单独立项）
-- ❌ 跨 GPU KV/latent transfer 机制（同上）
-- ❌ Placement algorithm（同上）
-
-**Scope 纪律**：exp08 只做 motivation，不做解法。解法留给 exp09+。
+### exp08 **不**做的事（强 scope 限制）
+- ❌ 写新的 disaggregation framework（vLLM-Omni 已做）
+- ❌ 与 vLLM-Omni / SGLang Diffusion 功能竞争
+- ❌ 原文中的 "position paper" 路线（空间已关闭）
+- ❌ 独立的 EPDA engine 实现
+- ✅ **可以做**：vLLM-Omni / SGLang 的上层 profile/benchmark 工具
+- ✅ **可以做**：contention model 作为 standalone 论文
+- ✅ **可以做**：VLA SLO benchmark 作为 vLLM-Omni 的 PR
 
 ---
 
@@ -154,15 +173,17 @@ configs/
 
 ---
 
-## 8. 成功标准
+## 8. 成功标准（v2 降档后）
 
-**最低标准**（必须达到才去见 Hao）:
-- 一张能让人一眼看懂 "EPDA 四阶段干扰存在" 的 motivation 图
-- 用 Hao 工作风格的语言（goodput / disaggregation / structural）表达问题
+**最低标准**（见 Hao 前必须达到）:
+- exp08a pilot（已完成 2026-04-27）的干扰 motivation 图
+- 诚实的 related-work 段落，明确不与 vLLM-Omni / SGLang Diffusion 竞争
+- 两个可行方向（mechanism study + VLA SLO benchmark）各自 one-pager
 
 **理想标准**:
-- Position paper 草稿（8 页），引用 DistServe + EPD Disaggregation + FastVideo 作为前沿
-- 具体 exp09 (disaggregation 实现) 的 one-pager
+- exp08b 完整 6×6 matrix 数据
+- exp08c 的 contention model 原型（能预测 coloc inflation）
+- 与 vLLM-Omni / SGLang 团队建立 contact（可能的合作或贡献 PR）
 
 ---
 
