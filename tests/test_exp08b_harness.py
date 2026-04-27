@@ -63,3 +63,38 @@ def test_per_iter_barrier_does_not_collapse_measurements():
     assert 8 < fast_median < 25, f"fast phase median should be ~10ms, got {fast_median}"
     assert 35 < slow_median < 55, f"slow phase median should be ~40ms, got {slow_median}"
     assert fast_median < slow_median - 15
+
+
+def test_decode_payload_has_stable_workload(monkeypatch):
+    """Decode step_fn must do identical work every call — KV cache must not grow."""
+    import torch
+
+    class _FakeOut:
+        def __init__(self, seq):
+            self.past_key_values = [torch.zeros(1, 1, seq, 4)]
+            self.logits = torch.zeros(1, 1, 10)
+
+    class _FakeModel:
+        def __call__(self, *a, **kw):
+            return _FakeOut(4)
+        def eval(self):
+            return self
+
+    class _FakeProc:
+        def __call__(self, *a, **kw):
+            class _B:
+                def to(self, device):
+                    return {"input_ids": torch.zeros(1, 4, dtype=torch.long)}
+            return _B()
+
+    monkeypatch.setattr(hm, "_load_decode_model", lambda *a, **kw: (_FakeProc(), _FakeModel()))
+    step_fn, state = hm.build_llm_decode_payload_testable(gpu=0)
+
+    initial_seq = state["past_kv"][0].shape[2]
+    for _ in range(10):
+        step_fn()
+
+    final_seq = state["past_kv"][0].shape[2]
+    assert final_seq == initial_seq, (
+        f"KV cache grew from seq={initial_seq} to seq={final_seq} across 10 calls."
+    )

@@ -116,40 +116,59 @@ def build_vision_encode_payload(
     return step_fn
 
 
-def build_llm_decode_payload(
+def _load_decode_model(model_name: str, device: str, dtype):
+    """Seam for tests to monkeypatch."""
+    from transformers import AutoModelForImageTextToText, AutoProcessor
+    proc = AutoProcessor.from_pretrained(model_name)
+    model = AutoModelForImageTextToText.from_pretrained(
+        model_name, torch_dtype=dtype, device_map=device, attn_implementation="sdpa",
+    )
+    model.eval()
+    return proc, model
+
+
+def build_llm_decode_payload_testable(
     gpu: int,
     model_name: str = "Qwen/Qwen2.5-VL-7B-Instruct",
-) -> Callable[[], None]:
-    """D phase: single decode token with KV cache."""
+):
+    """Return (step_fn, state) for test instrumentation.
+
+    Each step_fn() call does a 1-token decode at a FIXED KV cache length.
+    The cache is captured once from a prefill and never updated, so work
+    per call is constant.
+    """
     import torch
-    from transformers import AutoModelForImageTextToText, AutoProcessor
 
     device = f"cuda:{gpu}"
     dtype = torch.bfloat16
-    proc = AutoProcessor.from_pretrained(model_name)
-    model = AutoModelForImageTextToText.from_pretrained(
-        model_name, torch_dtype=dtype, device_map=device, attn_implementation="sdpa"
-    )
-    model.eval()
+    proc, model = _load_decode_model(model_name, device, dtype)
 
     text = "The capital of France is"
     inputs = proc(text=[text], return_tensors="pt").to(device)
     with torch.no_grad():
         prefill_out = model(**inputs, use_cache=True)
-    past_kv = prefill_out.past_key_values
-    next_token = torch.argmax(prefill_out.logits[:, -1, :], dim=-1, keepdim=True)
-    state = {"past_kv": past_kv, "token": next_token}
+
+    fixed_kv = prefill_out.past_key_values
+    fixed_token = torch.argmax(prefill_out.logits[:, -1, :], dim=-1, keepdim=True)
+    state = {"past_kv": fixed_kv, "token": fixed_token}
 
     def step_fn():
         with torch.no_grad():
-            out = model(
+            model(
                 input_ids=state["token"],
                 past_key_values=state["past_kv"],
                 use_cache=True,
             )
-        state["past_kv"] = out.past_key_values
-        state["token"] = torch.argmax(out.logits[:, -1, :], dim=-1, keepdim=True)
 
+    return step_fn, state
+
+
+def build_llm_decode_payload(
+    gpu: int,
+    model_name: str = "Qwen/Qwen2.5-VL-7B-Instruct",
+) -> Callable[[], None]:
+    """D phase: 1-token decode at fixed KV length."""
+    step_fn, _state = build_llm_decode_payload_testable(gpu, model_name)
     return step_fn
 
 
