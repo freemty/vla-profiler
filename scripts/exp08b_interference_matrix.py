@@ -179,8 +179,18 @@ def build_llm_prefill_payload(
     return step_fn
 
 
-def build_nitrogen_action_payload(gpu: int, k: int = 10) -> Callable[[], None]:
-    """A phase: NitroGen DiT k-step denoising loop."""
+def build_nitrogen_action_payload(
+    gpu: int,
+    k: int = 10,
+    require_real: bool = True,
+) -> Callable[[], None]:
+    """A phase: NitroGen DiT k-step denoising loop.
+
+    If `require_real` is True (default), failing to load the real NitroGen
+    controller raises RuntimeError.  The previous silent fallback to a
+    random-weights TransformerEncoder produced invalid A measurements
+    throughout exp08a/08b.
+    """
     import torch
 
     device = f"cuda:{gpu}"
@@ -201,7 +211,12 @@ def build_nitrogen_action_payload(gpu: int, k: int = 10) -> Callable[[], None]:
             ctrl.infer_action()
         return step_fn
     except Exception as e:
-        print(f"[warn] NitroGen controller unavailable ({e}); falling back to dummy DiT.")
+        if require_real:
+            raise RuntimeError(
+                f"NitroGen controller unavailable ({e}); refusing dummy fallback. "
+                f"Pass --allow-dummy-action to explicitly opt in (smoke tests only)."
+            ) from e
+        print(f"[warn] NitroGen unavailable ({e}); using dummy DiT (smoke test only).")
 
     hidden, heads, layers = 1024, 16, 24
     model = torch.nn.TransformerEncoder(
@@ -412,6 +427,11 @@ def main():
     p.add_argument("--d-model", type=str, default=None, help="Decode model")
     p.add_argument("--p-model", type=str, default=None, help="Prefill model")
     p.add_argument("--e-image-size", type=int, default=448, help="Image size for E phase")
+    p.add_argument(
+        "--allow-dummy-action",
+        action="store_true",
+        help="Allow NitroGen→TransformerEncoder dummy fallback. Smoke tests only.",
+    )
     args = p.parse_args()
 
     # Resolve combos
@@ -478,7 +498,9 @@ def main():
 
         if "A" in needed_phases:
             print("[init] Building A (NitroGen DiT) payload...")
-            phase_fns["A"] = build_nitrogen_action_payload(args.gpu, k=args.k)
+            phase_fns["A"] = build_nitrogen_action_payload(
+                args.gpu, k=args.k, require_real=not args.allow_dummy_action,
+            )
             _log_vram(args.gpu, "after A init")
     else:
         for ph in needed_phases:
