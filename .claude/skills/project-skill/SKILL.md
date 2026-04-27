@@ -3,7 +3,7 @@ name: project-skill
 description: "Use when advising on project architecture, experiment history, codebase navigation, or research findings."
 user-invocable: false
 version: v7
-note: "v7 — exp08a co-location probe pilot done. PA P-inflation 3.15x, DA D-inflation 3.52x — Roofline 低估 2-28x, 机制在 kernel-launch/SM-scheduler 而非 FLOPs/BW peak. Scope audit: vLLM-Omni + SGLang Diffusion 已实现 disaggregated multimodal serving → exp08 降档为 mechanism study + VLA SLO benchmark (候选 D → D')."
+note: "v7.1 — exp08a/08b/08c INVALIDATED 2026-04-27. Harness bugs: A on dummy model, no per-iter barrier, KV cache drift, fake CV. Rescue plan in progress. Scope audit unchanged: mechanism study + VLA SLO benchmark (候选 D → D')."
 updated_at: "2026-04-27"
 ---
 
@@ -34,9 +34,12 @@ updated_at: "2026-04-27"
 - 共享核心: `model-probe-core` git submodule (`src/core/`)
 - 共享统计 helper: `scripts/_profiling_stats.py` — standalone profiling scripts 统一的 median/percentile 口径
 - 服务器: xdlab23 (8x RTX 5880 Ada 48GB)，11 个实验完成 + 1 pilot
-- **完成的实验:** exp01a (E/P/D), exp01b (attention), exp02a (ACT), exp03a (LingBot-VLA-4B), exp04a (Fast-WAM ActionDiT), exp04b (LingBot-VA full WAM, **rerun 2026-04-27 canonical**), exp05a (LingBot-VLA attention), exp05b (Qwen2.5-VL-3B attention), exp06a (NitroGen 500M DiT), exp07a (Pi-Zero dual-stream), exp08a (PA/DA co-location pilot)
+- **完成的实验:** exp01a (E/P/D), exp01b (attention), exp02a (ACT), exp03a (LingBot-VLA-4B), exp04a (Fast-WAM ActionDiT), exp04b (LingBot-VA full WAM, **rerun 2026-04-27 canonical**), exp05a (LingBot-VLA attention), exp05b (Qwen2.5-VL-3B attention), exp06a (NitroGen 500M DiT), exp07a (Pi-Zero dual-stream)
+- **exp08a (PA/DA pilot 2026-04-26):** **INVALIDATED 2026-04-27** — same harness bug as exp08b (no per-iter barrier, A on dummy model). Numbers (PA 3.15x, DA 3.52x) are schedule artifacts. See `docs/superpowers/plans/2026-04-27-exp08bc-rescue.md`.
+- **exp08b (6-way matrix):** **INVALIDATED 2026-04-27** — see `exp/exp08b/INVALIDATED.md`.
+- **exp08c (contention model):** **INVALIDATED 2026-04-27** — fake CV (resubstitution, not LOO). True LOO R² = −12.69.
 - **重大方向变更 (2026-04-27 scope audit):** vLLM-Omni (arXiv:2602.02204) 已实现完整 any-to-any disaggregated serving；SGLang Diffusion 已有 ENCODER/DENOISER/DECODER/SERVER/MONOLITHIC 五 role + N:M:K DiffusionServer。"写新 EPDA framework" 空间**关闭** → 候选 D ⭐⭐⭐⭐⭐ 降档为 D' ⭐⭐⭐ (mechanism study + robotics SLO benchmark，不做 framework)
-- **下一步:** exp08b (full 6×6 PA/DA/VA matrix with canonical medians)、exp08c (contention mechanism model: kernel-launch queue vs SM scheduler vs memory BW)、候选 C (DiT caching for VLA) + 候选 D' (VLA SLO suite) 组合推进
+- **下一步:** exp08bc rescue (harness 修复 + 重跑)、候选 C (DiT caching for VLA) + 候选 D' (VLA SLO suite) 组合推进
 
 **核心数据汇总:**
 
@@ -52,7 +55,9 @@ updated_at: "2026-04-27"
 | exp05b | Qwen2.5-VL-3B (attention) | Disambiguation: Gini collapse is VLA fine-tuning effect, not model size. 3B vanilla Gini 0.80-0.98 |
 | exp06a | NitroGen 500M DiT | Per-step 7.2ms, linear scaling. 174M DiT compute-bound. 174M→350M = BW transition |
 | exp07a | Pi-Zero (dual-stream flow VLA) | **stable** E=9.32/C=26.40/A=164.76ms, total 200.5ms ≈ 5Hz. Action Expert (300M) dominates 82%. Per-step ~16.5ms. Cross-attn makes 300M Expert ~2.3x pricier than pure DiT. Bimodal 污染 → warmup=15 + `nvidia-smi -pm 1` |
-| exp08a | Co-location probe (two-thread + two-stream, pilot) | **PA (Qwen-VL-3B P + NitroGen 174M A) median: P 27.3→85.9ms (3.15x 膨胀), A 47.7→65.1ms (1.37x). DA (Qwen-VL-7B D + NitroGen A): D 22.1→77.6ms (3.52x), A 48.2→76.3ms (1.58x). Roofline 预测 PA "WEAK"(<1.1x) 被 3.15x 打脸 28x。LLM 侧膨胀 >> A 侧。机制在 kernel-launch/SM-scheduler，不是 FLOPs/BW peak rate。** |
+| exp08a | Co-location probe (pilot) | **⚠️ INVALIDATED 2026-04-27** — harness bugs (no per-iter barrier, A on dummy model). Numbers are schedule artifacts. See rescue plan. |
+| exp08b | 6-way interference matrix | **⚠️ INVALIDATED 2026-04-27** — same harness bugs as exp08a. See `exp/exp08b/INVALIDATED.md`. |
+| exp08c | Contention model | **⚠️ INVALIDATED 2026-04-27** — fake CV (resubstitution). True LOO R² = −12.69. |
 
 ---
 

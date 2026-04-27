@@ -1,3 +1,13 @@
+> **⚠️ UNVERIFIED CITATIONS — 2026-04-27.** This report was imported from an external
+> deep-research tool and contains fake citation tokens (`citeturn33view0`, etc.) that
+> do NOT correspond to real sources. Specific numeric claims in this document (e.g.
+> OpenVLA-OFT 4.2Hz→109.7Hz, Fast-WAM 190ms/step, vLLM 78.3k stars, JCT -91.4%)
+> MUST be independently verified against primary sources before being cited in
+> papers, slides, or project docs. See Task 7 of
+> `docs/superpowers/plans/2026-04-27-exp08bc-rescue.md` for the scrub status.
+
+---
+
 # VLA 与 WAM 效率系统研究报告
 
 ## 执行摘要

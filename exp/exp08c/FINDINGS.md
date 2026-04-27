@@ -1,3 +1,11 @@
+> **⚠️ INVALIDATED 2026-04-27.** Upstream data in `exp/exp08b/` is from a broken harness.
+> All conclusions below (A as "stealth disruptor", E+A safe, M4 contention model R²=0.94,
+> DistServe phenomenon validated, optimal split recommendations) are NOT supported by
+> valid data. See `exp/exp08b/INVALIDATED.md` and `docs/superpowers/plans/2026-04-27-exp08bc-rescue.md`.
+> Original body preserved below for diff history.
+
+---
+
 # exp08c Findings — GPU Contention Model
 
 ## Model Comparison (12 data points, 6 pairs from exp08b)
