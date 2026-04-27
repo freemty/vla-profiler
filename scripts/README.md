@@ -39,7 +39,7 @@ scripts to emit Hydra-PhaseTimer-compatible JSON. Not a runnable entry.
 |--------|---------|
 | `sync_to_remote.sh` | Push local repo to xdlab23 via git bundle (GitHub blocked by firewall) |
 | `launch_exp.sh` | Launch Hydra experiment on xdlab23 under `vit-probe` conda env |
-| `launch_exp08b.sh` | Sequentially run all 6 pairs (and optionally 5 triples/quad) on one GPU |
+| `launch_exp08b.sh <gpu> [--pairs-only\|--multi-only]` | Sequentially run pair / triple / quad combos on one GPU |
 | `launch_pizero.sh` | Launch on xdlab23 under `.venvs/pizero` uv env |
 | `run_remote.sh` | One-shot SSH launcher (wraps `launch_exp.sh` via ssh) |
 | `run_local.sh` | Same entry for local GPU if available |
