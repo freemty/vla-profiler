@@ -89,6 +89,7 @@ slides/                # 演示文稿
 | `bash scripts/launch_exp.sh 0 qwen_vl_7b/profiling` | Run profiling on GPU 0 |
 | `bash scripts/launch_exp.sh 1 qwen_vl_7b/attention` | Run attention analysis on GPU 1 |
 | `bash scripts/download-results.sh` | Download results from server |
+| `cat scripts/README.md` | Full script index with exp/env mapping |
 | /labmate:new-experiment | Scaffold new experiment |
 | /labmate:analyze-experiment | Analyze results |
 

@@ -45,6 +45,20 @@ LingBot-VLA 是 flow-matching VLA (非 autoregressive)，阶段结构与纯 VLM 
 - GPU: RTX 5880 Ada 48GB
 - Env: uv venv `.venvs/lingbot-vla/` (非 conda)
 
+## Commands
+
+LingBot-VLA 走 Hydra (`configs/lingbot_vla_4b/profiling.yaml`)，但因依赖冲突用
+uv venv 而非 `vit-probe` conda。入口见 `scripts/setup_lingbot_vla.sh` 建立 env
+后，标准 `launch_exp.sh` 即可 (该脚本内部切换 env)。
+
+```bash
+# On xdlab23 (from /data1/ybyang/vlla)
+bash scripts/launch_exp.sh 0 lingbot_vla_4b/profiling
+
+# Local: pull results
+bash scripts/download-results.sh lingbot_vla_4b
+```
+
 ## Results
 
 **10 runs, mean ± std, CUDA-timed:**
