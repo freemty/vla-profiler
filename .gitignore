@@ -63,3 +63,6 @@ outputs/
 logs/
 .gstack/
 vendor/
+
+# Playwright MCP session captures
+.playwright-mcp/
