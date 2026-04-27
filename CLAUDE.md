@@ -120,6 +120,7 @@ slides/                # 演示文稿
 - **Experiment TLDRs:** exp/summary.md (目的/方法/结果/下一步，每个 exp 一张卡)
 - **Domain papers:** survey/papers/
 - **TODO:** `docs/TODO.md` — Project action items and task backlog
+- **Learning plan:** `docs/learning-plan.md` — GPU systems 补课路径 (L0–L4 分层, 为 exp08 决策服务)
 
 ## Knowhow
 
