@@ -98,7 +98,60 @@ torch.cuda.nvtx.range_pop()
 
 Production systems (vLLM, SGLang, TensorRT-LLM) all use sync+perf_counter, NOT CUDA Events, for latency benchmarking. CUDA Events are used only for multi-stream synchronization. The difference is typically <1ms for VLM inference phases.
 
+## GPU Power-State Warmup Bimodality (2026-04-27)
+
+### Symptom
+Per-iteration latency splits into **two clusters** instead of Gaussian-distributed around the mean:
+- Runs 1-12 consistently slower (~1.25x)
+- Runs 13-20 consistently faster (true steady state)
+- CV appears moderate (~10-12%) but distribution is bimodal, not normal
+
+Real example from exp07a (Pi-Zero, 5 warmup + 20 benchmark on RTX 5880 Ada):
+```
+Action phase all_ms (ms):
+  runs 1-12:  [205.5, 204.1, 204.9, 204.9, 206.6, 206.1, 205.6, 210.9, 212.7, 204.1, 205.3, 192.8]
+  runs 13-20: [162.0, 162.8, 163.2, 167.6, 166.8, 166.2, 164.2, 165.3]
+  gap: ~40ms (25%)
+```
+
+### Cause
+Default 5 warmup iterations are **too few to ramp the GPU through P-states**. The card starts in a low-power state (P2/P8); initial kernels run at reduced clocks, and after roughly 6-10 iterations of sustained load the scheduler upclocks to P0. This is especially pronounced on RTX workstation cards (5880 Ada, A6000) where power management is more aggressive than datacenter H100/A100.
+
+Naive **mean** over a bimodal distribution is meaningless — it lands between the two modes and drifts with warmup count.
+
+### Solution — three complementary mitigations
+
+**(a) Increase warmup to 15** — cheapest, works for most workloads:
+```python
+# scripts/profile_fastwam.py, scripts/profile_lingbot_va.py
+parser.add_argument("--warmup", type=int, default=15,
+    help="Default 15 absorbs GPU power-state warmup bimodality")
+```
+
+**(b) Lock GPU to persistent high-power mode** — most reliable, needs root:
+```bash
+sudo nvidia-smi -pm 1                  # persistent mode (keep driver loaded)
+sudo nvidia-smi -i 0 -lgc 2505,2505    # lock graphics clock to max
+# ...run benchmarks...
+sudo nvidia-smi -i 0 -rgc              # restore
+sudo nvidia-smi -pm 0
+```
+`nvidia-smi -pm 1` alone often cuts the bimodality in half; combined with `-lgc` it flatlines CV to <2%.
+
+**(c) Canonical = stable-window median, not mean**: when you can't rerun, report `median(all_ms[warmup_est:])` as the canonical number and label naive mean as "polluted". exp07a canonical = median of runs 13-20 (200.5ms) vs naive mean of 20 runs (225ms) — 12% lower, matches real-world sustained latency.
+
+### How to detect this in data you already have
+Plot `all_ms` iteration index vs latency. If there's a visible step-down (not gradual), you have P-state bimodality, not statistical noise. Cross-check: compute `median(first_half)` vs `median(second_half)`; >15% gap = bimodal.
+
+Rule: **always persist `all_ms` raw iteration array** (`_profiling_stats.compute_phase_stats` does this). Without it you cannot detect or recover from this post-hoc.
+
+### When this matters most
+- First-time profiling of a new model — you don't yet know the steady-state latency
+- Cross-model comparison on the same GPU — unequal warmup = unfair comparison
+- Before committing a "canonical" number to a paper figure — rerun with warmup=15 + `-pm 1`
+
 ## Notes
-- Date: 2026-04-15
-- Source: 4-agent parallel survey of 8 ML inference systems
+- Date: 2026-04-15 (original), updated 2026-04-27 (bimodality section)
+- Source: 4-agent parallel survey of 8 ML inference systems (original); exp07a/exp04b rerun audit (bimodality)
 - Full report: `survey/papers/ml-profiling-systems-comprehensive-survey.md`
+- Related experiments: exp07a (Pi-Zero bimodal discovery), exp04b rerun (warmup=15 canonical)
