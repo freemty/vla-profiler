@@ -10,35 +10,57 @@
 
 ## Q0 — 核心问题 (15 min)
 
-> "VLA/Action Model 的 serving 是一个真需求吗？如果是，它长什么样？"
+> **"机器人的通用操作能力，是否必须依赖一个端侧放不下的大模型？"**
 
-### 请教的 context
+这是一个 technical bet。答案决定 VLA serving 是真需求还是伪需求，进而决定我整个 PhD 的方向。
 
-带着 survey 结论去提问，不是空手问：
+### The Bet
 
-**现状**（从我的 survey 中）：
-- 今天的 VLA 部署 = **一个机器人独占一张卡**，不存在 serving 问题
-- LLM serving (vLLM) 之所以成立，是因为千万用户共享 GPU → batching/scheduling/PagedAttention 有真实需求
-- VLA 目前**没有**这个场景。OxyGen (2603.14371) 是唯一一篇做 VLA continuous batching 的，但很初步
+```
+模型大小:  100M  →  1B  →  3B  →  7B  →  14B+系统
+泛化能力:   窄     中     ?     广     极广
+部署位置:  边缘    边缘   边缘   边缘勉强   必须云端
 
-**但趋势在变**：
-- 多机器人编队：亚马逊 75 万 Kiva、工厂产线 → 集中推理服务器 → N 机器人 : M 张卡
-- 模型变大：π0.7 = 四件套 (HLP + WM + VLA + Expert)、DreamZero = 14B → 边缘放不下
-- PI 和 Generalist 2026-04 同月承认 "model is a system" → system = 多组件 = 需要调度
-- 自动驾驶 VLM 在走云-端混合 (Wayve LINGO-2)
+                         ↑
+               存不存在一个"能力悬崖"？
+               3B 以下能做到"足够通用"吗？
+```
 
-**想请教**：
-1. 您觉得 VLA serving 的真需求会在**什么时间点**出现？1 年？3 年？5 年？
-2. 它的形态更像 **LLM serving** (多用户共享 stateless 请求) 还是 **游戏服务器** (有状态 session、持久连接)？
-3. 如果现在投入做 VLA serving 研究，是**太早** (需求不存在) 还是**正好** (提前占坑)？
-4. 您做 vLLM 时，LLM serving 的需求已经很明确了吗？还是也有赌的成分？
+| 如果 YES (大模型不可避免) | 如果 NO (小模型够) |
+|--------------------------|-------------------|
+| VLA serving 是 vLLM 级别的刚需 | VLA serving 是伪问题 |
+| PhD = "做 VLA 的 vLLM" | PhD = model compression / on-device |
+| exp08 是 serving system 的 motivation | exp08 是 dead end |
+| Hao 的 vLLM 经验直接迁移 | 需要走蒸馏/量化路线 |
+
+### 我的 survey 看到的证据
+
+**YES 侧 (大模型趋势)**:
+- 每次泛化能力跳跃都伴随模型变大：ACT 5M (窄) → OpenVLA 7B → π0.7 四件套 → DreamZero 14B (zero-shot)
+- PI 和 Generalist 2026-04 同月承认 "model is a system" → 不是一个模型变大, 是多个组队 → 总量更大
+- 多机器人编队 (亚马逊 75 万 Kiva, 工厂产线) → 如果大模型, 则 N:M 集中推理服务器
+- OxyGen (2603.14371) 是唯一一篇 VLA continuous batching — 说明有人在赌 YES
+
+**NO 侧 (小模型够用)**:
+- OpenVLA-OFT 7B 量化到 INT4 → 可能 Jetson AGX Orin 跑 10-20Hz, 很多任务够了
+- NanoVLA / BitVLA 存在 (虽然目前窄)
+- **VLA 蒸馏还没被认真做过** — LLM 70B→7B 保留 80-90%能力已证明, VLA 没人系统做
+- 机器人动作空间远小于语言 — 只需预测 6-DOF 关节角, 不是生成莎士比亚
+- 关键：**还没有人做过 VLA 的 model-size vs generalization scaling curve**
+
+### 想请教
+
+1. 您觉得机器人通用操作，最终会落在多大的模型上？存不存在"3B 以下够用"的可能？
+2. 您做 vLLM 时 LLM serving 的需求已经很明确了吗？还是也有赌的成分？
+3. 如果 VLA serving 是真需求, 它更像 **LLM serving** (stateless 请求) 还是 **游戏服务器** (有状态 session)？
+4. VLA model-size scaling curve 这件事本身是不是值得做？(作为判断 bet 的实证基础)
 
 ### 为什么这个问题重要
 
-答案直接决定接下来的路线选择：
-- 如果 serving 是真需求 → 做 EPDA serving system (候选 D')
-- 如果 serving 太早 → 做 model-level 加速 (候选 C: DiT caching) 或 mechanism study
-- 如果形态不同于 LLM → 可能需要全新的设计（不是扩展 vLLM）
+这不只是 exp08 的 motivation, 是**整个 PhD 方向级别的 bet**:
+- 如果 YES → 做 serving system (vLLM for VLA), exp08 是 motivation
+- 如果 NO → 做 model-level 加速 (蒸馏/量化/caching), exp08 只是 mechanism study
+- 如果 unclear → 做 VLA scaling curve 本身就是 contribution (帮领域判断这个 bet)
 
 ## Q1 — 方向选择请教 (10 min)
 
