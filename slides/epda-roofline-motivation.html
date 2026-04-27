@@ -43,6 +43,51 @@
   }
   .panel.full { grid-column: 1 / -1; }
 
+  /* EPDA legend bar */
+  .epda-legend {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 0 0 24px;
+    padding: 14px 16px;
+    background: rgba(255,255,255,.02);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 10px;
+  }
+  .epda-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 12px; line-height: 1.35;
+  }
+  .epda-badge {
+    flex-shrink: 0;
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700;
+    color: #0b1020;
+  }
+  .epda-badge.E { background: var(--e-color); }
+  .epda-badge.P { background: var(--p-color); }
+  .epda-badge.D { background: var(--d-color); }
+  .epda-badge.A { background: var(--a-color); color: #fff; }
+  .epda-name { font-weight: 700; color: var(--fg); font-size: 13px; }
+  .epda-desc { color: var(--muted); font-size: 11px; }
+  .epda-arch { color: var(--fg); font-size: 11px; margin-top: 2px; }
+  .epda-lineage {
+    margin-top: 8px;
+    padding: 10px 14px;
+    background: rgba(108,240,255,.04);
+    border-left: 2px solid var(--accent);
+    border-radius: 4px;
+    font-size: 12px; color: #dfe7f0; line-height: 1.55;
+  }
+  .epda-lineage b { color: var(--accent); }
+  .epda-lineage code {
+    background: rgba(255,255,255,.06);
+    padding: 1px 6px; border-radius: 3px;
+    font-size: 11px;
+  }
+
   .panel {
     background: rgba(255,255,255,.03);
     border: 1px solid rgba(255,255,255,.08);
@@ -202,6 +247,56 @@
 <header>
   <div class="kicker">exp08 motivation — one-pager for advisor meeting</div>
   <h1>EPDA on the Roofline &mdash; prediction &amp; exp08a pilot falsification</h1>
+  <div class="sub" style="margin-top:4px;">
+    &ldquo;EPDA&rdquo; = the four serving-pipeline phases of a Vision-Language-Action stack.
+    Extends DistServe&rsquo;s PD (LLM only) and recent EPD Disaggregation (VLM) to include the diffusion-based action phase (A) &mdash; a bottleneck class absent from LLM serving.
+  </div>
+</header>
+
+<!-- EPDA alphabet: legend bar so the reader can decode the symbols -->
+<section class="epda-legend">
+  <div class="epda-item">
+    <div class="epda-badge E">E</div>
+    <div>
+      <div class="epda-name">Encode</div>
+      <div class="epda-desc">Vision encoder &rarr; visual tokens (single forward)</div>
+      <div class="epda-arch">e.g. SigLIP / Qwen-VL ViT</div>
+    </div>
+  </div>
+  <div class="epda-item">
+    <div class="epda-badge P">P</div>
+    <div>
+      <div class="epda-name">Prefill</div>
+      <div class="epda-desc">LLM ingests the full prompt in one attention pass</div>
+      <div class="epda-arch">Qwen2.5-VL / Gemma backbone</div>
+    </div>
+  </div>
+  <div class="epda-item">
+    <div class="epda-badge D">D</div>
+    <div>
+      <div class="epda-name">Decode</div>
+      <div class="epda-desc">Autoregressive 1-token-at-a-time generation (KV cache)</div>
+      <div class="epda-arch">Only in AR-VLM / AR-VLA paradigms</div>
+    </div>
+  </div>
+  <div class="epda-item">
+    <div class="epda-badge A">A</div>
+    <div>
+      <div class="epda-name">Action</div>
+      <div class="epda-desc">Diffusion/flow DiT runs <em>k</em> denoise steps for one action chunk</div>
+      <div class="epda-arch">NitroGen DiT, Pi-Zero Expert, Fast-WAM</div>
+    </div>
+  </div>
+</section>
+
+<div class="epda-lineage">
+  <b>Lineage</b> &middot;
+  <b>DistServe (OSDI'24)</b> disaggregated <code>P + D</code> for LLM serving.
+  <b>EPD Disaggregation (ICML'25)</b> added <code>E</code> for VLMs.
+  <b>exp08 (this work)</b> adds <code>A</code> &mdash; the diffusion action phase, which has no counterpart in LLM serving. Our pilot below tests whether the roofline predictions for pair-wise co-location between these phases hold.
+</div>
+
+<header style="margin-top:28px;margin-bottom:24px;"><!-- restart grid context -->
   <div class="sub">
     Measured on RTX 5880 Ada (231.6 TFLOPS BF16, 960 GB/s, ridge @ 241 FLOPS/byte)
     &middot; data from exp01a / exp03a / exp04a / exp06a / exp07a
