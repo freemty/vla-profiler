@@ -3,8 +3,8 @@ name: project-skill
 description: "Use when advising on project architecture, experiment history, codebase navigation, or research findings."
 user-invocable: false
 version: v6
-note: "v6 — exp07a Pi-Zero dual-stream flow VLA profiling done. PiZeroController (uv venv, allenzren backend). DiT scaling curve: 174M=7.2ms < 300M=18ms < 350M=32ms."
-updated_at: "2026-04-25"
+note: "v6 — exp07a Pi-Zero profiling + exp04b rerun done (both canonical, warmup=15). DiT scaling curve: 174M=7.2ms < 300M=16.5ms < 350M=32ms. Pi-Zero 200.5ms ~5Hz; LingBot-VA 2518ms 0.40Hz."
+updated_at: "2026-04-27"
 ---
 
 # vlla — Project Knowledge
@@ -366,7 +366,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 - LingBot-VA WanDiT video (30L, 3072 hidden): ~34.5ms/step (rerun)
 - LingBot-VA WanDiT action (30L, 3072 hidden): ~34.0ms/step (rerun)
 - NitroGen DiT (12L, 1024 hidden, cross-attn to 256 tokens): ~7.2ms/step — compute-bound
-- Pi-Zero Action Expert (18L, 1024 hidden, Gemma + cross-attn to PaliGemma KV): ~18ms/step — cross-attn overhead
+- Pi-Zero Action Expert (18L, 1024 hidden, Gemma + cross-attn to PaliGemma KV): ~16.5ms/step (stable-window canonical) — cross-attn overhead
 - LingBot-VLA flow action head (small head, 10 steps): ~0.048ms/step
 
 ### 4.3 Pareto 前沿
@@ -566,7 +566,7 @@ SSH: `ssh xdlab23_yang` | Conda: `vit-probe` (legacy) | uv venv: `.venvs/lingbot
 ### 2026-04-25: Pi-Zero Dual-Stream Flow VLA (exp07a)
 47. **Vendor namespace collision requires setup-time rename:** allenzren/open-pi-zero uses `from src.model...` internally — collides with our `src/`. Solution: `setup_pizero.sh` renames `vendor/open_pi_zero/src/` → `pizero_src/` and sed-rewrites all imports
 48. **Manual phase timing for opaque models:** Pi-Zero's dual-stream architecture doesn't fit base class hook-on-module pattern. Override `register_profiling_hooks` as no-op, use explicit `timer.mark_start/end` in `model_inference` (same pattern as NitroGenController)
-49. **Cross-attention makes per-step cost super-linear vs pure DiT:** 300M Gemma Expert with cross-attn to PaliGemma KV = ~18ms/step, vs naive linear extrapolation from 174M DiT (7.2ms) predicting ~12ms. Cross-attn overhead adds ~50%
+49. **Cross-attention makes per-step cost super-linear vs pure DiT:** 300M Gemma Expert with cross-attn to PaliGemma KV = ~16.5ms/step (stable-window canonical — naive mean of 18ms was polluted by GPU warmup runs 1-12), vs linear extrapolation from 174M DiT (7.2ms) predicting ~12ms. Cross-attn overhead adds ~35%, not 50%.
 50. **5 warmup runs insufficient for GPU power state stabilization:** Clear bimodal distribution (runs 1-12 high, 13-20 low). Need 10-15 warmup or explicit GPU power state locking (`nvidia-smi -pm 1`)
 51. **uv venv works well for vendor-specific envs:** Pi-Zero needs specific torch/transformers versions incompatible with main env. `.venvs/pizero/` keeps it isolated without conda headaches on non-interactive SSH
 
