@@ -55,6 +55,7 @@ slides/                # 演示文稿
 - **Framework design spec**: `docs/superpowers/specs/2026-04-14-vlm-profiling-framework-design.md`
 - **Implementation plan**: `docs/superpowers/plans/2026-04-14-vlm-profiling-framework.md`
 - **EPDA Disaggregation Spec (exp08)**: `docs/specs/2026-04-26-epda-disaggregation-spec.md` — 四阶段干扰量化, L1→L2 跨越, DistServe-style motivation
+- **Reproducibility Spec (v0.9.0)**: `docs/specs/2026-04-28-reproducibility-spec.md` — 7 模型官方配置合约, 已知偏差 (NitroGen 缩小/Fast-WAM 10步/Pi-Zero 随机权重) 文档化, exp09 对齐基准
 - **Shared core (model-probe-core)**: `src/core/` — submodule, also used by rope2sink
 - **SGLang profiling 深度调研**: `notes/sglang-profiling-deep-survey.md` — SGLang 的 torch.profiler 集成、Prometheus metrics、benchmark 套件、prefill/decode 分离 profiling、内存追踪的实现级分析
 - **ML Inference Profiling Systems 横向调研**: `survey/papers/profiling-systems-survey.md` — FastVideo/TensorRT-LLM/DeepSpeed/Triton/vLLM/SGLang/llama.cpp/MLC LLM 8大系统的 profiling 实现对比，timing 机制、phase 定义、warmup 策略、统计方法、memory tracking 全面分析
