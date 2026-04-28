@@ -1,5 +1,26 @@
 # Changelog
 
+## v0.8.4 @freemty — 2026-04-28
+
+### 修复 (Codex adversarial review 2026-04-27 — exp08 harness rescue)
+在战略转向前把 exp08 harness 的 4 个 showstopper bug 全部修掉并加测试锁, 保证历史可复盘、未来若复活 exp08 无需从零重建
+- **Bug 1 修复**: `build_nitrogen_action_payload` 不再静默 fallback 到 dummy `TransformerEncoder`。`require_real=True` 默认, `--allow-dummy-action` 显式 opt-in (commit `4f88b38`)
+- **Bug 2 修复**: `run_loop` 把 `barrier.wait()` 从 pre-loop 单次改为 per-iteration, 消除并发 loop free-run drift (commit `30a9e48`)
+- **Bug 3 修复**: `build_llm_decode_payload` 拆分为 `_load_decode_model` + `build_llm_decode_payload_testable`, KV cache 只 snapshot 一次, 每次 decode 工作量恒定 (commit `6f3edfb`)
+- **Bug 4 修复**: `exp08c_contention_model.py` 新增 `resubstitution()` + `leave_one_out()` + `format_report()`, 暴露真 LOO R² = −12.69 (假 CV 0.94), 负 R² 自动标红 (commit `a476e2f`)
+- **Launcher 加固**: `launch_exp08b.sh` 强制 `nvidia-smi -pm 1` + warmup≥15 (exit 3 if fail), 对齐 exp07a canonical 条件 (commit `dfb30e9`)
+- **Self-consistency gate**: 新增 `verify_exp08b_baseline.py` — A 在 EA/PA/DA 三组合的 isolated median spread 必须 ≤5%, 否则 exit 1 (commit `a871ed4`)
+- **Survey 清洁**: scrub `vla-wam-efficiency-systems-deep-research.md` 里 356 个伪造 `citeturn*` token (commit `0a19640`)
+- **6 个单元测试全 pass** (`tests/test_exp08b_harness.py` × 4 + `tests/test_exp08c_contention_model.py` × 2)
+
+### 归档
+- 按 v0.8.3 "Fast VLA first, serving later" 战略转向, exp08 全部工件 (3 实验目录 + 5 脚本 + 2 测试 + 1 rescue plan) 移到 `_archive/` 保留历史 (commit `1c54cb1`)
+- 活跃树聚焦 exp01-07 profiling, exp08 rescue 8 个 harness commit 保留在 git 历史, 未来若复活可 revert
+
+### 备注
+- 原 Codex review 指认的 4 个 showstopper 加 1 个 env 问题全部已修 + 测试覆盖, 归档是"修完之后的归档"而非"跑路式归档"
+- SKILL.md v8 + exp/_archive/exp08*/INVALIDATED.md + FINDINGS.md banner 三处都已标明 INVALIDATED 2026-04-27, 防止未来误引用旧数字
+
 ## v0.8.3 @freemty — 2026-04-28
 
 ### 战略转向
