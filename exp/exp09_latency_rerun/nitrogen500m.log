@@ -1,0 +1,325 @@
+[2026年 04月 28日 星期二 19:26:01 CST] Starting experiment: nitrogen/profiling_full500m on GPU 0
+[2026-04-28 19:26:03,557][__main__][INFO] - Config:
+debug: false
+debug_port: 5679
+device: cuda:0
+seed: 42
+precision: bfloat16
+HF_PATH: /data1/ybyang/huggingface
+base_output_path: ./output
+num_warmup_runs: 15
+num_benchmark_runs: 20
+max_new_tokens: 128
+model_name: NitroGen-500M
+controller_name: nitrogen
+controller_config:
+  mode: profiling
+  weight_mode: full
+  checkpoint_path: /data1/ybyang/huggingface/nvidia/NitroGen/ng.pt
+  repo_path: /data1/ybyang/NitroGen
+  vision_encoder_name: /data1/ybyang/huggingface/google/siglip-large-patch16-256
+  vision_hidden_size: 1024
+  dit_num_layers: 12
+  dit_num_heads: 16
+  dit_head_dim: 64
+  vl_num_layers: 4
+  vl_num_heads: 16
+  vl_head_dim: 64
+  action_dim: 25
+  action_horizon: 16
+tasks:
+- epd_profiling
+task_configs: {}
+inputs:
+- name: k16
+  num_inference_steps: 16
+- name: k8
+  num_inference_steps: 8
+- name: k4
+  num_inference_steps: 4
+- name: k2
+  num_inference_steps: 2
+- name: k1
+  num_inference_steps: 1
+experiment:
+  name: exp09_latency_rerun_nitrogen500m
+  description: NitroGen full 500M DiT — aligned to ng.pt real checkpoint
+model:
+  name: NitroGen
+  type: va
+  paradigm: flow-matching-dit
+  repo: https://github.com/MineDojo/NitroGen
+  checkpoint: ng.pt
+profiling:
+  gpu_id: 0
+  warmup: 15
+  iterations: 20
+  phases:
+  - encode
+  - context
+  - action
+notes: 'NitroGen full 500M rerun with real ng.pt checkpoint.
+
+
+  Changes from exp06a (shrunk config):
+
+  - vision_hidden_size: 768 → 1024 (real SigLIP-large hidden dim)
+
+  - action_dim: 20 → 25 (real NitroGen output dim)
+
+  - vl_num_heads: 12 → 16 (aligned to 1024 hidden / 64 head_dim)
+
+  - weight_mode: random → full (load ng.pt checkpoint)
+
+  - warmup: 5 → 15 (avoid bimodal GPU warmup artifact)
+
+
+  Key questions:
+
+  1. E/C/A breakdown at k=16 with real weights
+
+  2. Per-step DiT cost at full 500M (expect ~20-30ms/step vs 7.2ms at 174M shrunk)
+
+  3. k sweep: latency vs step count (k=1,2,4,8,16)
+
+  4. Does weight loading change timing vs random init?
+
+
+  Expected: Total ~320-480ms at k=16, Action ~80-85% of total.
+
+  Compare with exp06a (shrunk 174M-equivalent, 7.2ms/step).
+
+  '
+
+[2026-04-28 19:26:03,580][probe_core.NitroGenController][INFO] - Initialized NitroGenController (mode=profiling, layers=[-1], phases=['-1'])
+[2026-04-28 19:26:03,580][src.utils.timing][INFO] - PhaseTimer initialized with CUDA backend
+/data1/ybyang/vit-probe/third_party/transformers/src/transformers/utils/hub.py:119: FutureWarning: Using `TRANSFORMERS_CACHE` is deprecated and will be removed in v5 of Transformers. Use `HF_HOME` instead.
+  warnings.warn(
+🚨 `image_seq_length` is part of ImagesKwargs, but not documented. Make sure to add it to the docstring of the function in /data1/ybyang/vit-probe/third_party/transformers/src/transformers/image_processing_utils_fast.py.
+[2026-04-28 19:26:08,545][src.controllers.nitrogen_controller][INFO] - Loading NitroGen from checkpoint: /data1/ybyang/huggingface/nvidia/NitroGen/ng.pt
+Total number of DiT parameters:  180757504
+Total number of SelfAttentionTransformer parameters:  50384896
+Tune action head multi_projector: False
+Tune action head diffusion model: False
+Tune action head vision tower: False
+Tune action head mm_projector: False
+Tune action head vl_mixing: False
+Warning: No action head trainable parameters found.
+total number of parameters: %e 0
+[2026-04-28 19:26:12,819][src.controllers.nitrogen_controller][INFO] - NitroGen: 552M total (Vision=316M, VL-SA=50M, DiT=181M)
+[2026-04-28 19:26:12,914][__main__][INFO] - Profiling mode: 15 warmup + 20 benchmark runs
+[2026-04-28 19:26:12,914][probe_core.NitroGenController][INFO] - Registering hooks in profiling mode
+[2026-04-28 19:26:12,914][probe_core.NitroGenController][INFO] - NitroGen: profiling via manual timer marks in model_inference (E=SigLIP encode, C=VL self-attention, A=DiT flow denoise)
+[2026-04-28 19:26:12,914][__main__][INFO] - Profiling input: k16
+[2026-04-28 19:26:12,914][__main__][INFO] -   Warmup 1/15
+[2026-04-28 19:26:13,439][__main__][INFO] -   Warmup 2/15
+[2026-04-28 19:26:13,575][__main__][INFO] -   Warmup 3/15
+[2026-04-28 19:26:13,715][__main__][INFO] -   Warmup 4/15
+[2026-04-28 19:26:13,856][__main__][INFO] -   Warmup 5/15
+[2026-04-28 19:26:13,998][__main__][INFO] -   Warmup 6/15
+[2026-04-28 19:26:14,128][__main__][INFO] -   Warmup 7/15
+[2026-04-28 19:26:14,261][__main__][INFO] -   Warmup 8/15
+[2026-04-28 19:26:14,398][__main__][INFO] -   Warmup 9/15
+[2026-04-28 19:26:14,529][__main__][INFO] -   Warmup 10/15
+[2026-04-28 19:26:14,669][__main__][INFO] -   Warmup 11/15
+[2026-04-28 19:26:14,811][__main__][INFO] -   Warmup 12/15
+[2026-04-28 19:26:14,956][__main__][INFO] -   Warmup 13/15
+[2026-04-28 19:26:15,100][__main__][INFO] -   Warmup 14/15
+[2026-04-28 19:26:15,280][__main__][INFO] -   Warmup 15/15
+[2026-04-28 19:26:15,424][__main__][INFO] -   Benchmark 1/20
+[2026-04-28 19:26:15,550][__main__][INFO] -   Benchmark 2/20
+[2026-04-28 19:26:15,675][__main__][INFO] -   Benchmark 3/20
+[2026-04-28 19:26:15,799][__main__][INFO] -   Benchmark 4/20
+[2026-04-28 19:26:15,923][__main__][INFO] -   Benchmark 5/20
+[2026-04-28 19:26:16,046][__main__][INFO] -   Benchmark 6/20
+[2026-04-28 19:26:16,169][__main__][INFO] -   Benchmark 7/20
+[2026-04-28 19:26:16,293][__main__][INFO] -   Benchmark 8/20
+[2026-04-28 19:26:16,416][__main__][INFO] -   Benchmark 9/20
+[2026-04-28 19:26:16,540][__main__][INFO] -   Benchmark 10/20
+[2026-04-28 19:26:16,663][__main__][INFO] -   Benchmark 11/20
+[2026-04-28 19:26:16,789][__main__][INFO] -   Benchmark 12/20
+[2026-04-28 19:26:16,915][__main__][INFO] -   Benchmark 13/20
+[2026-04-28 19:26:17,038][__main__][INFO] -   Benchmark 14/20
+[2026-04-28 19:26:17,161][__main__][INFO] -   Benchmark 15/20
+[2026-04-28 19:26:17,284][__main__][INFO] -   Benchmark 16/20
+[2026-04-28 19:26:17,408][__main__][INFO] -   Benchmark 17/20
+[2026-04-28 19:26:17,531][__main__][INFO] -   Benchmark 18/20
+[2026-04-28 19:26:17,654][__main__][INFO] -   Benchmark 19/20
+[2026-04-28 19:26:17,778][__main__][INFO] -   Benchmark 20/20
+[2026-04-28 19:26:17,903][__main__][INFO] - Executing task: epd_profiling
+[2026-04-28 19:26:17,904][src.tasks.profiling_task][INFO] - Using aggregated timing from 20 runs
+[2026-04-28 19:26:17,904][src.tasks.profiling_task][INFO] -   encode: mean=8.06ms std=0.52ms [UNSTABLE cv>5%%]
+[2026-04-28 19:26:17,904][src.tasks.profiling_task][INFO] -   context: mean=1.96ms std=0.10ms
+[2026-04-28 19:26:17,904][src.tasks.profiling_task][INFO] -   action: mean=113.36ms std=0.77ms
+[2026-04-28 19:26:17,924][src.tasks.profiling_task][INFO] - EPD timing saved to ./output/NitroGen-500M/k16/epd_profiling/epd_timing.json
+[2026-04-28 19:26:17,924][__main__][INFO] - Profiling input: k8
+[2026-04-28 19:26:17,924][__main__][INFO] -   Warmup 1/15
+[2026-04-28 19:26:18,026][__main__][INFO] -   Warmup 2/15
+[2026-04-28 19:26:18,095][__main__][INFO] -   Warmup 3/15
+[2026-04-28 19:26:18,162][__main__][INFO] -   Warmup 4/15
+[2026-04-28 19:26:18,228][__main__][INFO] -   Warmup 5/15
+[2026-04-28 19:26:18,295][__main__][INFO] -   Warmup 6/15
+[2026-04-28 19:26:18,361][__main__][INFO] -   Warmup 7/15
+[2026-04-28 19:26:18,428][__main__][INFO] -   Warmup 8/15
+[2026-04-28 19:26:18,494][__main__][INFO] -   Warmup 9/15
+[2026-04-28 19:26:18,561][__main__][INFO] -   Warmup 10/15
+[2026-04-28 19:26:18,627][__main__][INFO] -   Warmup 11/15
+[2026-04-28 19:26:18,693][__main__][INFO] -   Warmup 12/15
+[2026-04-28 19:26:18,760][__main__][INFO] -   Warmup 13/15
+[2026-04-28 19:26:18,826][__main__][INFO] -   Warmup 14/15
+[2026-04-28 19:26:18,892][__main__][INFO] -   Warmup 15/15
+[2026-04-28 19:26:18,959][__main__][INFO] -   Benchmark 1/20
+[2026-04-28 19:26:19,026][__main__][INFO] -   Benchmark 2/20
+[2026-04-28 19:26:19,092][__main__][INFO] -   Benchmark 3/20
+[2026-04-28 19:26:19,159][__main__][INFO] -   Benchmark 4/20
+[2026-04-28 19:26:19,225][__main__][INFO] -   Benchmark 5/20
+[2026-04-28 19:26:19,292][__main__][INFO] -   Benchmark 6/20
+[2026-04-28 19:26:19,360][__main__][INFO] -   Benchmark 7/20
+[2026-04-28 19:26:19,426][__main__][INFO] -   Benchmark 8/20
+[2026-04-28 19:26:19,493][__main__][INFO] -   Benchmark 9/20
+[2026-04-28 19:26:19,560][__main__][INFO] -   Benchmark 10/20
+[2026-04-28 19:26:19,627][__main__][INFO] -   Benchmark 11/20
+[2026-04-28 19:26:19,694][__main__][INFO] -   Benchmark 12/20
+[2026-04-28 19:26:19,761][__main__][INFO] -   Benchmark 13/20
+[2026-04-28 19:26:19,828][__main__][INFO] -   Benchmark 14/20
+[2026-04-28 19:26:19,895][__main__][INFO] -   Benchmark 15/20
+[2026-04-28 19:26:19,962][__main__][INFO] -   Benchmark 16/20
+[2026-04-28 19:26:20,028][__main__][INFO] -   Benchmark 17/20
+[2026-04-28 19:26:20,095][__main__][INFO] -   Benchmark 18/20
+[2026-04-28 19:26:20,163][__main__][INFO] -   Benchmark 19/20
+[2026-04-28 19:26:20,230][__main__][INFO] -   Benchmark 20/20
+[2026-04-28 19:26:20,298][__main__][INFO] - Executing task: epd_profiling
+[2026-04-28 19:26:20,298][src.tasks.profiling_task][INFO] - Using aggregated timing from 20 runs
+[2026-04-28 19:26:20,298][src.tasks.profiling_task][INFO] -   encode: mean=7.79ms std=0.04ms
+[2026-04-28 19:26:20,298][src.tasks.profiling_task][INFO] -   context: mean=1.90ms std=0.02ms
+[2026-04-28 19:26:20,298][src.tasks.profiling_task][INFO] -   action: mean=56.83ms std=0.39ms
+[2026-04-28 19:26:20,299][src.tasks.profiling_task][INFO] - EPD timing saved to ./output/NitroGen-500M/k8/epd_profiling/epd_timing.json
+[2026-04-28 19:26:20,299][__main__][INFO] - Profiling input: k4
+[2026-04-28 19:26:20,299][__main__][INFO] -   Warmup 1/15
+[2026-04-28 19:26:20,338][__main__][INFO] -   Warmup 2/15
+[2026-04-28 19:26:20,376][__main__][INFO] -   Warmup 3/15
+[2026-04-28 19:26:20,415][__main__][INFO] -   Warmup 4/15
+[2026-04-28 19:26:20,453][__main__][INFO] -   Warmup 5/15
+[2026-04-28 19:26:20,491][__main__][INFO] -   Warmup 6/15
+[2026-04-28 19:26:20,530][__main__][INFO] -   Warmup 7/15
+[2026-04-28 19:26:20,568][__main__][INFO] -   Warmup 8/15
+[2026-04-28 19:26:20,606][__main__][INFO] -   Warmup 9/15
+[2026-04-28 19:26:20,645][__main__][INFO] -   Warmup 10/15
+[2026-04-28 19:26:20,683][__main__][INFO] -   Warmup 11/15
+[2026-04-28 19:26:20,755][__main__][INFO] -   Warmup 12/15
+[2026-04-28 19:26:20,808][__main__][INFO] -   Warmup 13/15
+[2026-04-28 19:26:20,851][__main__][INFO] -   Warmup 14/15
+[2026-04-28 19:26:20,891][__main__][INFO] -   Warmup 15/15
+[2026-04-28 19:26:20,966][__main__][INFO] -   Benchmark 1/20
+[2026-04-28 19:26:21,020][__main__][INFO] -   Benchmark 2/20
+[2026-04-28 19:26:21,061][__main__][INFO] -   Benchmark 3/20
+[2026-04-28 19:26:21,100][__main__][INFO] -   Benchmark 4/20
+[2026-04-28 19:26:21,138][__main__][INFO] -   Benchmark 5/20
+[2026-04-28 19:26:21,177][__main__][INFO] -   Benchmark 6/20
+[2026-04-28 19:26:21,215][__main__][INFO] -   Benchmark 7/20
+[2026-04-28 19:26:21,254][__main__][INFO] -   Benchmark 8/20
+[2026-04-28 19:26:21,292][__main__][INFO] -   Benchmark 9/20
+[2026-04-28 19:26:21,331][__main__][INFO] -   Benchmark 10/20
+[2026-04-28 19:26:21,369][__main__][INFO] -   Benchmark 11/20
+[2026-04-28 19:26:21,408][__main__][INFO] -   Benchmark 12/20
+[2026-04-28 19:26:21,446][__main__][INFO] -   Benchmark 13/20
+[2026-04-28 19:26:21,485][__main__][INFO] -   Benchmark 14/20
+[2026-04-28 19:26:21,523][__main__][INFO] -   Benchmark 15/20
+[2026-04-28 19:26:21,562][__main__][INFO] -   Benchmark 16/20
+[2026-04-28 19:26:21,600][__main__][INFO] -   Benchmark 17/20
+[2026-04-28 19:26:21,646][__main__][INFO] -   Benchmark 18/20
+[2026-04-28 19:26:21,694][__main__][INFO] -   Benchmark 19/20
+[2026-04-28 19:26:21,734][__main__][INFO] -   Benchmark 20/20
+[2026-04-28 19:26:21,774][__main__][INFO] - Executing task: epd_profiling
+[2026-04-28 19:26:21,774][src.tasks.profiling_task][INFO] - Using aggregated timing from 20 runs
+[2026-04-28 19:26:21,774][src.tasks.profiling_task][INFO] -   encode: mean=8.29ms std=1.33ms [UNSTABLE cv>5%%]
+[2026-04-28 19:26:21,774][src.tasks.profiling_task][INFO] -   context: mean=2.02ms std=0.29ms [UNSTABLE cv>5%%]
+[2026-04-28 19:26:21,774][src.tasks.profiling_task][INFO] -   action: mean=29.63ms std=2.73ms [UNSTABLE cv>5%%]
+[2026-04-28 19:26:21,775][src.tasks.profiling_task][INFO] - EPD timing saved to ./output/NitroGen-500M/k4/epd_profiling/epd_timing.json
+[2026-04-28 19:26:21,775][__main__][INFO] - Profiling input: k2
+[2026-04-28 19:26:21,775][__main__][INFO] -   Warmup 1/15
+[2026-04-28 19:26:21,799][__main__][INFO] -   Warmup 2/15
+[2026-04-28 19:26:21,824][__main__][INFO] -   Warmup 3/15
+[2026-04-28 19:26:21,848][__main__][INFO] -   Warmup 4/15
+[2026-04-28 19:26:21,872][__main__][INFO] -   Warmup 5/15
+[2026-04-28 19:26:21,896][__main__][INFO] -   Warmup 6/15
+[2026-04-28 19:26:21,920][__main__][INFO] -   Warmup 7/15
+[2026-04-28 19:26:21,946][__main__][INFO] -   Warmup 8/15
+[2026-04-28 19:26:21,970][__main__][INFO] -   Warmup 9/15
+[2026-04-28 19:26:21,994][__main__][INFO] -   Warmup 10/15
+[2026-04-28 19:26:22,019][__main__][INFO] -   Warmup 11/15
+[2026-04-28 19:26:22,043][__main__][INFO] -   Warmup 12/15
+[2026-04-28 19:26:22,067][__main__][INFO] -   Warmup 13/15
+[2026-04-28 19:26:22,091][__main__][INFO] -   Warmup 14/15
+[2026-04-28 19:26:22,115][__main__][INFO] -   Warmup 15/15
+[2026-04-28 19:26:22,140][__main__][INFO] -   Benchmark 1/20
+[2026-04-28 19:26:22,164][__main__][INFO] -   Benchmark 2/20
+[2026-04-28 19:26:22,189][__main__][INFO] -   Benchmark 3/20
+[2026-04-28 19:26:22,213][__main__][INFO] -   Benchmark 4/20
+[2026-04-28 19:26:22,237][__main__][INFO] -   Benchmark 5/20
+[2026-04-28 19:26:22,261][__main__][INFO] -   Benchmark 6/20
+[2026-04-28 19:26:22,286][__main__][INFO] -   Benchmark 7/20
+[2026-04-28 19:26:22,310][__main__][INFO] -   Benchmark 8/20
+[2026-04-28 19:26:22,334][__main__][INFO] -   Benchmark 9/20
+[2026-04-28 19:26:22,359][__main__][INFO] -   Benchmark 10/20
+[2026-04-28 19:26:22,383][__main__][INFO] -   Benchmark 11/20
+[2026-04-28 19:26:22,407][__main__][INFO] -   Benchmark 12/20
+[2026-04-28 19:26:22,431][__main__][INFO] -   Benchmark 13/20
+[2026-04-28 19:26:22,455][__main__][INFO] -   Benchmark 14/20
+[2026-04-28 19:26:22,480][__main__][INFO] -   Benchmark 15/20
+[2026-04-28 19:26:22,504][__main__][INFO] -   Benchmark 16/20
+[2026-04-28 19:26:22,528][__main__][INFO] -   Benchmark 17/20
+[2026-04-28 19:26:22,552][__main__][INFO] -   Benchmark 18/20
+[2026-04-28 19:26:22,577][__main__][INFO] -   Benchmark 19/20
+[2026-04-28 19:26:22,601][__main__][INFO] -   Benchmark 20/20
+[2026-04-28 19:26:22,626][__main__][INFO] - Executing task: epd_profiling
+[2026-04-28 19:26:22,626][src.tasks.profiling_task][INFO] - Using aggregated timing from 20 runs
+[2026-04-28 19:26:22,626][src.tasks.profiling_task][INFO] -   encode: mean=7.81ms std=0.10ms
+[2026-04-28 19:26:22,626][src.tasks.profiling_task][INFO] -   context: mean=1.89ms std=0.02ms
+[2026-04-28 19:26:22,626][src.tasks.profiling_task][INFO] -   action: mean=14.23ms std=0.10ms
+[2026-04-28 19:26:22,627][src.tasks.profiling_task][INFO] - EPD timing saved to ./output/NitroGen-500M/k2/epd_profiling/epd_timing.json
+[2026-04-28 19:26:22,627][__main__][INFO] - Profiling input: k1
+[2026-04-28 19:26:22,627][__main__][INFO] -   Warmup 1/15
+[2026-04-28 19:26:22,644][__main__][INFO] -   Warmup 2/15
+[2026-04-28 19:26:22,661][__main__][INFO] -   Warmup 3/15
+[2026-04-28 19:26:22,678][__main__][INFO] -   Warmup 4/15
+[2026-04-28 19:26:22,696][__main__][INFO] -   Warmup 5/15
+[2026-04-28 19:26:22,713][__main__][INFO] -   Warmup 6/15
+[2026-04-28 19:26:22,730][__main__][INFO] -   Warmup 7/15
+[2026-04-28 19:26:22,747][__main__][INFO] -   Warmup 8/15
+[2026-04-28 19:26:22,764][__main__][INFO] -   Warmup 9/15
+[2026-04-28 19:26:22,781][__main__][INFO] -   Warmup 10/15
+[2026-04-28 19:26:22,798][__main__][INFO] -   Warmup 11/15
+[2026-04-28 19:26:22,816][__main__][INFO] -   Warmup 12/15
+[2026-04-28 19:26:22,833][__main__][INFO] -   Warmup 13/15
+[2026-04-28 19:26:22,850][__main__][INFO] -   Warmup 14/15
+[2026-04-28 19:26:22,867][__main__][INFO] -   Warmup 15/15
+[2026-04-28 19:26:22,884][__main__][INFO] -   Benchmark 1/20
+[2026-04-28 19:26:22,901][__main__][INFO] -   Benchmark 2/20
+[2026-04-28 19:26:22,918][__main__][INFO] -   Benchmark 3/20
+[2026-04-28 19:26:22,936][__main__][INFO] -   Benchmark 4/20
+[2026-04-28 19:26:22,953][__main__][INFO] -   Benchmark 5/20
+[2026-04-28 19:26:22,970][__main__][INFO] -   Benchmark 6/20
+[2026-04-28 19:26:22,987][__main__][INFO] -   Benchmark 7/20
+[2026-04-28 19:26:23,004][__main__][INFO] -   Benchmark 8/20
+[2026-04-28 19:26:23,021][__main__][INFO] -   Benchmark 9/20
+[2026-04-28 19:26:23,039][__main__][INFO] -   Benchmark 10/20
+[2026-04-28 19:26:23,056][__main__][INFO] -   Benchmark 11/20
+[2026-04-28 19:26:23,073][__main__][INFO] -   Benchmark 12/20
+[2026-04-28 19:26:23,090][__main__][INFO] -   Benchmark 13/20
+[2026-04-28 19:26:23,107][__main__][INFO] -   Benchmark 14/20
+[2026-04-28 19:26:23,124][__main__][INFO] -   Benchmark 15/20
+[2026-04-28 19:26:23,141][__main__][INFO] -   Benchmark 16/20
+[2026-04-28 19:26:23,158][__main__][INFO] -   Benchmark 17/20
+[2026-04-28 19:26:23,175][__main__][INFO] -   Benchmark 18/20
+[2026-04-28 19:26:23,194][__main__][INFO] -   Benchmark 19/20
+[2026-04-28 19:26:23,211][__main__][INFO] -   Benchmark 20/20
+[2026-04-28 19:26:23,229][__main__][INFO] - Executing task: epd_profiling
+[2026-04-28 19:26:23,229][src.tasks.profiling_task][INFO] - Using aggregated timing from 20 runs
+[2026-04-28 19:26:23,229][src.tasks.profiling_task][INFO] -   encode: mean=7.82ms std=0.21ms
+[2026-04-28 19:26:23,229][src.tasks.profiling_task][INFO] -   context: mean=1.89ms std=0.02ms
+[2026-04-28 19:26:23,229][src.tasks.profiling_task][INFO] -   action: mean=7.12ms std=0.05ms
+[2026-04-28 19:26:23,229][src.tasks.profiling_task][INFO] - EPD timing saved to ./output/NitroGen-500M/k1/epd_profiling/epd_timing.json
+[2026-04-28 19:26:23,229][__main__][INFO] - All inputs profiled
+[2026-04-28 19:26:23,229][__main__][INFO] - Run complete
+[2026年 04月 28日 星期二 19:26:24 CST] Experiment complete

@@ -1,0 +1,90 @@
+# NitroGen full 500M VA profiling config — aligned to ng.pt real checkpoint
+# Model: SigLIP ViT (encode) → VL Self-Attn (context) → DiT (flow matching action)
+#
+# Differences from profiling.yaml (shrunk config):
+#   vision_hidden_size: 768 → 1024
+#   action_dim: 20 → 25
+#   vl_num_heads: 12 → 16
+#   weight_mode: random → full (ng.pt)
+#   warmup: 5 → 15
+
+defaults:
+  - /base
+  - _self_
+
+experiment:
+  name: "exp09_latency_rerun_nitrogen500m"
+  description: "NitroGen full 500M DiT — aligned to ng.pt real checkpoint"
+
+model:
+  name: "NitroGen"
+  type: "va"
+  paradigm: "flow-matching-dit"
+  repo: "https://github.com/MineDojo/NitroGen"
+  checkpoint: "ng.pt"
+
+num_warmup_runs: 15
+num_benchmark_runs: 20
+
+model_name: "NitroGen-500M"
+controller_name: nitrogen
+controller_config:
+  mode: profiling
+  weight_mode: full
+  checkpoint_path: "/data1/ybyang/huggingface/nvidia/NitroGen/ng.pt"
+  repo_path: "/data1/ybyang/NitroGen"
+  vision_encoder_name: "/data1/ybyang/huggingface/google/siglip-large-patch16-256"
+  vision_hidden_size: 1024
+  # DiT config (matches NitroGen 500M defaults)
+  dit_num_layers: 12
+  dit_num_heads: 16
+  dit_head_dim: 64
+  vl_num_layers: 4
+  vl_num_heads: 16
+  vl_head_dim: 64
+  # Action config
+  action_dim: 25
+  action_horizon: 16
+
+tasks:
+  - epd_profiling
+
+profiling:
+  gpu_id: 0
+  warmup: 15
+  iterations: 20
+  phases:
+    - encode    # SigLIP ViT
+    - context   # VL self-attention
+    - action    # DiT flow matching × k steps
+
+inputs:
+  - name: "k16"
+    num_inference_steps: 16
+  - name: "k8"
+    num_inference_steps: 8
+  - name: "k4"
+    num_inference_steps: 4
+  - name: "k2"
+    num_inference_steps: 2
+  - name: "k1"
+    num_inference_steps: 1
+
+notes: |
+  NitroGen full 500M rerun with real ng.pt checkpoint.
+
+  Changes from exp06a (shrunk config):
+  - vision_hidden_size: 768 → 1024 (real SigLIP-large hidden dim)
+  - action_dim: 20 → 25 (real NitroGen output dim)
+  - vl_num_heads: 12 → 16 (aligned to 1024 hidden / 64 head_dim)
+  - weight_mode: random → full (load ng.pt checkpoint)
+  - warmup: 5 → 15 (avoid bimodal GPU warmup artifact)
+
+  Key questions:
+  1. E/C/A breakdown at k=16 with real weights
+  2. Per-step DiT cost at full 500M (expect ~20-30ms/step vs 7.2ms at 174M shrunk)
+  3. k sweep: latency vs step count (k=1,2,4,8,16)
+  4. Does weight loading change timing vs random init?
+
+  Expected: Total ~320-480ms at k=16, Action ~80-85% of total.
+  Compare with exp06a (shrunk 174M-equivalent, 7.2ms/step).
