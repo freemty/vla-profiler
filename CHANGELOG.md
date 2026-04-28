@@ -1,5 +1,35 @@
 # Changelog
 
+## v0.8.3 @freemty — 2026-04-28
+
+### 战略转向
+- **"Fast VLA first, serving later"** — VLA 推理当前卡在单请求太慢 (Pi-Zero 5Hz vs 目标 10-50Hz, 2-10x gap)，不是并发不够。定位为 FastVideo 阶段 (单次加速), 不是 vLLM 阶段 (多用户 serving)。候选排序: **A (Action DiT 加速) > B (benchmark) > C (DiT caching) >> D (serving)**。exp08 (contention/serving) 降档为 side project / 备用论文素材
+- 决策依据: exp07a 显示 Action Expert 占 82% 延迟; exp04a Fast-WAM 89%; exp04b LingBot-VA 69%。Action DiT 是 80-94% 的 bottleneck
+
+### 新增 (Meeting prep 收尾, 见 Hao 2026-04-28)
+- **`docs/hao-meeting-prep.md`** 重构为四幕叙事 — "从 3ms 到 2.5s: 四次跳跃"
+  - Act 1 (10min 主菜): Single-Forward (3ms) → Flow Head (74ms) → Flow DiT (18-407ms) → Full WAM (2518ms)。每一步讲清加了什么能力、付了什么延迟代价
+  - Act 2 (3min): VLM→VLA attention 崩塌 (Gini 0.91→0.07) 的意外发现
+  - Act 3 (5min): 版图空白 + "Fast VLA first" 优先级判断
+  - Act 4 (5min): 请教 — 漏了什么架构 / STA 哪些能迁移 / 入学前做什么
+- **`viewer/static/design-space.html`** — Action Model Design Space 交互 dashboard (Chart.js + 深色主题)
+  - Section 01: 7-model scatter (paradigm × log latency, bubble=params, 10-50Hz 绿带)
+  - Section 02: 100% stacked horizontal bar (E/C/V/A 四阶段占比, 标 action %)
+  - Section 03: DiT scaling curve (174M/300M/350M per-step + linear 外推线 + cross-attn tax 标注)
+- **`docs/meeting-cheatsheet.md`** — 15 分钟面谈前口头速查
+  - FastVideo 3 件事: 问题 (85% attention) / 三板斧 (STA + VSA + 蒸馏) / VLA 迁移适用性表
+  - DistServe 2 件事: PD disaggregation 机制 / 为什么 "serving later"
+  - 7 模型数据速查 (ms / Hz 对照) + DiT scaling + VLA attention 崩塌数字
+  - exp08 口头版 (Hao 问才说)
+
+### 変更
+- **`docs/TODO.md`** 重新围绕 "Fast VLA first" 排序 — 战略判断置顶; P0 meeting 项多数已 ✅ (Pareto 图, DiT scaling, FastVideo/DistServe 精读→cheatsheet 替代, exp08 一页总结); P1 候选 A/B/C 待 meeting 后启动; P2 exp08 收尾降档
+- **`CLAUDE.md`**: `current_exp` = "profiling complete (exp01-07 done), exp08 deprioritized"; `stage` = "meeting prep + learning"; `latest` = v0.8.2; Key References 加 `meeting-cheatsheet.md` 索引
+- **`.claude/skills/project-skill/SKILL.md`** v7→v8: 头部加 "Fast VLA first" 战略转向说明; current stage "Strategic Pivot" v0.8.2; 四范式覆盖情况 (exp01-07 全部 done); 下一步 P0 学习 → P0 meeting → P1 候选 A
+
+### 备注
+- 本版本无实验跑新结果，专注 meeting prep 战略叙事 + 可视化交付。下一次实验等 Hao meeting 后启动候选 A spec
+
 ## v0.8.2 @freemty — 2026-04-27
 
 ### 新增 (exp08b/c 完成)

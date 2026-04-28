@@ -121,13 +121,23 @@ Project documentation map. All paths relative to repo root.
 | `viewer/static/experiments.html` | Expandable experiment detail tables + prediction calibration |
 | `viewer/static/survey-dashboard.html` | Interactive survey dashboard (Pareto, pipeline comparison, maturity matrix) |
 | `viewer/static/scaling-curve.html` | DiT scaling scatter (log-log), latency spectrum, NitroGen k-sweep, paradigm comparison |
+| `viewer/static/design-space.html` | **Action Model Design Space dashboard** (2026-04-28, Hao meeting) — 7-model paradigm scatter + phase breakdown stacked bar + DiT scaling curve |
 | `slides/epda-roofline-motivation.html` | **exp08 one-pager** — EPDA roofline 可视化 + 干扰矩阵预测 (advisor meeting figure) |
+
+## Meeting & Planning
+
+| File | Description |
+|------|-------------|
+| `docs/hao-meeting-prep.md` | 第一次 meeting 大纲 (四幕叙事: Design Space → 四次跳跃 → Fast VLA first → 请教) |
+| `docs/meeting-cheatsheet.md` | 面谈前 15 分钟速查 (FastVideo STA/VSA/蒸馏 + DistServe PD disagg + 数据速查) |
+| `docs/TODO.md` | Project action items (战略判断置顶 + P0/P1/P2 分层) |
+| `docs/learning-plan.md` | GPU/MLSys 补课路径 (L0-L4 分层, Brrrr + CUDA MODE + vLLM + DistServe) |
 
 ## Other
 
 | File | Description |
 |------|-------------|
 | `CLAUDE.md` | Project instructions + index for Claude Code |
-| `CHANGELOG.md` | Version history (v0.1.0 - v0.7.0) |
+| `CHANGELOG.md` | Version history (v0.1.0 - v0.8.3) |
 | `.pipeline-state.json` | LabMate pipeline state (current_exp, stage) |
-| `.claude/skills/project-skill/SKILL.md` | Project knowledge base (v6) |
+| `.claude/skills/project-skill/SKILL.md` | Project knowledge base (v8, "Fast VLA first") |
