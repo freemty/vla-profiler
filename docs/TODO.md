@@ -16,13 +16,12 @@ VLA 推理现在卡在**单请求太慢** (Pi-Zero 200ms=5Hz, 需要 10-50Hz)，
 
 ## P0 — 见 Hao 前必做
 
-- [ ] **P0** 画 7-model Pareto 图 (一页, 有 Hz 刻度) — 用 exp01-07 全部数据
-- [ ] **P0** 画 DiT scaling curve 图 (174M / 300M / 350M per-step, 含 cross-attn 标注)
-- [ ] **P0** 读 FastVideo 论文 (STA + VSA + 蒸馏, 至少前 4 节) — 理解哪些 technique 可迁移到 VLA Action DiT
-- [ ] **P0** 读 DistServe 前 3 节 — 作为 "为什么 serving later" 的背景 (能说清 PD disaggregation)
+- [x] **P0** 画 7-model Pareto 图 (一页, 有 Hz 刻度) — `viewer/static/design-space.html` Section 01 散点图 ✅
+- [x] **P0** 画 DiT scaling curve 图 (174M / 300M / 350M per-step, 含 cross-attn 标注) — `viewer/static/design-space.html` Section 03 ✅
+- [x] **P0** 读 FastVideo / DistServe — 已有综合 survey (`survey/papers/hao-style-fastvideo.md`, `hao-style-distserve.md`)，蒸馏为口头速查 `docs/meeting-cheatsheet.md` ✅
 - [ ] **P0** 更新 `slides/` 演示: 加 "Fast VLA First" framing + Pareto 图 + DiT scaling
-- [ ] **P0** 准备 exp08 一页总结 (备用, 只在 Hao 问时展开: EPDA 非对称 contention, D/P 脆弱 2.4-2.9x)
-- [ ] **P0** 详见 `docs/hao-meeting-prep.md` — 核心: Q0 亮出 "Fast VLA first" 判断请他校准, Q1 候选排序, Q2 展示数据
+- [x] **P0** 准备 exp08 一页总结 (备用) — `docs/meeting-cheatsheet.md` 末尾口头版 ✅
+- [x] **P0** 详见 `docs/hao-meeting-prep.md` — 四幕叙事结构已完成 ✅
 
 ## P1 — 候选方向 (Hao meeting 后启动)
 
