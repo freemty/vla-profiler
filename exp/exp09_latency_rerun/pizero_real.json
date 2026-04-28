@@ -1,0 +1,20 @@
+{
+  "model": "Pi-Zero",
+  "weights": "real (bridge_beta_step19296_2024-12-26)",
+  "denoise_steps": 10,
+  "gpu": "RTX 5880 Ada",
+  "warmup": 15,
+  "iterations": 20,
+  "phases": {
+    "encode": {"median_ms": 11.74, "mean_ms": 12.64, "cv": 0.30},
+    "context": {"median_ms": 30.29, "mean_ms": 31.70, "cv": 0.16},
+    "action": {"median_ms": 183.03, "mean_ms": 184.14, "cv": 0.016}
+  },
+  "total_e2e_ms": 225.1,
+  "hz": 4.4,
+  "comparison_vs_exp07a": {
+    "exp07a_total_ms": 200.5,
+    "delta_pct": 12.3,
+    "note": "Run 8 outlier (E=28.8ms, C=53.0ms) inflates mean. Median delta ~11%. Action per-step 18.3ms vs exp07a 16.5ms (+11%). Random-weight timing is valid within ~12% for Pi-Zero."
+  }
+}
