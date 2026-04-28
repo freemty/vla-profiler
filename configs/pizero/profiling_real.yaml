@@ -1,0 +1,73 @@
+# Pi-Zero E/C/A profiling with REAL weights (bridge_beta checkpoint)
+# Purpose: Validate random-weight timing from exp07a — latency should be within 10%
+# Checkpoint: allenzren/open-pi-zero bridge_beta (.pt, ~11GB)
+# Backend: allenzren/open-pi-zero (vendor/open_pi_zero/pizero_src)
+
+defaults:
+  - /base
+  - _self_
+
+experiment:
+  name: "exp09_pizero_real_weights"
+  description: "Pi-Zero real weights rerun — validates random-weight timing faithfulness"
+
+model:
+  name: "Pi-Zero (bridge_beta)"
+  type: "vla"
+  paradigm: "dual-stream-flow-matching"
+  repo: "https://github.com/allenzren/open-pi-zero"
+
+# Real checkpoint: allenzren/open-pi-zero bridge_beta (~11GB .pt)
+# Downloaded via: HF_ENDPOINT=https://hf-mirror.com huggingface_hub.hf_hub_download(
+#   repo_id="allenzren/open-pi-zero",
+#   filename="bridge_beta_step19296_2024-12-26_22-30_42.pt",
+#   cache_dir="/data1/ybyang/huggingface")
+# The .pt file contains full model state_dict (VLM + Action Expert).
+# Snapshot hash 8518347d verified 2026-04-28.
+model_name: "${oc.env:HF_HOME,/data1/ybyang/huggingface}/models--allenzren--open-pi-zero/snapshots/8518347d4ae0c6cfc69fbdda970b3f38c6ff76ca/bridge_beta_step19296_2024-12-26_22-30_42.pt"
+controller_name: "pizero"
+
+controller_config:
+  mode: profiling
+
+denoise_steps: 10
+use_bf16: true
+
+# Match exp07a canonical settings (stable-window methodology)
+num_warmup_runs: 15
+num_benchmark_runs: 20
+
+tasks:
+  - epd_profiling
+
+profiling:
+  gpu_id: 2
+  warmup: 15
+  iterations: 20
+  phases:
+    - encode    # SigLIP ViT-So400m/14
+    - context   # PaliGemma/Gemma 2B prefill -> KV cache
+    - action    # Gemma 300M Action Expert x 10 Euler steps
+
+inputs:
+  - name: "single_camera_224"
+    image_shape: [3, 224, 224]
+
+notes: |
+  Real-weight validation rerun for Pi-Zero.
+
+  exp07a used random weights and measured:
+    E=9.32ms, C=26.40ms, A=164.76ms, Total=200.5ms (~5Hz)
+
+  This run uses allenzren/open-pi-zero bridge_beta checkpoint
+  (trained on Bridge dataset with beta flow sampling, ~19k steps).
+
+  Expected: latency within 10% of random-weight run (~180-220ms total),
+  confirming that random weights are timing-faithful for profiling purposes.
+
+  Checkpoint format: .pt file with full model state_dict.
+  Loading path: torch.load -> model.load_state_dict (strict=True).
+
+  Key comparison:
+  - exp07a random:  E=9.32  C=26.40 A=164.76 Total=200.5ms
+  - This run (real): Expected ~same (within 10%)

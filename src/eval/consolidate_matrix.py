@@ -6,20 +6,20 @@ from typing import Any
 
 
 LATENCY_MODELS = {
-    "act": {"display": "ACT", "paradigm": "single-forward"},
-    "lingbot_vla_4b": {"display": "LingBot-VLA", "paradigm": "flow-head"},
-    "nitrogen500m": {"display": "NitroGen-500M", "paradigm": "flow-dit"},
-    "pizero_real": {"display": "Pi-Zero", "paradigm": "flow-dit"},
-    "fastwam_5step": {"display": "Fast-WAM", "paradigm": "skip-imagination"},
-    "lingbotva": {"display": "LingBot-VA", "paradigm": "full-wam"},
-    "qwen_vl_7b": {"display": "Qwen-VL-7B", "paradigm": "vlm-only"},
+    "act": {"display": "ACT", "paradigm": "single-forward", "exp": "exp02a"},
+    "lingbot_vla_4b": {"display": "LingBot-VLA", "paradigm": "flow-head", "exp": "exp03a"},
+    "nitrogen500m": {"display": "NitroGen-500M", "paradigm": "flow-dit", "exp": "exp06b"},
+    "pizero_real": {"display": "Pi-Zero", "paradigm": "flow-dit", "exp": "exp07b"},
+    "fastwam_5step": {"display": "Fast-WAM", "paradigm": "skip-imagination", "exp": "exp04c"},
+    "lingbotva": {"display": "LingBot-VA", "paradigm": "full-wam", "exp": "exp04b"},
+    "qwen_vl_7b": {"display": "Qwen-VL-7B", "paradigm": "vlm-only", "exp": "exp01a"},
 }
 
 LIBERO_DIRS = {
-    "fastwam": Path("exp/exp09a_fastwam_libero"),
-    "pizero": Path("exp/exp09b_pizero_libero"),
-    "lingbot_vla_4b": Path("exp/exp09c_lingbotvla_libero"),
-    "lingbotva": Path("exp/exp09d_lingbotva_libero"),
+    "fastwam": Path("exp/exp04e"),
+    "pizero": Path("exp/exp07c"),
+    "lingbot_vla_4b": Path("exp/exp03b"),
+    "lingbotva": Path("exp/exp04d"),
 }
 
 SUITES = ["spatial", "object", "goal", "10"]

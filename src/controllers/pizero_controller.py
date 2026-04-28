@@ -180,7 +180,7 @@ class PiZeroController(BaseVLAController):
 
         if model_path:
             if os.path.isfile(model_path) and model_path.endswith(".pt"):
-                data = torch.load(model_path, weights_only=True, map_location="cpu")
+                data = torch.load(model_path, weights_only=False, map_location="cpu")
                 state_dict = data["model"] if "model" in data else data
                 state_dict = {
                     k.replace("_orig_mod.", ""): v

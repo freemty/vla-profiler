@@ -122,9 +122,10 @@ Cross-experiment flight recorder. Per-exp **目的 / 方法 / 结果 / 下一步
 | exp08a | EPDA pair-wise pilot (DA/PA) | **done** | DA: D×3.52, A×1.58. PA: P×2.27, A×1.15. Roofline 低估 2–28x。 |
 | exp08b | Full 6-pair EPDA matrix | **done (pairs)** | D/P 脆弱 (2.4–2.9x) vs E/A 鲁棒 (<1.3x)。Triples/quad pending。 |
 | exp08c | GPU contention model fit | **done (v1)** | M4 asymmetric R²=0.94. inflation=1+v_X·a_Y. 部署: {E,A} 同卡 / {P,D} 必 disagg。 |
-| exp09 | Full reproducibility + LIBERO eval | **planned** | Align all 7 models to official weights/configs, run LIBERO-4 success rate eval |
-| exp09_latency | Latency rerun (official configs) | **planned** | NitroGen 500M real, Fast-WAM 5-step, Pi-Zero real weights, others sanity |
-| exp09a | Fast-WAM LIBERO-4 eval | **planned** | 5-step, real ckpt, 20 ep/task × 4 suites |
-| exp09b | Pi-Zero LIBERO-4 eval | **planned** | pi0-base real ckpt, 20 ep/task × 4 suites |
-| exp09c | LingBot-VLA LIBERO-4 eval | **planned** | 4B real ckpt, 20 ep/task × 4 suites |
-| exp09d | LingBot-VA LIBERO-4 eval | **planned** | Conditional on checkpoint found (Task 8) |
+| exp04c | Fast-WAM 5-step paper-aligned | **done** | 257ms / 3.9Hz @ 5-step (paper 190ms on A100). Per-step ~41ms. |
+| exp04d | LingBot-VA real-weight LIBERO eval | **planned** | ckpt found: robbyant/lingbot-va-posttrain-libero-long (22.7GB) |
+| exp06b | NitroGen full 500M real-weight | **done** | 7.1ms/step — identical to exp06a (DiT=181M, not 500M). |
+| exp07b | Pi-Zero real-weight profiling | **done** | 225ms total. vs exp07a 200ms (+12%). Random-weight timing ≈ faithful. |
+| exp03b | LingBot-VLA LIBERO-4 eval | **planned** | 4B real ckpt, 20 ep/task × 4 suites |
+| exp04e | Fast-WAM LIBERO-4 eval | **planned** | 5-step, real ckpt, 20 ep/task × 4 suites |
+| exp07c | Pi-Zero LIBERO-4 eval | **planned** | pi0-base real ckpt, 20 ep/task × 4 suites |
