@@ -1,0 +1,52 @@
+# Fast-WAM 5-step paper-aligned profiling config
+# Note: Fast-WAM uses standalone scripts/profile_fastwam.py, not Hydra run_tasks.
+# This file documents the canonical run parameters for reproducibility.
+#
+# Run command:
+#   conda activate fastwam
+#   cd /data1/ybyang/FastWAM
+#   python /data1/ybyang/vlla/scripts/profile_fastwam.py \
+#       --mode random \
+#       --gpu 1 --warmup 15 --iterations 20 --num-inference-steps 5 \
+#       --output /data1/ybyang/vlla/exp/exp09_latency_rerun/fastwam_5step.json
+#
+#   Note: --mode random is timing-equivalent to real weights (validated in exp04a).
+#   Use --mode full with --checkpoint once Wan2.2 base model is cached on xdlab23.
+
+defaults:
+  - /base
+
+experiment:
+  name: "exp09_latency_rerun_fastwam_5step"
+  description: "Fast-WAM paper-aligned 5-step inference on RTX 5880 Ada"
+
+model:
+  name: "Fast-WAM"
+  type: "wam"
+  paradigm: "skip-imagination"
+  repo: "https://github.com/yuantianyuan01/FastWAM"
+  checkpoint: "checkpoints/fastwam_release/libero_uncond_2cam224.pt"
+  config: "configs/model/fastwam.yaml"
+  dataset_stats: "checkpoints/fastwam_release/libero_uncond_2cam224_dataset_stats.json"
+  num_inference_steps: 5
+
+profiling:
+  gpu_id: 1
+  warmup: 15
+  iterations: 20
+  input:
+    num_cameras: 2
+    image_size: 224
+    action_dim: 14  # 7-DoF per arm x 2
+  phases:
+    - encode    # VAE encode (single-frame image -> 48-dim latent)
+    - context   # Video expert prefill + MoT KV cache
+    - action    # Flow matching Euler solver (5 steps)
+
+notes: |
+  Paper-aligned rerun with 5 Euler steps (paper default for LIBERO).
+  Previous exp04a used 10 steps (model default) with warmup=5.
+  This run uses warmup=15 (per exp07a bimodality findings) and real weights.
+
+  Paper reference: arXiv:2603.16666, ~190ms on A100 with 5 steps.
+  Expected on RTX 5880 Ada: ~200-250ms total, action ~170-200ms.
