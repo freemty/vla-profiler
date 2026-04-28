@@ -56,6 +56,7 @@ scripts to emit Hydra-PhaseTimer-compatible JSON. Not a runnable entry.
 | `setup_lingbot_vla.sh` | Create `.venvs/lingbot-vla` uv env, install LingBot-VLA repo |
 | `setup_pizero.sh` | Create `.venvs/pizero` uv env, install openpi, download ckpt |
 | `setup_fastwam.sh` | Install Fast-WAM inside `.venvs/lingbot-vla` (shared WAM env) |
+| `install_libero.sh` | Install LIBERO benchmark into `vit-probe` conda env (PyPI, egl_probe workaround) |
 
 ## Test / misc
 
