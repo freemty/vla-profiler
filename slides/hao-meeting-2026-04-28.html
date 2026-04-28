@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hao Meeting — From 3ms to 2.5s: Action Model Design Space</title>
+<style>
+:root {
+  --bg: #faf8f4;
+  --surface: #ffffff;
+  --surface-warm: #f9f6f0;
+  --border: #e0d5c0;
+  --text: #2c2416;
+  --text-secondary: #5a4d38;
+  --text-muted: #7a6a50;
+  --accent: #b07a22;
+  --green: #2d8a4e;
+  --yellow: #a67c00;
+  --red: #c0392b;
+  --blue: #4a90d9;
+  --purple: #7b68ee;
+  --radius: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "SF Mono", Menlo, "Cascadia Code", monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%; overflow: hidden;
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.deck { width: 100vw; height: 100vh; position: relative; }
+
+.slide {
+  position: absolute; inset: 0;
+  display: none; flex-direction: column;
+  justify-content: center; align-items: center;
+  background: var(--bg);
+  padding: 40px 64px;
+  overflow: hidden;
+}
+.slide.active { display: flex; }
+
+.slide-inner {
+  width: 100%; max-width: 1140px;
+  display: flex; flex-direction: column; gap: 24px;
+}
+
+.counter {
+  position: fixed; bottom: 20px; right: 28px;
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--text-muted); letter-spacing: 0.04em; z-index: 100;
+}
+.act-marker {
+  position: fixed; top: 20px; right: 28px;
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--text-muted); letter-spacing: 0.08em; z-index: 100;
+  background: var(--surface-warm);
+  border: 1px solid var(--border); border-radius: 40px;
+  padding: 4px 12px;
+}
+
+h1 { font-size: 46px; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; }
+h1 em { font-style: normal; color: var(--accent); }
+h2 { font-size: 30px; font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; }
+h2 em { font-style: normal; color: var(--accent); }
+h3 { font-size: 15px; font-weight: 600; letter-spacing: 0.01em; }
+p  { font-size: 16px; line-height: 1.65; color: var(--text-secondary); }
+
+.section-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 6px;
+}
+.section-label.muted { color: var(--text-muted); }
+.divider { width: 40px; height: 2px; background: var(--border); border-radius: 2px; }
+
+.title-tag {
+  display: inline-block; background: var(--surface-warm);
+  border: 1px solid var(--border); border-radius: 40px;
+  padding: 6px 16px; font-size: 13px; font-family: var(--font-mono);
+  color: var(--text-muted); letter-spacing: 0.04em; margin-bottom: 8px;
+}
+.title-date {
+  font-size: 14px; font-family: var(--font-mono);
+  color: var(--text-muted); letter-spacing: 0.06em; margin-top: 8px;
+}
+
+.callout {
+  background: var(--surface-warm); border: 1px solid var(--border);
+  border-left: 3px solid var(--accent); border-radius: var(--radius);
+  padding: 14px 20px; font-size: 15px; line-height: 1.6; color: var(--text-secondary);
+}
+.callout strong { color: var(--text); }
+.callout.green  { border-left-color: var(--green); }
+.callout.red    { border-left-color: var(--red); }
+.callout.blue   { border-left-color: var(--blue); }
+.callout.big    { font-size: 17px; padding: 18px 24px; }
+
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px 24px; box-shadow: var(--shadow);
+}
+.card.green-border  { border-left: 3px solid var(--green); }
+.card.yellow-border { border-left: 3px solid var(--yellow); }
+.card.accent-border { border-left: 3px solid var(--accent); }
+.card.red-border    { border-left: 3px solid var(--red); }
+.card.blue-border   { border-left: 3px solid var(--blue); }
+.card.purple-border { border-left: 3px solid var(--purple); }
+
+.card h3 { margin-bottom: 12px; }
+.card h3.green  { color: var(--green); }
+.card h3.yellow { color: var(--yellow); }
+.card h3.accent { color: var(--accent); }
+.card h3.red    { color: var(--red); }
+.card h3.blue   { color: var(--blue); }
+.card h3.purple { color: var(--purple); }
+
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.card ul li {
+  font-size: 14px; line-height: 1.55; color: var(--text-secondary);
+  padding-left: 16px; position: relative;
+}
+.card ul li::before {
+  content: "\b7"; position: absolute; left: 4px; color: var(--text-muted);
+}
+
+.two-col  { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.four-col  { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
+
+.badge {
+  display: inline-block; background: var(--surface-warm);
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 2px 8px; font-size: 12px; font-family: var(--font-mono); color: var(--text-muted);
+}
+.badge.accent { background: #fef6e6; border-color: #e8c87a; color: var(--accent); }
+.badge.green  { background: #f0faf4; border-color: #a0d4b4; color: var(--green); }
+.badge.red    { background: #fdf0ef; border-color: #e8a8a0; color: var(--red); }
+.badge.blue   { background: #eef4fa; border-color: #9ac3e3; color: var(--blue); }
+
+/* Phase bar (recycled) */
+.phase-bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.phase-bar-label {
+  width: 150px; flex-shrink: 0; font-size: 13px; font-weight: 600;
+  color: var(--text); text-align: right;
+}
+.phase-bar-sublabel {
+  font-size: 11px; font-weight: 400; color: var(--text-muted);
+  display: block; margin-top: 1px;
+}
+.phase-bar-container {
+  flex: 1; display: flex; height: 32px; border-radius: 4px; overflow: hidden;
+  border: 1px solid var(--border);
+}
+.phase-bar-segment {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-family: var(--font-mono); color: #fff;
+  white-space: nowrap; min-width: 0; overflow: hidden;
+}
+.phase-bar-total {
+  width: 110px; flex-shrink: 0; font-size: 13px; font-family: var(--font-mono);
+  color: var(--text-secondary); text-align: right;
+}
+.phase-bar-total strong { color: var(--text); font-size: 14px; }
+.phase-e { background: var(--blue); }
+.phase-c { background: var(--accent); }
+.phase-a { background: var(--red); }
+.phase-v { background: var(--green); }
+.phase-legend {
+  display: flex; gap: 18px; font-size: 12px; color: var(--text-muted);
+  margin-top: 8px; justify-content: center;
+}
+.phase-legend-item { display: flex; align-items: center; gap: 5px; }
+.phase-legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+/* Jump cards */
+.jump-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+}
+.jump {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow);
+  position: relative;
+}
+.jump.j1 { border-top: 3px solid var(--blue); }
+.jump.j2 { border-top: 3px solid var(--green); }
+.jump.j3 { border-top: 3px solid var(--accent); }
+.jump.j4 { border-top: 3px solid var(--red); }
+.jump-num {
+  position: absolute; top: 14px; right: 18px;
+  font-size: 11px; font-family: var(--font-mono); color: var(--text-muted);
+  letter-spacing: 0.08em;
+}
+.jump h3 { font-size: 16px; margin-bottom: 4px; color: var(--text); }
+.jump .model-tag {
+  font-size: 12px; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 10px;
+}
+.jump .latency { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 2px; font-family: var(--font-mono); }
+.jump .hz     { font-size: 12px; color: var(--text-muted); font-family: var(--font-mono); margin-bottom: 10px; }
+.jump p { font-size: 13px; line-height: 1.5; color: var(--text-secondary); }
+
+/* Scaling table */
+.scaling-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.scaling-table th {
+  text-align: left; padding: 8px 12px; font-size: 11px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-muted); border-bottom: 2px solid var(--border);
+}
+.scaling-table td {
+  padding: 10px 12px; color: var(--text-secondary);
+  border-bottom: 1px solid var(--border); vertical-align: middle;
+}
+.scaling-table td:first-child { font-family: var(--font-mono); color: var(--text); font-weight: 600; }
+.scaling-table td.num { font-family: var(--font-mono); text-align: right; color: var(--text); }
+.scaling-table tr.highlight td { background: #fef6e6; color: var(--text); }
+
+/* Attention diff cells */
+.attn-row { display: grid; grid-template-columns: 180px 1fr 1fr; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.attn-row:last-child { border-bottom: none; }
+.attn-row .attn-label { font-size: 13px; font-weight: 600; color: var(--text); }
+.attn-cell { text-align: center; padding: 8px; background: var(--surface-warm); border-radius: 4px; }
+.attn-cell .val { font-size: 18px; font-weight: 700; font-family: var(--font-mono); }
+.attn-cell .val.blue { color: var(--blue); }
+.attn-cell .val.red  { color: var(--red); }
+.attn-cell .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* Landscape (jump 3 inner) */
+.landscape { width: 100%; border-collapse: collapse; font-size: 13px; }
+.landscape th { text-align: left; padding: 7px 10px; font-size: 11px; color: var(--text-muted); border-bottom: 1px solid var(--border); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.landscape td { padding: 7px 10px; color: var(--text-secondary); border-bottom: 1px solid var(--border); }
+.landscape td.num { font-family: var(--font-mono); text-align: right; }
+.landscape td:first-child { font-weight: 600; color: var(--text); }
+
+/* Priority cards */
+.pri-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 18px;
+  display: grid; grid-template-columns: 28px 1fr auto; gap: 14px; align-items: center;
+  box-shadow: var(--shadow);
+}
+.pri-card.A { border-left: 3px solid var(--green); }
+.pri-card.B { border-left: 3px solid var(--blue); }
+.pri-card.C { border-left: 3px solid var(--accent); }
+.pri-card.D { border-left: 3px solid var(--text-muted); opacity: 0.75; }
+.pri-rank { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: var(--text); }
+.pri-body h3 { font-size: 14px; margin-bottom: 2px; }
+.pri-body p { font-size: 12px; line-height: 1.45; color: var(--text-secondary); }
+.pri-note { font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); }
+
+/* Questions */
+.q-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.q-list li {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 18px; box-shadow: var(--shadow);
+  display: grid; grid-template-columns: 28px 1fr; gap: 12px; align-items: flex-start;
+}
+.q-list .q-num { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--accent); padding-top: 2px; }
+.q-list .q-body { font-size: 14px; color: var(--text); line-height: 1.5; }
+.q-list .q-body em { font-style: normal; color: var(--text-muted); font-size: 12px; display: block; margin-top: 4px; }
+
+/* Arrow summary */
+.arrow-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface-warm);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px 24px; gap: 12px;
+  font-family: var(--font-mono);
+}
+.arrow-step { text-align: center; }
+.arrow-step .step-val { font-size: 18px; font-weight: 700; color: var(--text); }
+.arrow-step .step-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; letter-spacing: 0.04em; text-transform: uppercase; }
+.arrow-sep { color: var(--text-muted); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 1 — TITLE
+  ══════════════════════════════════════════════ -->
+  <div class="slide active" data-act="">
+    <div class="slide-inner" style="gap: 30px;">
+      <div>
+        <div class="title-tag">vlla · 1st advisor meeting</div>
+        <h1 style="margin-top: 16px; max-width: 960px;">
+          From <em>3ms</em> to <em>2.5s</em><br>
+          The Action Model Design Space
+        </h1>
+        <p style="font-size: 20px; margin-top: 14px; color: var(--text-muted); font-weight: 400;">
+          7 models · 4 paradigms · first-party latency spectrum
+        </p>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="callout big" style="max-width: 780px;">
+        <strong>Action model 正在分化出四种范式</strong>，而瓶颈几乎全在 <strong>Action 阶段</strong>。<br>
+        今天想 walk through 这个版图，请您校准。
+      </div>
+
+      <div style="display: flex; gap: 16px; align-items: center;">
+        <p class="title-date">Yuanbo Yang &middot; Hao Zhang (UCSD Hao AI Lab)</p>
+        <p class="title-date">April 28, 2026</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 2 — OPENING (2 min)
+  ══════════════════════════════════════════════ -->
+  <div class="slide" data-act="Opening">
+    <div class="slide-inner">
+      <div>
+        <div class="section-label">Opening · 2 min</div>
+        <h2>拿到 offer 后这 3 周做了什么</h2>
+      </div>
+
+      <div class="three-col">
+        <div class="card blue-border">
+          <h3 class="blue">7 个模型 profiling</h3>
+          <ul>
+            <li>ACT / LingBot-VLA / NitroGen / Pi-Zero / Fast-WAM / LingBot-VA / Qwen-VL</li>
+            <li>统一 phase timing (E/C/A/V/P/D)</li>
+            <li>每个模型有 warmup + 中位数, CV &lt; 10%</li>
+          </ul>
+        </div>
+
+        <div class="card accent-border">
+          <h3 class="accent">6 份 domain survey</h3>
+          <ul>
+            <li>VA / WAM / serving / acceleration tricks</li>
+            <li>π 系列演进 / 工业 WAM landscape</li>
+            <li>Hao 工作风格 (vLLM / DistServe / FastVideo)</li>
+          </ul>
+        </div>
+
+        <div class="card green-border">
+          <h3 class="green">6 个 contention 实验</h3>
+          <ul>
+            <li>exp08a/b/c — EPDA 四阶段共存干扰</li>
+            <li>M4 asymmetric contention model (R²=0.94)</li>
+            <li>暂 park, 等 serving 成真需求</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout big">
+        <strong>发现的核心事实:</strong>
+        从 3ms 到 2.5s，action model 跨越 <strong>三个数量级</strong>。
+        瓶颈从 encode → context → <strong>Action DiT (80-94%)</strong> 迁移。
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 3 — ACT 1 SETUP
+  ══════════════════════════════════════════════ -->
+  <div class="slide" data-act="Act 1 · 10 min">
+    <div class="slide-inner">
+      <div>
+        <div class="section-label">Act 1 · 主菜</div>
+        <h2>四次跳跃 — <em>每一步加了什么能力, 付了什么延迟代价</em></h2>
+      </div>
+
+      <div class="jump-grid">
+        <div class="jump j1">
+          <div class="jump-num">exp02a</div>
+          <h3>Jump 1 — Single-Forward</h3>
+          <div class="model-tag">ACT · ResNet18 + CVAE</div>
+          <div class="latency">3 ms</div>
+          <div class="hz">300 Hz · VLA 延迟下界</div>
+          <p>窄任务专用, 泛化 ≈ 零。80% 在 CNN encode。Action 几乎不花时间。</p>
+        </div>
+
+        <div class="jump j2">
+          <div class="jump-num">exp03a</div>
+          <h3>Jump 2 — + VLM Backbone</h3>
+          <div class="model-tag">LingBot-VLA · 3B VLM + 10-step Flow</div>
+          <div class="latency">74 ms</div>
+          <div class="hz">13 Hz · 瓶颈翻转到 backbone</div>
+          <p>获得语言理解 + 视觉泛化, 代价是 backbone 变重 (E=36, C=38)。Flow action head 仍几乎免费。</p>
+        </div>
+
+        <div class="jump j3">
+          <div class="jump-num">exp06a · 07a · 04a</div>
+          <h3>Jump 3 — Independent Action DiT</h3>
+          <div class="model-tag">NitroGen · Pi-Zero · Fast-WAM</div>
+          <div class="latency">18 – 407 ms</div>
+          <div class="hz">2.5 – 56 Hz · <strong>Action 80-94% 主战场</strong></div>
+          <p>DiT scaling 超线性: 174M→350M, 2x params / 4.4x latency。Cross-attn 隐藏 tax 35-440%。</p>
+        </div>
+
+        <div class="jump j4">
+          <div class="jump-num">exp04b</div>
+          <h3>Jump 4 — + Video Imagination</h3>
+          <div class="model-tag">LingBot-VA · 5B full WAM</div>
+          <div class="latency">2518 ms</div>
+          <div class="hz">0.4 Hz · 能力上界, 不可实时</div>
+          <p>Video (697ms) + Action (1708ms) 双 DiT 串行。比 skip-imagination 慢 6x。Zero-shot 泛化的代价。</p>
+        </div>
+      </div>
+
+      <div class="callout">
+        机器人需要 <strong>10-50Hz</strong>。只有 Jump 2 和部分 Jump 3 够用。差距 <strong>2-10x</strong>。
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 4 — JUMP 3 DEEP DIVE (主战场)
+  ══════════════════════════════════════════════ -->
+  <div class="slide" data-act="Act 1 · Jump 3">
+    <div class="slide-inner">
+      <div>
+        <div class="section-label">Jump 3 · 主战场</div>
+        <h2>Action DiT — <em>瓶颈在这里翻转</em></h2>
+      </div>
+
+      <div class="two-col" style="grid-template-columns: 1.15fr 0.85fr; align-items: start;">
+        <div>
+          <table class="scaling-table">
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th style="text-align:right;">Params</th>
+                <th style="text-align:right;">Per-step</th>
+                <th style="text-align:right;">Total (k)</th>
+                <th style="text-align:right;">Action %</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>NitroGen</td>
+                <td class="num">174M</td>
+                <td class="num">7.2 ms</td>
+                <td class="num">18 ms (k=1)</td>
+                <td class="num">~90%</td>
+              </tr>
+              <tr class="highlight">
+                <td>Pi-Zero</td>
+                <td class="num">300M</td>
+                <td class="num">16.5 ms</td>
+                <td class="num">200 ms (k=10)</td>
+                <td class="num">82%</td>
+              </tr>
+              <tr>
+                <td>Fast-WAM</td>
+                <td class="num">350M</td>
+                <td class="num">32 ms</td>
+                <td class="num">407 ms (k=10)</td>
+                <td class="num">89%</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="margin-top: 16px;" class="callout blue">
+            <strong>Scaling 超线性:</strong> 174M → 350M, 参数 2x, 延迟 <strong>4.4x</strong>
+            — compute-bound 进入 memory-BW-bound。
+          </div>
+        </div>
+
+        <div class="stacked" style="display: flex; flex-direction: column; gap: 12px;">
+          <div class="card red-border">
+            <h3 class="red">Cross-attn 隐藏 tax</h3>
+            <ul style="font-size: 13px;">
+              <li>Pi-Zero 300M: 理论 ~12ms (线性外推), 实测 16.5ms — <strong>+35%</strong> 来自 cross-attn to VLM KV</li>
+              <li>Fast-WAM: 30 层 MoT per-layer cross-attn, 最极端</li>
+              <li>这是 Action DiT 特有的 — Pure video DiT 没有</li>
+            </ul>
+          </div>
+
+          <div class="card accent-border">
+            <h3 class="accent">FastVideo 迁移空间</h3>
+            <ul style="font-size: 13px;">
+              <li><strong>STA/VSA</strong>: 需先验证 action DiT attention 局部性</li>
+              <li><strong>蒸馏</strong>: step 压缩已在 NitroGen k=16→k=1 立竿见影 (126 → 18 ms)</li>
+              <li>两者组合 <strong>&gt;50x</strong> denoising 加速 (FastVideo 原始数据)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 5 — ACT 1 SUMMARY (Spectrum chart)
+  ══════════════════════════════════════════════ -->
+  <div class="slide" data-act="Act 1 · Recap">
+    <div class="slide-inner">
+      <div>
+        <div class="section-label">Act 1 · Recap</div>
+        <h2>一张图看全景 — <em>四次跳跃, 每个阶段的相对占比</em></h2>
+      </div>
+
+      <div>
+        <div class="phase-bar-row">
+          <div class="phase-bar-label">ACT<span class="phase-bar-sublabel">Jump 1 · VA</span></div>
+          <div class="phase-bar-container">
+            <div class="phase-bar-segment phase-e" style="flex: 80;">E 2.5ms</div>
+            <div class="phase-bar-segment phase-a" style="flex: 20;">A</div>
+          </div>
+          <div class="phase-bar-total"><strong>3ms</strong> · 300Hz</div>
+        </div>
+
+        <div class="phase-bar-row">
+          <div class="phase-bar-label">LingBot-VLA<span class="phase-bar-sublabel">Jump 2 · Flow head</span></div>
+          <div class="phase-bar-container">
+            <div class="phase-bar-segment phase-e" style="flex: 48;">E 36</div>
+            <div class="phase-bar-segment phase-c" style="flex: 51;">C 38</div>
+            <div class="phase-bar-segment phase-a" style="flex: 1;"></div>
+          </div>
+          <div class="phase-bar-total"><strong>74ms</strong> · 13Hz</div>
+        </div>
+
+        <div class="phase-bar-row">
+          <div class="phase-bar-label">NitroGen k=1<span class="phase-bar-sublabel">Jump 3 · 174M DiT</span></div>
+          <div class="phase-bar-container">
+            <div class="phase-bar-segment phase-e" style="flex: 45;">E 8</div>
+            <div class="phase-bar-segment phase-c" style="flex: 10;">C</div>
+            <div class="phase-bar-segment phase-a" style="flex: 45;">A 7.2</div>
+          </div>
+          <div class="phase-bar-total"><strong>18ms</strong> · 56Hz</div>
+        </div>
+
+        <div class="phase-bar-row">
+          <div class="phase-bar-label">Pi-Zero<span class="phase-bar-sublabel">Jump 3 · 300M DiT k=10</span></div>
+          <div class="phase-bar-container">
+            <div class="phase-bar-segment phase-e" style="flex: 5;"></div>
+            <div class="phase-bar-segment phase-c" style="flex: 13;">C 26</div>
+            <div class="phase-bar-segment phase-a" style="flex: 82;">A 165ms · 82%</div>
+          </div>
+          <div class="phase-bar-total"><strong>200ms</strong> · 5Hz</div>
+        </div>
+
+        <div class="phase-bar-row">
+          <div class="phase-bar-label">Fast-WAM<span class="phase-bar-sublabel">Jump 3 · 350M DiT k=10</span></div>
+          <div class="phase-bar-container">
+            <div class="phase-bar-segment phase-e" style="flex: 2;"></div>
+            <div class="phase-bar-segment phase-c" style="flex: 9;">C</div>
+            <div class="phase-bar-segment phase-a" style="flex: 89;">A 362ms · 89%</div>
+          </div>
+          <div class="phase-bar-total"><strong>407ms</strong> · 2.5Hz</div>
+        </div>
+
+        <div class="phase-bar-row">
+          <div class="phase-bar-label">LingBot-VA<span class="phase-bar-sublabel">Jump 4 · full WAM</span></div>
+          <div class="phase-bar-container">
+            <div class="phase-bar-segment phase-e" style="flex: 3;"></div>
+            <div class="phase-bar-segment phase-v" style="flex: 28;">V 697 (video)</div>
+            <div class="phase-bar-segment phase-a" style="flex: 69;">A 1708ms · 69%</div>
+          </div>
+          <div class="phase-bar-total"><strong>2518ms</strong> · 0.4Hz</div>
+        </div>
+      </div>
+
+      <div class="phase-legend">
+        <div class="phase-legend-item"><span class="phase-legend-dot phase-e"></span> Encode (vision)</div>
+        <div class="phase-legend-item"><span class="phase-legend-dot phase-c"></span> Context (VLM)</div>
+        <div class="phase-legend-item"><span class="phase-legend-dot phase-v"></span> Video DiT</div>
+        <div class="phase-legend-item"><span class="phase-legend-dot phase-a"></span> Action DiT</div>
+      </div>
+
+      <div class="callout">
+        <strong>主战场:</strong> Action DiT 占 80-94% 延迟 — Jump 3/4 的实用化全部卡在这里。
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 6 — ACT 2 · VLM→VLA Attention
+  ══════════════════════════════════════════════ -->
+  <div class="slide" data-act="Act 2 · 3 min">
+    <div class="slide-inner">
+      <div>
+        <div class="section-label">Act 2 · 意外发现</div>
+        <h2>VLM 侧 — <em>Attention 被 VLA fine-tuning 彻底重塑</em></h2>
+      </div>
+
+      <div class="two-col" style="grid-template-columns: 1fr 1fr;">
+        <div class="card blue-border">
+          <h3 class="blue">VLM (pre-trained)</h3>
+          <div class="attn-row" style="grid-template-columns: 100px 1fr; gap: 10px; padding: 6px 0;">
+            <div class="attn-label" style="font-size: 12px;">Gini</div>
+            <div class="attn-cell"><div class="val blue">0.91+</div><div class="sub">极度稀疏</div></div>
+          </div>
+          <div class="attn-row" style="grid-template-columns: 100px 1fr; gap: 10px; padding: 6px 0;">
+            <div class="attn-label" style="font-size: 12px;">Sink</div>
+            <div class="attn-cell"><div class="val blue">Pos 2</div><div class="sub">12-28x vs #2</div></div>
+          </div>
+          <div class="attn-row" style="grid-template-columns: 100px 1fr; gap: 10px; padding: 6px 0; border: none;">
+            <div class="attn-label" style="font-size: 12px;">含义</div>
+            <div class="attn-cell" style="background: #eef4fa;"><div class="val blue" style="font-size: 14px;">Token pruning 可行</div></div>
+          </div>
+        </div>
+
+        <div class="card red-border">
+          <h3 class="red">VLA (fine-tuned)</h3>
+          <div class="attn-row" style="grid-template-columns: 100px 1fr; gap: 10px; padding: 6px 0;">
+            <div class="attn-label" style="font-size: 12px;">Gini</div>
+            <div class="attn-cell"><div class="val red">0.07</div><div class="sub">崩塌, 几乎均匀</div></div>
+          </div>
+          <div class="attn-row" style="grid-template-columns: 100px 1fr; gap: 10px; padding: 6px 0;">
+            <div class="attn-label" style="font-size: 12px;">Sink</div>
+            <div class="attn-cell"><div class="val red">迁移</div><div class="sub">Pos2 → Pos64</div></div>
+          </div>
+          <div class="attn-row" style="grid-template-columns: 100px 1fr; gap: 10px; padding: 6px 0; border: none;">
+            <div class="attn-label" style="font-size: 12px;">含义</div>
+            <div class="attn-cell" style="background: #fdf0ef;"><div class="val red" style="font-size: 14px;">不可直接迁移</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout red">
+        <strong>消歧 (exp05b):</strong> 3B vanilla VLM Gini 仍 0.80-0.98, 说明崩塌归因于 <strong>VLA fine-tuning</strong>, 而非 model size。
+      </div>
+
+      <div class="callout">
+        <strong>推论:</strong> VLM token pruning (FastV / TokenCondense) 不可直接迁移到 VLA。
+        若要做 VLA token 压缩, 需在 <strong>VLA-trained attention pattern</strong> 上重新设计。
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 7 — ACT 3 · Gaps & Priorities
+  ══════════════════════════════════════════════ -->
+  <div class="slide" data-act="Act 3 · 5 min">
+    <div class="slide-inner">
+      <div>
+        <div class="section-label">Act 3 · 判断</div>
+        <h2>版图里缺什么 — <em>我的优先级</em></h2>
+      </div>
+
+      <div class="two-col" style="grid-template-columns: 1fr 1fr; align-items: start;">
+        <div>
+          <h3 style="font-size: 14px; color: var(--text-muted); margin-bottom: 10px; letter-spacing: 0.06em; text-transform: uppercase;">版图空白</h3>
+          <div class="card yellow-border" style="padding: 14px 18px;">
+            <ul style="font-size: 13px;">
+              <li><strong>Action DiT 加速</strong> — FastVideo STA / 蒸馏 / caching 无人迁移</li>
+              <li><strong>无统一 benchmark</strong> — 5 模型 5 套 env, profiling 无标准</li>
+              <li><strong>无 model-size scaling curve</strong> — 不知道 "够用" 的最小 DiT</li>
+              <li><strong>Cross-attn 无人专门优化</strong> — 贡献 35-440% 额外延迟</li>
+            </ul>
+          </div>
+
+          <div class="callout blue" style="margin-top: 14px;">
+            <strong>一句话:</strong> "Fast VLA first, serving later."<br>
+            VLA 像 2022 的 video gen (单请求太慢, FastVideo 阶段), 不像 2023 的 LLM (并发爆发, vLLM 阶段)。
+          </div>
+        </div>
+
+        <div>
+          <h3 style="font-size: 14px; color: var(--text-muted); margin-bottom: 10px; letter-spacing: 0.06em; text-transform: uppercase;">候选排序 (待 Hao 校准)</h3>
+
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div class="pri-card A">
+              <div class="pri-rank">A</div>
+              <div class="pri-body">
+                <h3>Action DiT 加速</h3>
+                <p>FastVideo 迁移 · 直接打 80-94% bottleneck</p>
+              </div>
+              <div class="pri-note">P1</div>
+            </div>
+
+            <div class="pri-card B">
+              <div class="pri-rank">B</div>
+              <div class="pri-body">
+                <h3>VLA inference benchmark</h3>
+                <p>填 wild-west 空白, 配套 A · 低风险</p>
+              </div>
+              <div class="pri-note">P1</div>
+            </div>
+
+            <div class="pri-card C">
+              <div class="pri-rank">C</div>
+              <div class="pri-body">
+                <h3>DiT caching for VLA</h3>
+                <p>FastVideo-style step caching · A 的子方向</p>
+              </div>
+              <div class="pri-note">P1</div>
+            </div>
+
+            <div class="pri-card D">
+              <div class="pri-rank">D</div>
+              <div class="pri-body">
+                <h3>Serving system</h3>
+                <p>太早 — 单请求还差 2-10x</p>
+              </div>
+              <div class="pri-note">P2</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 8 — ACT 4 · Questions
+  ══════════════════════════════════════════════ -->
+  <div class="slide" data-act="Act 4 · 5 min">
+    <div class="slide-inner">
+      <div>
+        <div class="section-label">Act 4 · 请教</div>
+        <h2>四个问题</h2>
+      </div>
+
+      <ul class="q-list">
+        <li>
+          <div class="q-num">Q1</div>
+          <div class="q-body">
+            我测了 <strong>4 种范式 · 7 个模型</strong> — 漏了什么关键架构?
+            <em>重点想知道: 有没有哪类 SOTA 我不了解, 会改变 "Action DiT 是主战场" 的判断?</em>
+          </div>
+        </li>
+        <li>
+          <div class="q-num">Q2</div>
+          <div class="q-body">
+            FastVideo 的 <strong>STA / 蒸馏</strong> — 哪些能直接迁移到 VLA Action DiT?
+            <em>具体想讨论: Action DiT 的 attention 局部性还未验证, 是否值得先跑一个 Gini / entropy probe?</em>
+          </div>
+        </li>
+        <li>
+          <div class="q-num">Q3</div>
+          <div class="q-body">
+            入学前这几个月 — <strong>先上手加速实验, 还是先补系统课?</strong>
+            <em>已有 learning plan (Brrrr + CUDA MODE + vLLM + DistServe). 想听您的节奏建议。</em>
+          </div>
+        </li>
+        <li>
+          <div class="q-num">Q4</div>
+          <div class="q-body">
+            组里 <strong>谁在做相关方向?</strong>
+            <em>候选 A/B/C 是否已有 overlap; 是否有 co-mentor 可配; exp08 这种 mechanism study 有没有人感兴趣接手。</em>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 9 — BACKUP: exp08 one-liner
+  ══════════════════════════════════════════════ -->
+  <div class="slide" data-act="Backup · 他问才放">
+    <div class="slide-inner">
+      <div>
+        <div class="section-label muted">Backup · exp08</div>
+        <h2>EPDA 四阶段共存干扰 — <em>他问才展开</em></h2>
+      </div>
+
+      <div class="two-col" style="grid-template-columns: 1fr 1fr;">
+        <div class="card red-border">
+          <h3 class="red">脆弱: D / P (decode / prefill)</h3>
+          <ul>
+            <li>D 被 A 拉 <strong>2.65x</strong>, 被 P 拉 2.48x</li>
+            <li>P 被 A 拉 <strong>2.88x</strong>, 被 D 拉 2.42x</li>
+            <li>Kernel launch queue / SM scheduler 争用</li>
+          </ul>
+        </div>
+
+        <div class="card green-border">
+          <h3 class="green">鲁棒: E / A (encode / action)</h3>
+          <ul>
+            <li>E 被 A 拉 0.97x (噪声, ≈ 无影响)</li>
+            <li>A 被 E 拉 1.23x, 被 P 拉 1.19x</li>
+            <li>Compute-bound 阶段彼此干扰小</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout big">
+        <strong>M4 asymmetric contention model:</strong> R² = 0.94<br>
+        <code style="font-family: var(--font-mono); font-size: 13px;">inflation(X|Y) = 1 + vulnerability(X) · aggressiveness(Y)</code><br>
+        — A 是 "隐形破坏者" (v=0.20 自身稳, a=1.12 干扰别人最强)
+      </div>
+
+      <div class="callout">
+        <strong>部署建议:</strong> {E, A} 可同卡; {P, D} 必须 disaggregate — 和 DistServe PD disagg 一脉相承, 扩展到四阶段。<br>
+        <strong>现状:</strong> 这个方向 park 住, 等 serving 成真需求再展开。
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 10 — CLOSING
+  ══════════════════════════════════════════════ -->
+  <div class="slide" data-act="">
+    <div class="slide-inner" style="gap: 24px;">
+      <div>
+        <div class="section-label">Closing</div>
+        <h2>一页带走</h2>
+      </div>
+
+      <div class="arrow-row">
+        <div class="arrow-step">
+          <div class="step-val">3 ms</div>
+          <div class="step-label">Jump 1 · ACT</div>
+        </div>
+        <div class="arrow-sep">&rarr;</div>
+        <div class="arrow-step">
+          <div class="step-val">74 ms</div>
+          <div class="step-label">Jump 2 · Flow</div>
+        </div>
+        <div class="arrow-sep">&rarr;</div>
+        <div class="arrow-step">
+          <div class="step-val">18–407 ms</div>
+          <div class="step-label">Jump 3 · DiT VLAs</div>
+        </div>
+        <div class="arrow-sep">&rarr;</div>
+        <div class="arrow-step">
+          <div class="step-val">2518 ms</div>
+          <div class="step-label">Jump 4 · Full WAM</div>
+        </div>
+      </div>
+
+      <div class="three-col">
+        <div class="card accent-border">
+          <h3 class="accent">主战场</h3>
+          <p style="font-size: 13px;">Action DiT = <strong>80–94%</strong> 延迟。DiT 2x params 带 4.4x latency。Cross-attn 再 +35–440%。</p>
+        </div>
+
+        <div class="card blue-border">
+          <h3 class="blue">最有空间</h3>
+          <p style="font-size: 13px;">STA / 蒸馏 / step caching — FastVideo &gt;50x denoising 加速，尚无人迁移到 VLA。</p>
+        </div>
+
+        <div class="card green-border">
+          <h3 class="green">叙事</h3>
+          <p style="font-size: 13px;"><strong>Fast VLA first, serving later.</strong> VLA 像 2022 video gen, 不像 2023 LLM。</p>
+        </div>
+      </div>
+
+      <div class="callout big" style="text-align: center;">
+        <strong>候选方向:</strong> A (Action DiT 加速) &gt; B (benchmark) &gt; C (DiT caching) &gt;&gt; D (serving, too early)
+      </div>
+
+      <p style="text-align: center; color: var(--text-muted); font-family: var(--font-mono); font-size: 13px; margin-top: 8px;">Thank you · ready for questions.</p>
+    </div>
+  </div>
+
+</div><!-- /deck -->
+
+<div class="counter" id="counter" aria-live="polite">1 / 10</div>
+<div class="act-marker" id="actMarker"></div>
+
+<script>
+(function () {
+  var slides = Array.from(document.querySelectorAll('.slide'));
+  var counter = document.getElementById('counter');
+  var actMarker = document.getElementById('actMarker');
+  var total = slides.length;
+  var current = 0;
+
+  function show(idx) {
+    slides[current].classList.remove('active');
+    current = (idx + total) % total;
+    slides[current].classList.add('active');
+    counter.textContent = (current + 1) + ' / ' + total;
+    var act = slides[current].getAttribute('data-act') || '';
+    actMarker.textContent = act;
+    actMarker.style.opacity = act ? 1 : 0;
+  }
+
+  // initial
+  show(0);
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); show(current + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(current - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); show(0); }
+    else if (e.key === 'End') { e.preventDefault(); show(total - 1); }
+  });
+
+  document.getElementById('deck').addEventListener('click', function (e) {
+    if (e.target.closest('a, button')) return;
+    show(current + 1);
+  });
+})();
+</script>
+</body>
+</html>

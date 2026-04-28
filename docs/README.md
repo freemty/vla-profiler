@@ -122,6 +122,7 @@ Project documentation map. All paths relative to repo root.
 | `viewer/static/survey-dashboard.html` | Interactive survey dashboard (Pareto, pipeline comparison, maturity matrix) |
 | `viewer/static/scaling-curve.html` | DiT scaling scatter (log-log), latency spectrum, NitroGen k-sweep, paradigm comparison |
 | `viewer/static/design-space.html` | **Action Model Design Space dashboard** (2026-04-28, Hao meeting) — 7-model paradigm scatter + phase breakdown stacked bar + DiT scaling curve |
+| `slides/hao-meeting-2026-04-28.html` | **Hao meeting deck** (10 slides, 四幕叙事) — Title / Opening / 4 Jumps / Main battle / Spectrum recap / VLA attention / Priorities / Questions / exp08 backup / Closing |
 | `slides/epda-roofline-motivation.html` | **exp08 one-pager** — EPDA roofline 可视化 + 干扰矩阵预测 (advisor meeting figure) |
 
 ## Meeting & Planning

@@ -19,7 +19,7 @@ VLA 推理现在卡在**单请求太慢** (Pi-Zero 200ms=5Hz, 需要 10-50Hz)，
 - [x] **P0** 画 7-model Pareto 图 (一页, 有 Hz 刻度) — `viewer/static/design-space.html` Section 01 散点图 ✅
 - [x] **P0** 画 DiT scaling curve 图 (174M / 300M / 350M per-step, 含 cross-attn 标注) — `viewer/static/design-space.html` Section 03 ✅
 - [x] **P0** 读 FastVideo / DistServe — 已有综合 survey (`survey/papers/hao-style-fastvideo.md`, `hao-style-distserve.md`)，蒸馏为口头速查 `docs/meeting-cheatsheet.md` ✅
-- [ ] **P0** 更新 `slides/` 演示: 加 "Fast VLA First" framing + Pareto 图 + DiT scaling
+- [x] **P0** 新 slide deck 按四幕叙事重做 — `slides/hao-meeting-2026-04-28.html` (10 页, Title/Opening/4 Jumps/Jump 3 deep dive/Spectrum bars/VLA attention/Priorities/Questions/exp08 backup/Closing) ✅
 - [x] **P0** 准备 exp08 一页总结 (备用) — `docs/meeting-cheatsheet.md` 末尾口头版 ✅
 - [x] **P0** 详见 `docs/hao-meeting-prep.md` — 四幕叙事结构已完成 ✅
 
