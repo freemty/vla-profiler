@@ -122,4 +122,9 @@ Cross-experiment flight recorder. Per-exp **目的 / 方法 / 结果 / 下一步
 | exp08a | EPDA pair-wise pilot (DA/PA) | **done** | DA: D×3.52, A×1.58. PA: P×2.27, A×1.15. Roofline 低估 2–28x。 |
 | exp08b | Full 6-pair EPDA matrix | **done (pairs)** | D/P 脆弱 (2.4–2.9x) vs E/A 鲁棒 (<1.3x)。Triples/quad pending。 |
 | exp08c | GPU contention model fit | **done (v1)** | M4 asymmetric R²=0.94. inflation=1+v_X·a_Y. 部署: {E,A} 同卡 / {P,D} 必 disagg。 |
-| exp09a | Cosmos Policy direct-mode profiling | **ready** | Fill paper's latency gap. Pure DiT homogeneous → FastVideo accel candidate. |
+| exp09 | Full reproducibility + LIBERO eval | **planned** | Align all 7 models to official weights/configs, run LIBERO-4 success rate eval |
+| exp09_latency | Latency rerun (official configs) | **planned** | NitroGen 500M real, Fast-WAM 5-step, Pi-Zero real weights, others sanity |
+| exp09a | Fast-WAM LIBERO-4 eval | **planned** | 5-step, real ckpt, 20 ep/task × 4 suites |
+| exp09b | Pi-Zero LIBERO-4 eval | **planned** | pi0-base real ckpt, 20 ep/task × 4 suites |
+| exp09c | LingBot-VLA LIBERO-4 eval | **planned** | 4B real ckpt, 20 ep/task × 4 suites |
+| exp09d | LingBot-VA LIBERO-4 eval | **planned** | Conditional on checkpoint found (Task 8) |
