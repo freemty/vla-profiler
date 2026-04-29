@@ -127,5 +127,5 @@ Cross-experiment flight recorder. Per-exp **目的 / 方法 / 结果 / 下一步
 | exp06b | NitroGen full 500M real-weight | **done** | 7.1ms/step — identical to exp06a (DiT=181M, not 500M). |
 | exp07b | Pi-Zero real-weight profiling | **done** | 225ms total. vs exp07a 200ms (+12%). Random-weight timing ≈ faithful. |
 | exp03b | LingBot-VLA LIBERO-4 eval | **planned** | 4B real ckpt, 20 ep/task × 4 suites |
-| exp04e | Fast-WAM LIBERO-4 eval | **planned** | 5-step, real ckpt, 20 ep/task × 4 suites |
+| exp04e | Fast-WAM LIBERO-4 eval | **done** | 94.5% avg (spatial 91.5 / object 100 / goal 97 / 10 89.5), 800 ep, real ckpt 5-step |
 | exp07c | Pi-Zero LIBERO-4 eval | **planned** | pi0-base real ckpt, 20 ep/task × 4 suites |

@@ -200,9 +200,9 @@ Pipeline state tracked in .pipeline-state.json.
   - **exp05b (Qwen2.5-VL-3B attention):** 消歧: Gini 崩塌归因于 VLA fine-tuning (非 model size)。3B vanilla Gini 0.80-0.98。
   - **exp06a (NitroGen 500M DiT):** Per-step 7.2ms (174M DiT), perfectly linear. 174M→350M: 2x params, 4.4x latency → compute-bound 到 memory-BW-bound 转换。k=1: 55.9Hz。
 - **exp07a (profiling):** **Canonical (stable-window runs 13-20)**: E=9.32ms/C=26.40ms/A=164.76ms (total 200.5ms, ~5Hz). **Action Expert (300M Gemma) dominates 82% latency.** Per-step ~16.5ms. Cross-attn to PaliGemma KV makes 300M Expert ~2.3x pricier than pure DiT. DiT scaling curve: 174M=7.2ms < 300M=16.5ms < 350M=32ms. Bimodal 污染: runs 1-12 慢 1.25x (GPU 功率爬坡) → warmup=15 + `nvidia-smi -pm 1` 为后续默认配置。
-- **exp06b (NitroGen 500M real):** Per-step 7.1ms (DiT=181M not 500M, identical to exp06a 174M variant). Real ng.pt + 1024 hidden + 25 action_dim.
+  - **exp06b (NitroGen 500M real):** Per-step 7.1ms (DiT=181M not 500M, identical to exp06a 174M variant). Real ng.pt + 1024 hidden + 25 action_dim.
   - **exp04c (Fast-WAM 5-step):** 257ms / 3.9Hz (paper 190ms on A100, 1.35x RTX 5880). Per-step 41ms.
   - **exp07b (Pi-Zero real):** 225ms total (vs exp07a random 200ms, Δ=12%). Validates random-weight timing.
-  - **exp04e (Fast-WAM LIBERO):** task0 spatial 95% / object 100% / goal 100% / 10 90%. Full 800-ep running.
+  - **exp04e (Fast-WAM LIBERO):** spatial 91.5% / object 100% / goal 97% / 10 89.5% — avg **94.5%** (800 ep, paper 93.7%).
 - **latest (v0.9.0):** Reproducibility pass + LIBERO eval. 4/7 real weights, random-weight timing Δ<12%.
-- **next:** Fast-WAM LIBERO full results → dashboard update → Hao meeting → P1 候选 A (Action DiT 加速). 详见 `docs/TODO.md`。
+- **next:** Hao meeting → P1 候选 A (Action DiT 加速). 详见 `docs/TODO.md`。

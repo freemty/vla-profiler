@@ -16,8 +16,8 @@ LATENCY_MODELS = {
 }
 
 LIBERO_DIRS = {
-    "fastwam": Path("exp/exp04e"),
-    "pizero": Path("exp/exp07c"),
+    "fastwam_5step": Path("exp/exp04e"),
+    "pizero_real": Path("exp/exp07c"),
     "lingbot_vla_4b": Path("exp/exp03b"),
     "lingbotva": Path("exp/exp04d"),
 }
