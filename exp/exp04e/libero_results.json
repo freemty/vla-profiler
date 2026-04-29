@@ -1,0 +1,239 @@
+{
+  "libero_spatial": {
+    "success": 183,
+    "total": 200,
+    "rate": 0.915,
+    "tasks": [
+      {
+        "task_id": 0,
+        "success": 19,
+        "total": 20
+      },
+      {
+        "task_id": 1,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 2,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 3,
+        "success": 18,
+        "total": 20
+      },
+      {
+        "task_id": 4,
+        "success": 18,
+        "total": 20
+      },
+      {
+        "task_id": 5,
+        "success": 10,
+        "total": 20
+      },
+      {
+        "task_id": 6,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 7,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 8,
+        "success": 19,
+        "total": 20
+      },
+      {
+        "task_id": 9,
+        "success": 19,
+        "total": 20
+      }
+    ]
+  },
+  "libero_object": {
+    "success": 200,
+    "total": 200,
+    "rate": 1.0,
+    "tasks": [
+      {
+        "task_id": 0,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 1,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 2,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 3,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 4,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 5,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 6,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 7,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 8,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 9,
+        "success": 20,
+        "total": 20
+      }
+    ]
+  },
+  "libero_goal": {
+    "success": 194,
+    "total": 200,
+    "rate": 0.97,
+    "tasks": [
+      {
+        "task_id": 0,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 1,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 2,
+        "success": 19,
+        "total": 20
+      },
+      {
+        "task_id": 3,
+        "success": 17,
+        "total": 20
+      },
+      {
+        "task_id": 4,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 5,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 6,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 7,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 8,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 9,
+        "success": 18,
+        "total": 20
+      }
+    ]
+  },
+  "libero_10": {
+    "success": 179,
+    "total": 200,
+    "rate": 0.895,
+    "tasks": [
+      {
+        "task_id": 0,
+        "success": 18,
+        "total": 20
+      },
+      {
+        "task_id": 1,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 2,
+        "success": 17,
+        "total": 20
+      },
+      {
+        "task_id": 3,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 4,
+        "success": 16,
+        "total": 20
+      },
+      {
+        "task_id": 5,
+        "success": 20,
+        "total": 20
+      },
+      {
+        "task_id": 6,
+        "success": 12,
+        "total": 20
+      },
+      {
+        "task_id": 7,
+        "success": 19,
+        "total": 20
+      },
+      {
+        "task_id": 8,
+        "success": 17,
+        "total": 20
+      },
+      {
+        "task_id": 9,
+        "success": 20,
+        "total": 20
+      }
+    ]
+  },
+  "overall": {
+    "success": 756,
+    "total": 800,
+    "rate": 0.945
+  },
+  "model": "Fast-WAM",
+  "config": "5-step, real ckpt libero_uncond_2cam224.pt",
+  "gpu": "RTX 5880 Ada",
+  "episodes_per_task": 20
+}
