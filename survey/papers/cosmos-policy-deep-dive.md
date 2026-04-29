@@ -88,8 +88,13 @@ Cosmos Policy 在 vlla landscape 里开辟了第三个品类: **"unified video-p
 
 ## Open Questions
 
-1. ~~**Direct mode 到底多慢?**~~ **已回答 (exp09a)**: **1362ms / 0.73Hz** on RTX 5880 Ada (5-step EDM, parallel gen). Per-step ~272ms. 比 domain-expert 估算 (~500ms) 慢 2.7x, 原因是 e2e 包含 VAE encode + future state + value generation. 纯 action-only (no parallel gen) 待测。
-2. **5 steps 可压到多少?** 论文用 5-step (非 50-step), 进一步 distill 到 1-step 是否保质?
+1. ~~**Direct mode 到底多慢?**~~ **已回答 (exp09a, full sweep)**:
+   - **Action-only 5-step: 659ms / 1.5Hz** (parallel_gen=False)
+   - **Full (action+future+value): 1363ms / 0.73Hz** (parallel_gen=True, +698ms overhead)
+   - **Linear fit (R²=0.9975)**: fixed cost **265ms** (VAE encode + extract) + **76.8ms/step** (DiT denoise)
+   - **1-step distilled 预测: 342ms / 2.9Hz** (固定成本占主导)
+   - 之前估算 "~500ms" 和 "272ms/step" 都不准确: 前者忽略了 parallel_gen 开销, 后者是 total/steps 而非斜率
+2. ~~**5 steps 可压到多少?**~~ **部分回答**: step sweep 显示 1-step 和 2-step 几乎一样 (378ms vs 381ms), 说明 fixed cost 占主导。1-step distillation → 342ms/2.9Hz 是可达的; 但真实 quality 损失需要 LIBERO eval 验证。
 3. **Action latent 维度多少?** 对 action head 线性投影的 rank 有影响, 代码应该有
 4. ~~**Cosmos-Predict2-2B 在 RTX 5880 Ada 48GB 上显存够吗?**~~ **已回答 (exp09a)**: Peak VRAM = 8816 MB. 48GB 绰绰有余。
 5. **和 LingBot-VA 的 full WAM (697ms video + 1708ms action = 2518ms) 比, Cosmos Policy 是否真的更快?** 需要同机测

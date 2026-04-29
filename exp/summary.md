@@ -99,9 +99,14 @@ Cross-experiment flight recorder. Per-exp **目的 / 方法 / 结果 / 下一步
 ## exp09a — Cosmos Policy direct-mode latency profiling · **done**
 
 - **目的**：测量 Cosmos Policy (Cosmos-Predict2-2B, LIBERO 98.5%) 的 direct-mode 推理延迟。论文 (arXiv:2601.16163) 零报告该数字，只说 planning 5s/chunk。
-- **方法**：cosmos-policy 官方 `get_action()` + CUDA event e2e timing，合成 LIBERO 输入 (224×224, 9-dim proprio)。RTX 5880 Ada, warmup=15, iter=20, 5-step EDM denoise, parallel_gen=True。
-- **结果**：**E2E median = 1362.5ms (0.73Hz)**。std=4.83ms (CV=0.35%)。Peak VRAM 8816MB。1.96B params。Per-step DiT cost ~272ms。比 Pi-Zero 慢 6.8x，比 Fast-WAM 慢 5.3x，比 LingBot-VA 快 1.8x。
-- **下一步**：跑 `--no-parallel-gen` 对照（纯 action-only，去掉 future state + value generation overhead）；step sweep (1/2/5/10/20)；更新 deep-dive 文档。
+- **方法**：cosmos-policy 官方 `get_action()` + CUDA event e2e timing，合成 LIBERO 输入 (224×224, 9-dim proprio)。RTX 5880 Ada, warmup=15, 5-step EDM denoise。跑了 parallel_gen=True/False 对照 + step sweep (1/2/5/10/20)。
+- **结果**：
+  - **Action-only 5-step: 659ms / 1.5Hz** (parallel_gen=False)
+  - **Full (action+future+value) 5-step: 1363ms / 0.73Hz** (parallel_gen=True, 额外 698ms)
+  - **Linear fit (R²=0.9975)**: fixed cost 265ms (VAE+extract) + **76.8ms/step** (DiT denoise)
+  - **1-step distilled 预测: 342ms / 2.9Hz**
+  - Peak VRAM 8816MB, 1.96B params
+- **下一步**：更新 Hao meeting slides 加入 Cosmos Policy 数据点；确认 1-step distillation quality loss on LIBERO。
 
 ---
 
@@ -129,4 +134,4 @@ Cross-experiment flight recorder. Per-exp **目的 / 方法 / 结果 / 下一步
 | exp03b | LingBot-VLA LIBERO-4 eval | **planned** | 4B real ckpt, 20 ep/task × 4 suites |
 | exp04e | Fast-WAM LIBERO-4 eval | **done** | 94.5% avg (spatial 91.5 / object 100 / goal 97 / 10 89.5), 800 ep, real ckpt 5-step |
 | exp07c | Pi-Zero LIBERO-4 eval | **planned** | pi0-base real ckpt, 20 ep/task × 4 suites |
-| exp09a | Cosmos Policy direct-mode profiling | **done** | **1362ms / 0.73Hz** (5-step, 1.96B DiT). Per-step 272ms. Paper 缺口已填。 |
+| exp09a | Cosmos Policy direct-mode profiling | **done** | Action-only 659ms/1.5Hz, full 1363ms/0.73Hz. **Per-step DiT = 76.8ms** (linear R²=0.9975). Fixed cost 265ms. 1-step → 342ms/2.9Hz. |

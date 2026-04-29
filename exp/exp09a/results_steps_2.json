@@ -1,0 +1,37 @@
+{
+  "experiment": "exp09a",
+  "model": "Cosmos-Policy-LIBERO-Predict2-2B",
+  "model_params_B": 1.96,
+  "denoise_steps": 2,
+  "chunk_size": 16,
+  "chunk_duration_s": 0.64,
+  "image_size": 224,
+  "parallel_gen": false,
+  "gpu_name": "NVIDIA RTX 5880 Ada Generation",
+  "device": "cuda:0",
+  "dtype": "bfloat16",
+  "mode": "synthetic",
+  "warmup": 15,
+  "iterations": 10,
+  "e2e": {
+    "median_ms": 380.51,
+    "mean_ms": 382.5,
+    "std_ms": 4.89,
+    "min_ms": 377.73,
+    "max_ms": 394.04,
+    "all_ms": [
+      383.5,
+      394.04,
+      387.82,
+      379.53,
+      381.13,
+      380.13,
+      380.15,
+      380.78,
+      377.73,
+      380.25
+    ]
+  },
+  "policy_query_hz": 2.63,
+  "peak_vram_mb": 8816
+}
