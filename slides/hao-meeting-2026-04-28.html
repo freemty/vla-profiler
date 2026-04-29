@@ -389,12 +389,12 @@ p  { font-size: 16px; line-height: 1.65; color: var(--text-secondary); }
         </div>
 
         <div class="jump j3">
-          <div class="jump-num">exp06a · 07a · 04a</div>
+          <div class="jump-num">exp06b · 07b · 04c</div>
           <h3>Jump 3 — Independent Action DiT</h3>
-          <div class="model-tag">NitroGen · Pi-Zero · Fast-WAM</div>
-          <div class="latency">18 – 407 ms</div>
-          <div class="hz">2.5 – 56 Hz · <strong>Action 80-94% 主战场</strong></div>
-          <p>DiT scaling 超线性: 174M→350M, 2x params / 4.4x latency。Cross-attn 隐藏 tax 35-440%。</p>
+          <div class="model-tag">NitroGen (real) · Pi-Zero (real) · Fast-WAM (5-step)</div>
+          <div class="latency">17 – 257 ms</div>
+          <div class="hz">3.9 – 60 Hz · <strong>Action 80-94% 主战场</strong></div>
+          <p>DiT scaling 超线性: 181M→350M. Real vs random Δ&lt;12%. Fast-WAM 5-step 对齐 paper.</p>
         </div>
 
         <div class="jump j4">
@@ -437,25 +437,25 @@ p  { font-size: 16px; line-height: 1.65; color: var(--text-secondary); }
             </thead>
             <tbody>
               <tr>
-                <td>NitroGen</td>
-                <td class="num">174M</td>
-                <td class="num">7.2 ms</td>
-                <td class="num">18 ms (k=1)</td>
+                <td>NitroGen <span class="badge green">real</span></td>
+                <td class="num">181M</td>
+                <td class="num">7.1 ms</td>
+                <td class="num">17 ms (k=1)</td>
                 <td class="num">~90%</td>
               </tr>
               <tr class="highlight">
-                <td>Pi-Zero</td>
+                <td>Pi-Zero <span class="badge green">real</span></td>
                 <td class="num">300M</td>
-                <td class="num">16.5 ms</td>
-                <td class="num">200 ms (k=10)</td>
+                <td class="num">18.3 ms</td>
+                <td class="num">225 ms (k=10)</td>
                 <td class="num">82%</td>
               </tr>
               <tr>
-                <td>Fast-WAM</td>
+                <td>Fast-WAM <span class="badge accent">5-step</span></td>
                 <td class="num">350M</td>
-                <td class="num">32 ms</td>
-                <td class="num">407 ms (k=10)</td>
-                <td class="num">89%</td>
+                <td class="num">41 ms</td>
+                <td class="num">257 ms (k=5)</td>
+                <td class="num">80%</td>
               </tr>
             </tbody>
           </table>
@@ -520,33 +520,33 @@ p  { font-size: 16px; line-height: 1.65; color: var(--text-secondary); }
         </div>
 
         <div class="phase-bar-row">
-          <div class="phase-bar-label">NitroGen k=1<span class="phase-bar-sublabel">Jump 3 · 174M DiT</span></div>
+          <div class="phase-bar-label">NitroGen k=1<span class="phase-bar-sublabel">Jump 3 · 181M DiT · real</span></div>
           <div class="phase-bar-container">
-            <div class="phase-bar-segment phase-e" style="flex: 45;">E 8</div>
-            <div class="phase-bar-segment phase-c" style="flex: 10;">C</div>
-            <div class="phase-bar-segment phase-a" style="flex: 45;">A 7.2</div>
+            <div class="phase-bar-segment phase-e" style="flex: 47;">E 7.8</div>
+            <div class="phase-bar-segment phase-c" style="flex: 11;">C</div>
+            <div class="phase-bar-segment phase-a" style="flex: 42;">A 7.1</div>
           </div>
-          <div class="phase-bar-total"><strong>18ms</strong> · 56Hz</div>
+          <div class="phase-bar-total"><strong>17ms</strong> · 60Hz</div>
         </div>
 
         <div class="phase-bar-row">
-          <div class="phase-bar-label">Pi-Zero<span class="phase-bar-sublabel">Jump 3 · 300M DiT k=10</span></div>
+          <div class="phase-bar-label">Pi-Zero<span class="phase-bar-sublabel">Jump 3 · 300M DiT · real</span></div>
           <div class="phase-bar-container">
             <div class="phase-bar-segment phase-e" style="flex: 5;"></div>
-            <div class="phase-bar-segment phase-c" style="flex: 13;">C 26</div>
-            <div class="phase-bar-segment phase-a" style="flex: 82;">A 165ms · 82%</div>
+            <div class="phase-bar-segment phase-c" style="flex: 13;">C 30</div>
+            <div class="phase-bar-segment phase-a" style="flex: 82;">A 183ms · 81%</div>
           </div>
-          <div class="phase-bar-total"><strong>200ms</strong> · 5Hz</div>
+          <div class="phase-bar-total"><strong>225ms</strong> · 4.4Hz</div>
         </div>
 
         <div class="phase-bar-row">
-          <div class="phase-bar-label">Fast-WAM<span class="phase-bar-sublabel">Jump 3 · 350M DiT k=10</span></div>
+          <div class="phase-bar-label">Fast-WAM<span class="phase-bar-sublabel">Jump 3 · 350M DiT · 5-step</span></div>
           <div class="phase-bar-container">
-            <div class="phase-bar-segment phase-e" style="flex: 2;"></div>
-            <div class="phase-bar-segment phase-c" style="flex: 9;">C</div>
-            <div class="phase-bar-segment phase-a" style="flex: 89;">A 362ms · 89%</div>
+            <div class="phase-bar-segment phase-e" style="flex: 3;"></div>
+            <div class="phase-bar-segment phase-c" style="flex: 17;">C 43</div>
+            <div class="phase-bar-segment phase-a" style="flex: 80;">A 206ms · 80%</div>
           </div>
-          <div class="phase-bar-total"><strong>407ms</strong> · 2.5Hz</div>
+          <div class="phase-bar-total"><strong>257ms</strong> · 3.9Hz</div>
         </div>
 
         <div class="phase-bar-row">
@@ -745,7 +745,51 @@ p  { font-size: 16px; line-height: 1.65; color: var(--text-secondary); }
   </div>
 
   <!-- ══════════════════════════════════════════════
-       SLIDE 9 — BACKUP: exp08 one-liner
+       SLIDE 9 — Reproducibility (他问才展开)
+  ══════════════════════════════════════════════ -->
+  <div class="slide" data-act="Backup · Reproducibility">
+    <div class="slide-inner">
+      <div>
+        <div class="section-label muted">Backup · 复现</div>
+        <h2>Reproducibility — <em>真权重 × 官方配置</em></h2>
+      </div>
+
+      <div class="two-col" style="grid-template-columns: 1fr 1fr; align-items: start;">
+        <div>
+          <h3 style="font-size: 14px; color: var(--text-muted); margin-bottom: 10px; letter-spacing: 0.06em; text-transform: uppercase;">Latency: Real vs Random Weights</h3>
+          <div class="card blue-border" style="padding: 14px 18px;">
+            <ul style="font-size: 13px;">
+              <li><strong>NitroGen 500M</strong> (real ng.pt): 7.1ms/step — vs random 7.2ms (<strong>Δ&lt;2%</strong>)</li>
+              <li><strong>Pi-Zero</strong> (real pi0-base): 225ms — vs random 200ms (<strong>Δ=12%</strong>)</li>
+              <li><strong>Fast-WAM 5-step</strong>: 257ms / 3.9Hz — paper 报 190ms on A100 (<strong>1.35x</strong> RTX 5880)</li>
+              <li><strong>LingBot-VLA</strong> + <strong>Qwen-VL</strong>: 已用真权重 (exp03a / exp01a)</li>
+            </ul>
+          </div>
+          <div class="callout" style="margin-top: 12px; font-size: 13px;">
+            <strong>结论:</strong> Random-weight timing Δ&lt;12%。权重值不改变 CUDA kernel 计算图 — profiling 可信。
+          </div>
+        </div>
+
+        <div>
+          <h3 style="font-size: 14px; color: var(--text-muted); margin-bottom: 10px; letter-spacing: 0.06em; text-transform: uppercase;">LIBERO Task Success (preliminary)</h3>
+          <div class="card green-border" style="padding: 14px 18px;">
+            <ul style="font-size: 13px;">
+              <li><strong>Fast-WAM 5-step</strong>: LIBERO spatial 95%, object 100%, goal 100%, 10 90% <span class="badge accent">task0 only</span></li>
+              <li><strong>Pi-Zero</strong>: paper 报 96.9% avg (π0.5 finetuned)</li>
+              <li><strong>LingBot-VA</strong>: env 兼容性问题, deferred</li>
+              <li>Full 800-episode eval running (Fast-WAM)</li>
+            </ul>
+          </div>
+          <div class="callout green" style="margin-top: 12px; font-size: 13px;">
+            <strong>4/7 模型用真权重，3/7 用官方架构随机权重 (timing-faithful)。</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 10 — BACKUP: exp08 one-liner
   ══════════════════════════════════════════════ -->
   <div class="slide" data-act="Backup · 他问才放">
     <div class="slide-inner">
@@ -846,7 +890,7 @@ p  { font-size: 16px; line-height: 1.65; color: var(--text-secondary); }
 
 </div><!-- /deck -->
 
-<div class="counter" id="counter" aria-live="polite">1 / 10</div>
+<div class="counter" id="counter" aria-live="polite">1 / 11</div>
 <div class="act-marker" id="actMarker"></div>
 
 <script>
