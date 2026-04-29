@@ -29,6 +29,10 @@
 - **Fast-WAM LIBERO 完整复现**: 94.5% avg (800 ep) vs paper 93.7% — 匹配在噪声范围内
 - **exp09a Cosmos Policy**: direct-mode 1362ms / 0.73Hz (RTX 5880, 5-step EDM), per-step 272ms, VRAM 8816MB
 
+### 修复 (Codex adversarial challenge)
+- `run_fastwam_fullweight.sh`: `--steps` → `--num-inference-steps` (argparse mismatch = dead script)
+- `consolidate_matrix.py`: `load_libero` 支持聚合 `libero_results.json` 格式 (was silently producing empty LIBERO rows)
+
 ### Deferred
 - Pi-Zero LIBERO eval (openpi 依赖 flax/JAX, GitHub 被防火墙挡)
 - LingBot-VA LIBERO eval (vit-probe cuDNN crash + fastwam env flash-attn build fail)
