@@ -40,6 +40,11 @@ Project documentation map. All paths relative to repo root.
 | `exp/exp05b/` | Qwen2.5-VL-3B (attention) | Done | Disambiguation: Gini collapse = VLA fine-tuning |
 | `exp/exp06a/` | NitroGen 500M DiT (profiling) | Done | 7.2ms/step, linear, k=1: 55.9Hz |
 | `exp/exp07a/` | Pi-Zero dual-stream (profiling) | Done | **stable**: E=9.32/C=26.40/A=164.76ms (200.5ms, ~5Hz) |
+| `exp/exp04c/` | Fast-WAM 5-step paper-aligned | Done (v0.9.0) | 257ms / 3.9Hz (paper 190ms A100) |
+| `exp/exp04d/` | LingBot-VA real-weight LIBERO | Deferred | ckpt found, env compat issue |
+| `exp/exp04e/` | **Fast-WAM LIBERO-4 eval** | Done (v0.9.0) | **94.5% avg** (spatial 91.5 / object 100 / goal 97 / 10 89.5), 800 ep |
+| `exp/exp06b/` | NitroGen 500M real-weight | Done (v0.9.0) | 7.1ms/step (DiT=181M, identical to exp06a) |
+| `exp/exp07b/` | Pi-Zero real-weight profiling | Done (v0.9.0) | 225ms total (random 200ms, Δ=12%) |
 | `exp/summary.md` | Flight recorder | — | All experiments, one row each |
 
 ## Design Specs & Plans
@@ -52,6 +57,8 @@ Project documentation map. All paths relative to repo root.
 | `docs/superpowers/plans/2026-04-15-attention-overlay-visualization.md` | Attention overlay 实施计划 |
 | `docs/specs/2026-04-26-epda-disaggregation-spec.md` | **exp08 spec** — EPDA 四阶段干扰量化 (L1→L2 跨越, DistServe-style motivation figure) |
 | `docs/specs/2026-04-26-epda-roofline-analysis.md` | **exp08 roofline 分析** — E/P/D/A 在 RTX 5880 Ada 上的 AI/utilization 坐标, go/no-go 论证, 干扰矩阵预测 |
+| `docs/specs/2026-04-28-reproducibility-spec.md` | **Reproducibility spec (v0.9.0)** — 7 模型官方配置合约 (权重/架构/步数/benchmark) + 已知偏差 |
+| `docs/superpowers/plans/2026-04-28-full-reproducibility-libero.md` | **Reproducibility + LIBERO eval 计划** — 18 tasks, 5 phases |
 
 ## Knowhow (Operational Knowledge)
 
@@ -61,6 +68,7 @@ Project documentation map. All paths relative to repo root.
 |------|-------------|
 | `docs/knowhow/runbooks/deploy-to-xdlab23.md` | xdlab23 首次部署 + 日常 sync 流程 |
 | `docs/knowhow/runbooks/setup-uv-env-xdlab23.md` | uv venv 替代 conda (非交互 SSH 场景) |
+| `docs/knowhow/runbooks/install-libero.md` | LIBERO 安装 — PyPI + assets 部署 (GitHub clone→scp) + 6 个 gotcha |
 
 ### Toolchain
 
@@ -84,6 +92,8 @@ Project documentation map. All paths relative to repo root.
 | `docs/knowhow/debug-solutions/lingbot-va-wam-integration.md` | LingBot-VA full WAM 集成 7 个陷阱 (构造参数, VAE, timestep, action_mode) |
 | `docs/knowhow/debug-solutions/nitrogen-controller-deployment.md` | NitroGen 部署 5 个问题 + Codex 审查发现 |
 | `docs/knowhow/debug-solutions/pizero-integration.md` | Pi-Zero 集成 5 个陷阱 — vendor src/ 命名冲突、manual timing vs hooks、opaque infer_action、uv-over-conda、cv2/matplotlib 依赖 |
+| `docs/knowhow/debug-solutions/conda-env-model-compat.md` | **Conda env × 模型兼容矩阵** — 哪个 env 跑哪个模型, flash-attn/cuDNN/flax blockers |
+| `docs/knowhow/debug-solutions/concurrent-cuda-stream-profiling-pitfalls.md` | 并发 CUDA stream profiling 陷阱 |
 
 ### Infrastructure
 
@@ -122,7 +132,8 @@ Project documentation map. All paths relative to repo root.
 | `viewer/static/survey-dashboard.html` | Interactive survey dashboard (Pareto, pipeline comparison, maturity matrix) |
 | `viewer/static/scaling-curve.html` | DiT scaling scatter (log-log), latency spectrum, NitroGen k-sweep, paradigm comparison |
 | `viewer/static/design-space.html` | **Action Model Design Space dashboard** (2026-04-28, Hao meeting) — 7-model paradigm scatter + phase breakdown stacked bar + DiT scaling curve |
-| `slides/hao-meeting-2026-04-28.html` | **Hao meeting deck** (10 slides, 四幕叙事) — Title / Opening / 4 Jumps / Main battle / Spectrum recap / VLA attention / Priorities / Questions / exp08 backup / Closing |
+| `viewer/static/reproducibility.html` | **Reproducibility Matrix dashboard** (v0.9.0) — latency old vs new grouped bars + LIBERO-4 success heatmap |
+| `slides/hao-meeting-2026-04-28.html` | **Hao meeting deck** (11 slides, 四幕叙事 + reproducibility backup) — real-weight data + LIBERO 94.5% |
 | `slides/epda-roofline-motivation.html` | **exp08 one-pager** — EPDA roofline 可视化 + 干扰矩阵预测 (advisor meeting figure) |
 
 ## Meeting & Planning
@@ -139,6 +150,7 @@ Project documentation map. All paths relative to repo root.
 | File | Description |
 |------|-------------|
 | `CLAUDE.md` | Project instructions + index for Claude Code |
-| `CHANGELOG.md` | Version history (v0.1.0 - v0.8.3) |
+| `CHANGELOG.md` | Version history (v0.1.0 - v0.9.0) |
 | `.pipeline-state.json` | LabMate pipeline state (current_exp, stage) |
 | `.claude/skills/project-skill/SKILL.md` | Project knowledge base (v8, "Fast VLA first") |
+| `src/eval/consolidate_matrix.py` | Latency + LIBERO JSON 结果聚合脚本 |
