@@ -8,12 +8,16 @@
 - **exp04c Fast-WAM 5-step paper-aligned**: 257ms / 3.9Hz (paper 190ms on A100, 1.35x RTX 5880)
 - **exp07b Pi-Zero real pi0-base weights**: 225ms total (vs exp07a random 200ms, Δ=12%)
 - **exp04d LingBot-VA checkpoint found**: `robbyant/lingbot-va-posttrain-libero-long` (22.7GB, Apache-2.0)
-- **exp04e Fast-WAM LIBERO-4 eval**: 真权重 5-step, task0 spatial 95% / object 100% / goal 100% / 10 90%. Full 800-ep running
+- **exp04e Fast-WAM LIBERO-4 eval**: 真权重 5-step, **800 ep 完整结果: spatial 91.5% / object 100% / goal 97% / libero_10 89.5% / avg 94.5%** (paper 93.7%)
 - **LIBERO 环境 + assets**: xdlab23 fastwam/vit-probe 两个 env 完整安装 (1370 asset files)
 - **Wan2.2-TI2V-5B 下载**: 非 Diffusers 版 32GB (Fast-WAM base model)
 - `viewer/static/reproducibility.html` — latency realignment + LIBERO success matrix dashboard
 - `src/eval/consolidate_matrix.py` — JSON 结果聚合脚本
+- **exp09a Cosmos Policy profiling**: Cosmos-Predict2-2B direct-mode e2e timing (论文零报告 latency)
+- `viewer/static/reproducibility.html` — latency realignment + LIBERO success matrix dashboard
+- `src/eval/consolidate_matrix.py` — JSON 结果聚合脚本
 - `exp/exp10_aloha_deferred/` — ACT ALOHA eval 显式 deferred stub
+- 4 条 knowhow 归档: LIBERO assets 部署 / hf-mirror 429 / conda env 兼容矩阵 / FastWAM Hydra eval 接口
 
 ### 変更
 - Slides `hao-meeting-2026-04-28.html`: 新 slide 9 (Reproducibility backup) + slide 3/4/5 数据更新 (real weights + 5-step)
@@ -22,7 +26,8 @@
 ### 关键发现
 - **Random-weight timing 可信**: Pi-Zero real vs random Δ=12%, NitroGen Δ<2%. 权重值不改变 CUDA kernel 计算图
 - **DiT 真实参数量**: NitroGen "500M" 实为 DiT 181M + SigLIP 316M. Scaling curve 修正: 181M=7.1ms < 300M=18.3ms < 350M=41ms
-- **Fast-WAM LIBERO 初步结果**: task0 单 task 95-100%, 与 paper 报的 97.6% spatial 一致
+- **Fast-WAM LIBERO 完整复现**: 94.5% avg (800 ep) vs paper 93.7% — 匹配在噪声范围内
+- **exp09a Cosmos Policy**: direct-mode 1362ms / 0.73Hz (RTX 5880, 5-step EDM), per-step 272ms, VRAM 8816MB
 
 ### Deferred
 - Pi-Zero LIBERO eval (openpi 依赖 flax/JAX, GitHub 被防火墙挡)
