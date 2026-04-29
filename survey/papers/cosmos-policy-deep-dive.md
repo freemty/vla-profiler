@@ -88,10 +88,10 @@ Cosmos Policy 在 vlla landscape 里开辟了第三个品类: **"unified video-p
 
 ## Open Questions
 
-1. **Direct mode 到底多慢?** 论文零报告 — 需要 Level 1 profiling 回答
-2. **50 steps 可压到多少?** flow matching 通常 4-step 够, 但 action 精度阈值未知
+1. ~~**Direct mode 到底多慢?**~~ **已回答 (exp09a)**: **1362ms / 0.73Hz** on RTX 5880 Ada (5-step EDM, parallel gen). Per-step ~272ms. 比 domain-expert 估算 (~500ms) 慢 2.7x, 原因是 e2e 包含 VAE encode + future state + value generation. 纯 action-only (no parallel gen) 待测。
+2. **5 steps 可压到多少?** 论文用 5-step (非 50-step), 进一步 distill 到 1-step 是否保质?
 3. **Action latent 维度多少?** 对 action head 线性投影的 rank 有影响, 代码应该有
-4. **Cosmos-Predict2-2B 在 RTX 5880 Ada 48GB 上显存够吗?** 2B @ FP16 = 4GB weights, 但 50-step activation + VAE decode 的峰值未知
+4. ~~**Cosmos-Predict2-2B 在 RTX 5880 Ada 48GB 上显存够吗?**~~ **已回答 (exp09a)**: Peak VRAM = 8816 MB. 48GB 绰绰有余。
 5. **和 LingBot-VA 的 full WAM (697ms video + 1708ms action = 2518ms) 比, Cosmos Policy 是否真的更快?** 需要同机测
 6. **Attention pattern 是不是和 exp05 Gini 崩塌一致 (VLA fine-tune 后 sink 消失)?** 未验证
 7. **Latent frame injection 是否适用于 dexterous hand (高维 action)?** 论文未覆盖

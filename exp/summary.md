@@ -96,12 +96,12 @@ Cross-experiment flight recorder. Per-exp **目的 / 方法 / 结果 / 下一步
 - **结果**：**M4 R²=0.94**（M1=0.21，M2=-3.44，M3=1.0 查表上界）。公式 `inflation(X|Y) = 1 + v_X·a_Y`。学到 v=(D:1.52, P:1.61, E:0.23, A:0.20)；a=(A:1.12, E:0.96, P:1.02, D:0.87)。**A 是隐形破坏者**（自身鲁棒但对他人干扰最大）；**E 最安全 co-locate**。部署建议：{E,A} 同卡，{P,D} 必须 disaggregate。
 - **下一步**：用 exp08b triple/quad 数据验证 M4 外推 → 若 R² 依旧 >0.9 即可作为 mechanism-study 论文核心。
 
-## exp09a — Cosmos Policy direct-mode latency profiling · **ready**
+## exp09a — Cosmos Policy direct-mode latency profiling · **done**
 
 - **目的**：测量 Cosmos Policy (Cosmos-Predict2-2B, LIBERO 98.5%) 的 direct-mode 推理延迟。论文 (arXiv:2601.16163) 零报告该数字，只说 planning 5s/chunk。
-- **方法**：在 cosmos-policy Docker 环境里加 CUDA event timing 包裹三相位 (E/D/X)，合成 LIBERO 输入。canonical = warmup=15, iter=20, 5 步 denoise。附带 step sweep (1/2/5/10/20) 测 quality-speed frontier。
-- **结果**：待跑。
-- **下一步**：在 xdlab23 跑完后，和 Pi-Zero (200ms/5Hz) / Fast-WAM (407ms/2.5Hz) / LingBot-VA (2518ms/0.4Hz) 对比。若 pure DiT 每步 ~30-100ms，则 5 步 = 150-500ms → 候选 A (FastVideo 加速) 的 baseline。
+- **方法**：cosmos-policy 官方 `get_action()` + CUDA event e2e timing，合成 LIBERO 输入 (224×224, 9-dim proprio)。RTX 5880 Ada, warmup=15, iter=20, 5-step EDM denoise, parallel_gen=True。
+- **结果**：**E2E median = 1362.5ms (0.73Hz)**。std=4.83ms (CV=0.35%)。Peak VRAM 8816MB。1.96B params。Per-step DiT cost ~272ms。比 Pi-Zero 慢 6.8x，比 Fast-WAM 慢 5.3x，比 LingBot-VA 快 1.8x。
+- **下一步**：跑 `--no-parallel-gen` 对照（纯 action-only，去掉 future state + value generation overhead）；step sweep (1/2/5/10/20)；更新 deep-dive 文档。
 
 ---
 
@@ -129,3 +129,4 @@ Cross-experiment flight recorder. Per-exp **目的 / 方法 / 结果 / 下一步
 | exp03b | LingBot-VLA LIBERO-4 eval | **planned** | 4B real ckpt, 20 ep/task × 4 suites |
 | exp04e | Fast-WAM LIBERO-4 eval | **done** | 94.5% avg (spatial 91.5 / object 100 / goal 97 / 10 89.5), 800 ep, real ckpt 5-step |
 | exp07c | Pi-Zero LIBERO-4 eval | **planned** | pi0-base real ckpt, 20 ep/task × 4 suites |
+| exp09a | Cosmos Policy direct-mode profiling | **done** | **1362ms / 0.73Hz** (5-step, 1.96B DiT). Per-step 272ms. Paper 缺口已填。 |
