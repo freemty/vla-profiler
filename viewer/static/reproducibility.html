@@ -219,7 +219,7 @@ section + section { border-top: 1px solid var(--border); }
   <div class="stat-card">
     <div class="stat-label">LIBERO Eval</div>
     <div class="stat-value">1</div>
-    <div class="stat-sub">Fast-WAM 800 episodes running</div>
+    <div class="stat-sub">Fast-WAM 800 ep = 94.5% avg</div>
   </div>
 </div>
 
@@ -287,12 +287,12 @@ section + section { border-top: 1px solid var(--border); }
         <tbody>
           <tr>
             <td>Fast-WAM 5-step</td>
-            <td class="cell-deep-green cell-preliminary">95%</td>
-            <td class="cell-deep-green cell-preliminary">100%</td>
-            <td class="cell-deep-green cell-preliminary">100%</td>
-            <td class="cell-light-green cell-preliminary">90%</td>
-            <td class="cell-deep-green cell-preliminary">96%</td>
-            <td class="source-col">exp04e (task0 only, full running)</td>
+            <td class="cell-light-green">91.5%</td>
+            <td class="cell-deep-green">100%</td>
+            <td class="cell-deep-green">97.0%</td>
+            <td class="cell-light-green">89.5%</td>
+            <td class="cell-deep-green">94.5%</td>
+            <td class="source-col">exp04e (800 ep, real weights)</td>
           </tr>
           <tr>
             <td>Pi-Zero</td>
@@ -327,7 +327,7 @@ section + section { border-top: 1px solid var(--border); }
   </div>
 
   <div class="callout">
-    <strong>Fast-WAM preliminary:</strong> Single-task (task0) results across all 4 suites. Full 800-episode evaluation is running.
+    <strong>Fast-WAM verified:</strong> 800 episodes (40 tasks × 20 ep), avg 94.5% — matches paper's 93.7% within noise. Real weights + 5-step.
     Pi-Zero numbers are from the published pi0.5 paper (finetuned on LIBERO).
   </div>
 </section>
