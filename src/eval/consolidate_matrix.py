@@ -36,6 +36,17 @@ def load_libero(model_key: str) -> dict[str, float] | None:
     d = LIBERO_DIRS.get(model_key)
     if d is None or not d.exists():
         return None
+    # Format A: single aggregate libero_results.json (keys: libero_spatial, etc.)
+    aggregate = d / "libero_results.json"
+    if aggregate.exists():
+        data = json.loads(aggregate.read_text())
+        suites = {}
+        for suite in SUITES:
+            key = f"libero_{suite}"
+            if key in data and isinstance(data[key], dict):
+                suites[suite] = data[key].get("rate", data[key].get("success_rate", 0.0))
+        return suites if suites else None
+    # Format B: per-suite results_spatial.json files
     suites = {}
     for suite in SUITES:
         f = d / f"results_{suite}.json"

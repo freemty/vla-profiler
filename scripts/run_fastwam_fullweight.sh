@@ -23,7 +23,7 @@ CUDA_VISIBLE_DEVICES=$GPU python scripts/profile_fastwam.py \
   --mode full \
   --checkpoint /data1/ybyang/FastWAM/checkpoints/fastwam_release/libero_uncond_2cam224.pt \
   --dataset-stats /data1/ybyang/FastWAM/checkpoints/fastwam_release/libero_uncond_2cam224_dataset_stats.json \
-  --steps 5 \
+  --num-inference-steps 5 \
   --warmup 15 \
   --iterations 20 \
   --gpu "$GPU" \
