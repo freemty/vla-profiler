@@ -109,9 +109,35 @@ HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 python -m src.run_tasks ...
 | SigLIP-large-patch16-256 | `/data1/ybyang/huggingface/google/siglip-large-patch16-256` | hf-mirror | 2.6GB | OK |
 | lingbot-vla-4b | `/data1/ybyang/huggingface/robbyant/lingbot-vla-4b` | ModelScope | ~8GB | pending |
 
+## hf-mirror 429 Rate Limit 绕过 (2026-04-29)
+
+下载多文件 repo（如 `jadechoghari/libero-assets` 586 files）时 hf-mirror 会返回 `429 Too Many Requests`。
+
+**解法**: 限制下载并发为 1:
+```bash
+HF_ENDPOINT=https://hf-mirror.com HF_HUB_DOWNLOAD_CONCURRENCY=1 \
+  ~/miniconda3/bin/huggingface-cli download jadechoghari/libero-assets \
+  --local-dir /data1/ybyang/libero-assets --local-dir-use-symlinks False
+```
+
+**注意**: `huggingface-cli` 在非 interactive shell 里需要完整路径 (`~/miniconda3/bin/huggingface-cli`)，conda activate 在 `sh` (非 bash) 里不工作。
+
+## 已有模型清单 (2026-04-29 更新)
+
+| 模型 | HF 路径 | 来源 | 大小 | 状态 |
+|------|---------|------|------|------|
+| Qwen2.5-VL-7B-Instruct | `/data1/ybyang/huggingface/Qwen/Qwen2.5-VL-7B-Instruct` | ModelScope | ~16GB | OK |
+| NitroGen ng.pt | `/data1/ybyang/huggingface/nvidia/NitroGen/ng.pt` | hf-mirror | 1.97GB | OK |
+| SigLIP-large-patch16-256 | `/data1/ybyang/huggingface/google/siglip-large-patch16-256` | hf-mirror | 2.6GB | OK |
+| lingbot-vla-4b | `/data1/ybyang/modelscope/Robbyant/lingbot-vla-4b` | ModelScope | ~8GB | OK |
+| **Wan2.2-TI2V-5B** | `/data1/ybyang/huggingface/Wan-AI/Wan2.2-TI2V-5B` | hf-mirror | 32GB | OK (2026-04-29) |
+| **lingbot-va-posttrain-libero-long** | `/data1/ybyang/huggingface/robbyant/lingbot-va-posttrain-libero-long` | hf-mirror | 22GB | OK (2026-04-29) |
+| **open-pi-zero (pi0-base)** | `/data1/ybyang/huggingface/models--allenzren--open-pi-zero` | hf-mirror | 11.8GB | OK (2026-04-28) |
+| **libero-assets** | `/data1/ybyang/libero-assets` | hf-mirror (concurrency=1) | 172MB | OK (2026-04-29) |
+
 ## Notes
-- Date: 2026-04-20 (original), updated 2026-04-27 (hf-mirror + NitroGen/SigLIP)
+- Date: 2026-04-20 (original), updated 2026-04-29 (4 new downloads + 429 workaround)
 - Environment: xdlab23, modelscope 1.35.3
-- HuggingFace 直连确认 ConnectTimeout (2026-04-20 实测)
-- hf-mirror.com 确认可达 (2026-04-27 实测: NitroGen + SigLIP 均成功)
-- ModelScope 下载速度: ~10MB/s (校园网)
+- HuggingFace 直连: xdlab23 上有时能通有时不能（不稳定），hf-mirror.com 更可靠
+- hf-mirror 429 rate limit: 对 586-file repos 用 `HF_HUB_DOWNLOAD_CONCURRENCY=1`
+- SSH 不稳定: 大量下载时 SSH 会 timeout（带宽占满），进程在服务器上不受影响

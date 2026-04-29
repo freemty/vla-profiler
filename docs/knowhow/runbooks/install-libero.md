@@ -121,6 +121,43 @@ print('LIBERO suites:', list(b.keys()))
 "
 ```
 
-## Installed 2026-04-28
+### LIBERO assets (scene XMLs + 3D models) NOT in PyPI (CRITICAL, 2026-04-29)
 
-Verified working on xdlab23 vit-probe env (Python 3.12, cmake 4.1.3).
+PyPI `libero==0.1.1` wheel 不包含 `assets/` 目录（mujoco scene XML, .obj, .mtl, textures）。实际跑 LIBERO eval 时会报 `FileNotFoundError: libero_tabletop_base_style.xml`。
+
+**LIBERO v0.1.1 内置了 HF 自动下载** (`download_assets_from_huggingface()` → `jadechoghari/libero-assets`)，但 xdlab23 上 hf-mirror 会触发 429 rate limit（586 个小文件）。
+
+**解法 — 本地 clone + scp**:
+```bash
+# 1. 本地 macOS (能访问 GitHub):
+GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 --no-checkout https://github.com/Lifelong-Robot-Learning/LIBERO.git /tmp/libero-git
+cd /tmp/libero-git && git sparse-checkout set libero/libero/assets && git checkout
+tar czf /tmp/libero-assets-full.tar.gz -C /tmp/libero-git/libero/libero assets
+
+# 2. scp 到服务器:
+scp /tmp/libero-assets-full.tar.gz xdlab23_yang:/tmp/
+
+# 3. 服务器上部署到每个 conda env:
+ssh xdlab23_yang 'cd /tmp && tar xzf libero-assets-full.tar.gz
+  cp -r assets /home/ybyang/miniconda3/envs/fastwam/lib/python3.10/site-packages/libero/libero/
+  cp -r assets /home/ybyang/miniconda3/envs/vit-probe/lib/python3.12/site-packages/libero/libero/'
+```
+
+**验证**: `ls /path/to/site-packages/libero/libero/assets/stable_scanned_objects/akita_black_bowl/akita_black_bowl.xml`
+
+**注意**: HF repo `jadechoghari/libero-assets` 是第三方上传，**缺 `stable_scanned_objects/` 和 `textures/`**。必须从 GitHub 原始 repo 获取完整 assets。
+
+**另一个 hf-mirror 绕过 429 的方法**: `HF_HUB_DOWNLOAD_CONCURRENCY=1` 降低并发。
+
+### 多 conda env 的 LIBERO 安装 (2026-04-29)
+
+每个 conda env 都需要独立安装 LIBERO + assets:
+- `vit-probe` (Python 3.12): Pi-Zero profiling 用
+- `fastwam` (Python 3.10): Fast-WAM eval 用
+
+`pip install libero` 装包，但 assets 需要手动部署到每个 env 的 `site-packages/libero/libero/assets/`。
+
+## Installed 2026-04-28, updated 2026-04-29
+
+- 2026-04-28: PyPI install + smoke test (benchmark dict) OK
+- 2026-04-29: Assets 缺失发现 + 解决 (GitHub clone → scp → 1370 files 部署). Fast-WAM LIBERO eval 跑通 (spatial task0 95% success)
