@@ -1,0 +1,42 @@
+{
+  "experiment": "exp09a",
+  "model": "Cosmos-Policy-LIBERO-Predict2-2B",
+  "model_params_B": 1.96,
+  "denoise_steps": 5,
+  "chunk_size": 16,
+  "chunk_duration_s": 0.64,
+  "image_size": 224,
+  "warmup": 15,
+  "iterations": 20,
+  "e2e": {
+    "median_ms": 1362.47,
+    "mean_ms": 1361.35,
+    "std_ms": 4.83,
+    "min_ms": 1346.18,
+    "max_ms": 1367.43,
+    "all_ms": [
+      1357.5,
+      1357.41,
+      1356.76,
+      1359.09,
+      1360.62,
+      1346.18,
+      1359.87,
+      1361.9,
+      1363.92,
+      1363.34,
+      1364.9,
+      1363.05,
+      1361.71,
+      1364.03,
+      1366.21,
+      1364.85,
+      1364.45,
+      1367.43,
+      1366.18,
+      1357.63
+    ]
+  },
+  "policy_query_hz": 0.73,
+  "peak_vram_mb": 8816
+}

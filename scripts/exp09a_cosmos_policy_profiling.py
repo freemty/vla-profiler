@@ -33,6 +33,48 @@ if str(COSMOS_REPO) not in sys.path:
     sys.path.insert(0, str(COSMOS_REPO))
 
 
+def _patch_hf_downloads():
+    """Monkey-patch hf_hub_download to resolve from local cache without network.
+
+    cosmos-policy's make_config_v2() recursively imports all experiment configs,
+    which call get_checkpoint_path("hf://nvidia/..."). On firewalled servers this
+    fails even with files in cache (missing HF metadata). This patch intercepts
+    hf_hub_download and returns the local blob path directly if it exists.
+    """
+    import huggingface_hub.file_download as hf_dl
+
+    _original = hf_dl.hf_hub_download
+
+    def _patched(repo_id, filename=None, *args, **kwargs):
+        if filename is None:
+            filename = args[0] if args else kwargs.get("filename", "")
+        # Search both HF_HOME and default cache
+        search_dirs = []
+        hf_home = os.environ.get("HF_HOME")
+        if hf_home:
+            search_dirs.append(os.path.join(hf_home, "hub"))
+        search_dirs.append(os.path.expanduser("~/.cache/huggingface/hub"))
+        for cache_dir in search_dirs:
+            repo_folder = os.path.join(cache_dir, f"models--{repo_id.replace('/', '--')}")
+            snapshots_dir = os.path.join(repo_folder, "snapshots")
+            if os.path.isdir(snapshots_dir):
+                for snap in os.listdir(snapshots_dir):
+                    candidate = os.path.join(snapshots_dir, snap, filename)
+                    if os.path.exists(candidate):
+                        print(f"[hf-patch] {repo_id}/{filename} → {candidate}")
+                        return candidate
+        dummy = f"/tmp/_hf_dummy_{repo_id.replace('/', '_')}_{filename.replace('/', '_')}"
+        Path(dummy).parent.mkdir(parents=True, exist_ok=True)
+        Path(dummy).touch()
+        print(f"[hf-patch] MISS: {repo_id}/{filename} — created dummy at {dummy}")
+        return dummy
+
+    hf_dl.hf_hub_download = _patched
+
+
+_patch_hf_downloads()
+
+
 @dataclass
 class ProfileConfig:
     """Minimal config mirroring PolicyEvalConfig fields needed by get_action().
@@ -74,7 +116,7 @@ def make_synthetic_observation(image_size: int = 224):
     return {
         "primary_image": np.random.randint(0, 255, (image_size, image_size, 3), dtype=np.uint8),
         "wrist_image": np.random.randint(0, 255, (image_size, image_size, 3), dtype=np.uint8),
-        "proprio": np.random.randn(14).astype(np.float32),
+        "proprio": np.random.randn(9).astype(np.float32),
     }
 
 
@@ -107,6 +149,8 @@ def main():
     parser.add_argument("--output", type=str, default=None)
     parser.add_argument("--trace", action="store_true",
                         help="Save torch.profiler trace for phase breakdown")
+    parser.add_argument("--local-ckpt", type=str, default=None,
+                        help="Local path to checkpoint snapshot dir (bypasses HF download)")
     args = parser.parse_args()
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
@@ -122,6 +166,21 @@ def main():
     )
 
     cfg = ProfileConfig(num_denoising_steps_action=args.denoise_steps)
+
+    if args.local_ckpt:
+        local_snap = Path(args.local_ckpt)
+        # If dir, find .pt file inside (mimicking download_hf_checkpoint logic)
+        if local_snap.is_dir():
+            pt_files = list(local_snap.glob("*.pt"))
+            if pt_files:
+                cfg.ckpt_path = str(pt_files[0])
+            else:
+                cfg.ckpt_path = str(local_snap)
+        else:
+            cfg.ckpt_path = str(local_snap)
+        snap_dir = local_snap if local_snap.is_dir() else local_snap.parent
+        cfg.dataset_stats_path = str(snap_dir / "libero_dataset_statistics.json")
+        cfg.t5_text_embeddings_path = str(snap_dir / "libero_t5_embeddings.pkl")
 
     print("[init] Loading dataset stats...")
     dataset_stats = load_dataset_stats(cfg.dataset_stats_path)
