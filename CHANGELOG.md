@@ -1,5 +1,34 @@
 # Changelog
 
+## v0.9.0 @freemty — 2026-04-29
+
+### 新增 (Full reproducibility + LIBERO eval)
+- **Reproducibility spec**: `docs/specs/2026-04-28-reproducibility-spec.md` — 7 模型官方配置合约 (权重/架构/步数/benchmark)
+- **exp06b NitroGen 500M real-weight**: 7.1ms/step (vs exp06a 174M 7.2ms, DiT 实际 181M 非 500M)
+- **exp04c Fast-WAM 5-step paper-aligned**: 257ms / 3.9Hz (paper 190ms on A100, 1.35x RTX 5880)
+- **exp07b Pi-Zero real pi0-base weights**: 225ms total (vs exp07a random 200ms, Δ=12%)
+- **exp04d LingBot-VA checkpoint found**: `robbyant/lingbot-va-posttrain-libero-long` (22.7GB, Apache-2.0)
+- **exp04e Fast-WAM LIBERO-4 eval**: 真权重 5-step, task0 spatial 95% / object 100% / goal 100% / 10 90%. Full 800-ep running
+- **LIBERO 环境 + assets**: xdlab23 fastwam/vit-probe 两个 env 完整安装 (1370 asset files)
+- **Wan2.2-TI2V-5B 下载**: 非 Diffusers 版 32GB (Fast-WAM base model)
+- `viewer/static/reproducibility.html` — latency realignment + LIBERO success matrix dashboard
+- `src/eval/consolidate_matrix.py` — JSON 结果聚合脚本
+- `exp/exp10_aloha_deferred/` — ACT ALOHA eval 显式 deferred stub
+
+### 変更
+- Slides `hao-meeting-2026-04-28.html`: 新 slide 9 (Reproducibility backup) + slide 3/4/5 数据更新 (real weights + 5-step)
+- 实验命名重构: exp09* → exp0{3b,4c,4d,4e,6b,7b,7c} 沿用父实验字母后缀
+
+### 关键发现
+- **Random-weight timing 可信**: Pi-Zero real vs random Δ=12%, NitroGen Δ<2%. 权重值不改变 CUDA kernel 计算图
+- **DiT 真实参数量**: NitroGen "500M" 实为 DiT 181M + SigLIP 316M. Scaling curve 修正: 181M=7.1ms < 300M=18.3ms < 350M=41ms
+- **Fast-WAM LIBERO 初步结果**: task0 单 task 95-100%, 与 paper 报的 97.6% spatial 一致
+
+### Deferred
+- Pi-Zero LIBERO eval (openpi 依赖 flax/JAX, GitHub 被防火墙挡)
+- LingBot-VA LIBERO eval (vit-probe cuDNN crash + fastwam env flash-attn build fail)
+- ACT ALOHA sim eval → exp10
+
 ## v0.8.4 @freemty — 2026-04-28
 
 ### 修复 (Codex adversarial review 2026-04-27 — exp08 harness rescue)

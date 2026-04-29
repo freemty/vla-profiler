@@ -186,9 +186,9 @@ Pipeline state tracked in .pipeline-state.json.
 
 ## Current state
 
-- **current_exp:** profiling complete (exp01-07 done), exp08 deprioritized
-- **stage:** meeting prep + learning ("Fast VLA first, serving later")
-- **skill_updated_at:** 2026-04-27
+- **current_exp:** reproducibility + LIBERO eval (exp06b/04c/07b real-weight done, exp04e LIBERO running), exp08 archived
+- **stage:** reproducibility pass complete, meeting prep final ("Fast VLA first, serving later")
+- **skill_updated_at:** 2026-04-29
 - **key findings:**
   - **exp01a (profiling):** text P=20ms/D=18ms; single_img E=253ms/P=156ms/D=18.6ms; multi_img E=541ms/P=332ms/D=21ms. Encode scales linearly.
   - **exp01b (attention):** Pos 2 (first visual patch) is universal attention sink (12K-18K received, 12-28x vs #2). Text→Visual Gini >0.91 (extreme sparsity → token pruning viable). Layer 21 entropy lowest (3.44).
@@ -200,5 +200,9 @@ Pipeline state tracked in .pipeline-state.json.
   - **exp05b (Qwen2.5-VL-3B attention):** 消歧: Gini 崩塌归因于 VLA fine-tuning (非 model size)。3B vanilla Gini 0.80-0.98。
   - **exp06a (NitroGen 500M DiT):** Per-step 7.2ms (174M DiT), perfectly linear. 174M→350M: 2x params, 4.4x latency → compute-bound 到 memory-BW-bound 转换。k=1: 55.9Hz。
 - **exp07a (profiling):** **Canonical (stable-window runs 13-20)**: E=9.32ms/C=26.40ms/A=164.76ms (total 200.5ms, ~5Hz). **Action Expert (300M Gemma) dominates 82% latency.** Per-step ~16.5ms. Cross-attn to PaliGemma KV makes 300M Expert ~2.3x pricier than pure DiT. DiT scaling curve: 174M=7.2ms < 300M=16.5ms < 350M=32ms. Bimodal 污染: runs 1-12 慢 1.25x (GPU 功率爬坡) → warmup=15 + `nvidia-smi -pm 1` 为后续默认配置。
-- **latest (v0.8.2):** "Fast VLA first" strategic pivot. Action Model Design Space 四范式覆盖完成。
-- **next:** P0 学习补课 (GPU systems L0-L2) → P0 Hao meeting → P1 候选 A (Action DiT 加速). 详见 `docs/TODO.md`。
+- **exp06b (NitroGen 500M real):** Per-step 7.1ms (DiT=181M not 500M, identical to exp06a 174M variant). Real ng.pt + 1024 hidden + 25 action_dim.
+  - **exp04c (Fast-WAM 5-step):** 257ms / 3.9Hz (paper 190ms on A100, 1.35x RTX 5880). Per-step 41ms.
+  - **exp07b (Pi-Zero real):** 225ms total (vs exp07a random 200ms, Δ=12%). Validates random-weight timing.
+  - **exp04e (Fast-WAM LIBERO):** task0 spatial 95% / object 100% / goal 100% / 10 90%. Full 800-ep running.
+- **latest (v0.9.0):** Reproducibility pass + LIBERO eval. 4/7 real weights, random-weight timing Δ<12%.
+- **next:** Fast-WAM LIBERO full results → dashboard update → Hao meeting → P1 候选 A (Action DiT 加速). 详见 `docs/TODO.md`。
