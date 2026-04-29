@@ -48,7 +48,6 @@ def _patch_hf_downloads():
     def _patched(repo_id, filename=None, *args, **kwargs):
         if filename is None:
             filename = args[0] if args else kwargs.get("filename", "")
-        # Search both HF_HOME and default cache
         search_dirs = []
         hf_home = os.environ.get("HF_HOME")
         if hf_home:
@@ -58,21 +57,30 @@ def _patch_hf_downloads():
             repo_folder = os.path.join(cache_dir, f"models--{repo_id.replace('/', '--')}")
             snapshots_dir = os.path.join(repo_folder, "snapshots")
             if os.path.isdir(snapshots_dir):
-                for snap in os.listdir(snapshots_dir):
+                snaps = sorted(
+                    os.listdir(snapshots_dir),
+                    key=lambda s: os.path.getmtime(os.path.join(snapshots_dir, s)),
+                    reverse=True,
+                )
+                for snap in snaps:
                     candidate = os.path.join(snapshots_dir, snap, filename)
                     if os.path.exists(candidate):
                         print(f"[hf-patch] {repo_id}/{filename} → {candidate}")
                         return candidate
+        import warnings
         dummy = f"/tmp/_hf_dummy_{repo_id.replace('/', '_')}_{filename.replace('/', '_')}"
         Path(dummy).parent.mkdir(parents=True, exist_ok=True)
         Path(dummy).touch()
-        print(f"[hf-patch] MISS: {repo_id}/{filename} — created dummy at {dummy}")
+        warnings.warn(
+            f"[hf-patch] MISS: {repo_id}/{filename} — created empty dummy. "
+            "If this file is read during inference (not just config registration), "
+            "results will be invalid."
+        )
         return dummy
 
     hf_dl.hf_hub_download = _patched
 
 
-_patch_hf_downloads()
 
 
 @dataclass
@@ -109,6 +117,7 @@ class ProfileConfig:
     planning_model_ckpt_path: str = ""
     seed: int = 7
     randomize_seed: bool = False
+    deterministic: bool = True
 
 
 def make_synthetic_observation(image_size: int = 224):
@@ -120,7 +129,8 @@ def make_synthetic_observation(image_size: int = 224):
     }
 
 
-def profile_e2e(get_action_fn, model, cfg, dataset_stats, obs, text_emb, denoise_steps):
+def profile_e2e(get_action_fn, model, cfg, dataset_stats, obs, text_emb,
+                denoise_steps, parallel_gen=True):
     """One e2e call with CUDA event timing."""
     start = torch.cuda.Event(enable_timing=True)
     end = torch.cuda.Event(enable_timing=True)
@@ -132,7 +142,7 @@ def profile_e2e(get_action_fn, model, cfg, dataset_stats, obs, text_emb, denoise
         cfg, model, dataset_stats, obs,
         text_emb,
         num_denoising_steps_action=denoise_steps,
-        generate_future_state_and_value_in_parallel=True,
+        generate_future_state_and_value_in_parallel=parallel_gen,
     )
 
     end.record()
@@ -151,12 +161,17 @@ def main():
                         help="Save torch.profiler trace for phase breakdown")
     parser.add_argument("--local-ckpt", type=str, default=None,
                         help="Local path to checkpoint snapshot dir (bypasses HF download)")
+    parser.add_argument("--no-parallel-gen", action="store_true",
+                        help="Skip future state + value generation (pure action-only timing)")
     args = parser.parse_args()
+
+    _patch_hf_downloads()
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
 
+    parallel_gen = not args.no_parallel_gen
     print(f"[config] GPU={args.gpu}, warmup={args.warmup}, iter={args.iterations}, "
-          f"steps={args.denoise_steps}")
+          f"steps={args.denoise_steps}, parallel_gen={parallel_gen}")
 
     from cosmos_policy.experiments.robot.cosmos_utils import (
         get_action,
@@ -203,7 +218,7 @@ def main():
     # Warmup
     print(f"\n[warmup] Running {args.warmup} warmup iterations...")
     for i in range(args.warmup):
-        profile_e2e(get_action, model, cfg, dataset_stats, obs, task_desc, args.denoise_steps)
+        profile_e2e(get_action, model, cfg, dataset_stats, obs, task_desc, args.denoise_steps, parallel_gen)
         if i == 0:
             torch.cuda.synchronize()
             mem_mb = torch.cuda.max_memory_allocated() / 1024 / 1024
@@ -215,7 +230,7 @@ def main():
     print(f"\n[benchmark] Running {args.iterations} timed iterations...")
     all_ms = []
     for i in range(args.iterations):
-        ms = profile_e2e(get_action, model, cfg, dataset_stats, obs, task_desc, args.denoise_steps)
+        ms = profile_e2e(get_action, model, cfg, dataset_stats, obs, task_desc, args.denoise_steps, parallel_gen)
         all_ms.append(ms)
         if (i + 1) % 5 == 0:
             med = statistics.median(all_ms)
@@ -237,7 +252,7 @@ def main():
                 cfg, model, dataset_stats, obs,
                 task_desc,
                 num_denoising_steps_action=args.denoise_steps,
-                generate_future_state_and_value_in_parallel=True,
+                generate_future_state_and_value_in_parallel=parallel_gen,
             )
         trace_path = trace_dir / f"trace_steps_{args.denoise_steps}.json"
         prof.export_chrome_trace(str(trace_path))
@@ -258,6 +273,11 @@ def main():
         "chunk_size": cfg.chunk_size,
         "chunk_duration_s": chunk_s,
         "image_size": 224,
+        "parallel_gen": parallel_gen,
+        "gpu_name": torch.cuda.get_device_name(0),
+        "device": f"cuda:{args.gpu}",
+        "dtype": "bfloat16",
+        "mode": "synthetic",
         "warmup": args.warmup,
         "iterations": args.iterations,
         "e2e": {
