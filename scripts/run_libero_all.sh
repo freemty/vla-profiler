@@ -1,127 +1,147 @@
 #!/usr/bin/env bash
-# Run LIBERO-4 eval for Fast-WAM / Pi-Zero / LingBot-VLA in parallel on GPUs 0-2.
+# Run LIBERO-4 eval for Fast-WAM / LingBot-VA / Pi-Zero on separate GPUs.
+# Each model uses its own conda env + eval interface.
 # Usage: bash scripts/run_libero_all.sh [episodes_per_task]
 #   Default: 2 (smoke test). Use 20 for full eval.
 set -euo pipefail
 
 EP=${1:-2}
+SUITES="libero_spatial libero_object libero_goal libero_10"
+
 echo "[run_libero_all] Episodes per task: $EP"
+echo "[run_libero_all] Suites: $SUITES"
 
-# GPU assignments
-GPU_FASTWAM=0
-GPU_PIZERO=1
-GPU_LINGBOTVLA=2
-
-# Shared setup
-source ~/miniconda3/etc/profile.d/conda.sh
-conda activate vit-probe
 export MUJOCO_GL=egl
 export HF_HOME=/data1/ybyang/huggingface
 
-cd /data1/ybyang/vlla
-
 ########################################
-# Fast-WAM (exp04e)
+# Fast-WAM (exp04e) — fastwam conda env, Hydra interface
 ########################################
 run_fastwam() {
+  local GPU=0
   local FW=/data1/ybyang/FastWAM
-  local CKPT="$FW/checkpoints/fastwam_release/libero_uncond_2cam224.pt"
-  local OUT=exp/exp04e
+  local OUT=/data1/ybyang/vlla/exp/exp04e
   mkdir -p "$OUT"
 
-  for suite in libero_spatial libero_object libero_goal libero_10; do
-    echo "[FastWAM] $suite (GPU $GPU_FASTWAM, $EP ep)"
-    CUDA_VISIBLE_DEVICES=$GPU_FASTWAM python "$FW/experiments/libero/eval_libero_single.py" \
-      --checkpoint_path "$CKPT" \
-      --suite "$suite" \
-      --num_episodes_per_task "$EP" \
-      --num_inference_steps 5 \
-      --save_dir "$OUT/${suite}" \
+  eval "$(/home/ybyang/miniconda3/bin/conda shell.bash hook)"
+  conda activate fastwam
+
+  cd "$FW"
+  for suite in $SUITES; do
+    echo "[FastWAM] $suite (GPU $GPU, $EP ep)"
+    CUDA_VISIBLE_DEVICES=$GPU python experiments/libero/eval_libero_single.py \
+      --config-name sim_libero \
+      ckpt=checkpoints/fastwam_release/libero_uncond_2cam224.pt \
+      EVALUATION.task_suite_name="$suite" \
+      EVALUATION.num_trials="$EP" \
+      EVALUATION.num_inference_steps=5 \
+      EVALUATION.dataset_stats_path=checkpoints/fastwam_release/libero_uncond_2cam224_dataset_stats.json \
+      EVALUATION.output_dir="$OUT/${suite}" \
       2>&1 | tee "$OUT/${suite}.log" || echo "[FastWAM] $suite FAILED"
   done
-  echo "[FastWAM] done"
+  echo "[FastWAM] all suites done"
 }
 
 ########################################
-# Pi-Zero (exp07c)
+# LingBot-VA (exp04d) — vit-probe env, server-client interface
 ########################################
-run_pizero() {
-  local OPENPI=/data1/ybyang/openpi
-  local CKPT=/data1/ybyang/huggingface/models--allenzren--open-pi-zero
-  local OUT=exp/exp07c
+run_lingbotva() {
+  local GPU=2
+  local LVA=/data1/ybyang/lingbot-va
+  local CKPT=/data1/ybyang/huggingface/robbyant/lingbot-va-posttrain-libero-long
+  local OUT=/data1/ybyang/vlla/exp/exp04d
   mkdir -p "$OUT"
 
-  # Pi-Zero uses server-client arch
-  for suite in libero_spatial libero_object libero_goal libero_10; do
-    echo "[Pi-Zero] $suite (GPU $GPU_PIZERO, $EP ep)"
+  eval "$(/home/ybyang/miniconda3/bin/conda shell.bash hook)"
+  conda activate vit-probe
+
+  cd "$LVA"
+  local PORT=29056
+
+  # Start server
+  echo "[LingBot-VA] Starting server on GPU $GPU, port $PORT..."
+  CUDA_VISIBLE_DEVICES=$GPU python -m torch.distributed.run \
+    --nproc_per_node 1 --master_port 29061 \
+    wan_va/wan_va_server.py \
+    --config-name libero \
+    --port $PORT \
+    --save_root "$OUT/vis" \
+    > "$OUT/server.log" 2>&1 &
+  local SERVER_PID=$!
+  echo "[LingBot-VA] Server PID=$SERVER_PID, waiting 120s for model load..."
+  sleep 120
+
+  for suite in $SUITES; do
+    local suite_short=${suite/libero_/}
+    echo "[LingBot-VA] $suite (GPU $GPU, $EP ep)"
+    python evaluation/libero/client.py \
+      --libero-benchmark "$suite" \
+      --port $PORT \
+      --test-num "$EP" \
+      --task-range 0 10 \
+      --out-dir "$OUT/${suite}" \
+      2>&1 | tee "$OUT/${suite}.log" || echo "[LingBot-VA] $suite FAILED"
+  done
+
+  kill $SERVER_PID 2>/dev/null || true
+  echo "[LingBot-VA] all suites done"
+}
+
+########################################
+# Pi-Zero (exp07c) — openpi env, server-client interface
+########################################
+run_pizero() {
+  local GPU=1
+  local OPENPI=/data1/ybyang/openpi
+  local CKPT=/data1/ybyang/huggingface/models--allenzren--open-pi-zero
+  local OUT=/data1/ybyang/vlla/exp/exp07c
+  mkdir -p "$OUT"
+
+  eval "$(/home/ybyang/miniconda3/bin/conda shell.bash hook)"
+  conda activate vit-probe
+
+  cd "$OPENPI"
+  export PYTHONPATH=${OPENPI}/third_party/libero:${PYTHONPATH:-}
+
+  for suite in $SUITES; do
+    echo "[Pi-Zero] $suite (GPU $GPU, $EP ep)"
 
     # Start server
-    CUDA_VISIBLE_DEVICES=$GPU_PIZERO python "$OPENPI/scripts/serve_policy.py" \
+    CUDA_VISIBLE_DEVICES=$GPU python scripts/serve_policy.py \
       --env LIBERO policy:checkpoint \
       --policy.config pi0_libero --policy.dir "$CKPT" \
       > "$OUT/${suite}_server.log" 2>&1 &
     local SERVER_PID=$!
-    sleep 45  # let server load model
+    echo "[Pi-Zero] Server PID=$SERVER_PID, waiting 60s..."
+    sleep 60
 
     # Run client
-    MUJOCO_GL=egl python "$OPENPI/examples/libero/main.py" \
+    python examples/libero/main.py \
       --args.task-suite-name "$suite" \
       --args.num-episodes "$EP" \
       --args.save-dir "$OUT/${suite}/" \
-      2>&1 | tee "$OUT/${suite}_client.log" || echo "[Pi-Zero] $suite client FAILED"
+      2>&1 | tee "$OUT/${suite}_client.log" || echo "[Pi-Zero] $suite FAILED"
 
     kill $SERVER_PID 2>/dev/null || true
     sleep 5
   done
-  echo "[Pi-Zero] done"
+  echo "[Pi-Zero] all suites done"
 }
 
 ########################################
-# LingBot-VLA (exp03b)
+# Run all three in parallel (each in subshell for separate conda env)
 ########################################
-run_lingbotvla() {
-  local CKPT=/data1/ybyang/modelscope/Robbyant/lingbot-vla-4b
-  local OUT=exp/exp03b
-  mkdir -p "$OUT"
+echo "[run_libero_all] Starting 3 evals in parallel on GPUs 0/1/2..."
 
-  # Check if lingbot-va has a shared eval harness
-  local EVAL_SCRIPT=/data1/ybyang/lingbot-va/evaluation/libero/eval_libero.py
-  if [[ ! -f "$EVAL_SCRIPT" ]]; then
-    echo "[LingBot-VLA] eval script not found at $EVAL_SCRIPT, checking alternatives..."
-    EVAL_SCRIPT=$(find /data1/ybyang/lingbot-va -name "eval*libero*" -type f 2>/dev/null | head -1)
-  fi
-
-  if [[ -z "$EVAL_SCRIPT" || ! -f "$EVAL_SCRIPT" ]]; then
-    echo "[LingBot-VLA] ERROR: no eval script found. Skipping."
-    echo "NOT_RUN: eval script not found" > "$OUT/SKIP.md"
-    return 1
-  fi
-
-  for suite in libero_spatial libero_object libero_goal libero_10; do
-    echo "[LingBot-VLA] $suite (GPU $GPU_LINGBOTVLA, $EP ep)"
-    CUDA_VISIBLE_DEVICES=$GPU_LINGBOTVLA python "$EVAL_SCRIPT" \
-      --checkpoint "$CKPT" \
-      --suite "$suite" \
-      --num_episodes "$EP" \
-      --save_dir "$OUT/${suite}" \
-      2>&1 | tee "$OUT/${suite}.log" || echo "[LingBot-VLA] $suite FAILED"
-  done
-  echo "[LingBot-VLA] done"
-}
-
-########################################
-# Run all three in parallel
-########################################
-echo "[run_libero_all] Starting 3 evals in parallel..."
-run_fastwam &
+(run_fastwam) &
 PID_FW=$!
 
-run_pizero &
+(run_pizero) &
 PID_PZ=$!
 
-run_lingbotvla &
+(run_lingbotva) &
 PID_LV=$!
 
-echo "[run_libero_all] PIDs: FastWAM=$PID_FW Pi-Zero=$PID_PZ LingBot-VLA=$PID_LV"
+echo "[run_libero_all] PIDs: FastWAM=$PID_FW Pi-Zero=$PID_PZ LingBot-VA=$PID_LV"
 wait $PID_FW $PID_PZ $PID_LV
 echo "[run_libero_all] All evals complete."
