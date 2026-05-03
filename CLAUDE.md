@@ -69,6 +69,7 @@ slides/                # 演示文稿
   - `survey/papers/hao-style-distserve.md` — DistServe: PD disaggregation, goodput 指标, EPD/EPDA VLM+VLA 迁移
   - `survey/papers/hao-style-fastvideo.md` — FastVideo: STA/VSA 稀疏 attention + 蒸馏, Triton kernel co-design
   - `survey/papers/hao-style-synthesis.md` — **综合分析**: 5-step co-design 方法论模板, exp07 候选 A/B/C/D 打分, 见 Hao 的"一页话"
+- **Dreamverse / FastVideo Real-Time 1080p (2026-03)**: `survey/papers/dreamverse-fastvideo-realtime.md` — Hao 最新: 全栈 Blackwell 优化 (NVFP4 + SM100 kernel + graph fusion + 系统工程), 单 B200 4.55s 生成 5s 1080p video (3.9x faster). Dreamverse = vibe directing 应用层. 和 candidate A 完全同技术线, fixed cost 瓶颈发现与 exp09a 一致
 - **Multimodal Serving Systems Survey (2026)**: `survey/papers/multimodal-serving-systems-2026.md` — vLLM-Omni (arXiv:2602.02204) + SGLang Diffusion 实地调研, **"EPDA framework"方向已被占**, exp08 必须降档到 mechanism study + robotics SLO benchmark
 - **VLA/WAM Serving Systems Survey (2026)**: `survey/papers/vla-wam-serving-systems-2026.md` — VLA/WAM 专用 serving 系统现状，18 arXiv ID 全部 curl 校验零幻觉。唯二真 system: **OxyGen** (2603.14371, VLA continuous batching + shared KV) + **VLAgents** (2601.11250, policy server 协议层)。Hao AI Lab 未涉足 VLA 方向 → 候选 D' 的 baseline + 结构性机会
 - **π Series + GEN-1 Evolution (2024-2026)**: `survey/papers/pi-series-evolution.md` — π0/π0.5/π*0.6/π0.7 (PI) + GEN-1 (Generalist AI) 对照。**2026-04 同月两家都承认 "model is a system"** — π0.7 用 High-Level + World Model + VLA + Action Expert 四件套，GEN-1 blog 原话 "GEN-1 is a system"。exp07a 测的 π0 已是 2024 年代 picture，候选 D' 的 SLO benchmark 必须升级到 pipeline tier
