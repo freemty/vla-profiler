@@ -52,6 +52,7 @@ slides/                # 演示文稿
 - **2025-2026 最新论文综述**: `survey/papers/recent-papers.md` — VLM/VLA inference efficiency 领域 40+ 篇论文/项目
 - **VA + World Action Model 深度 Survey**: `survey/papers/va-world-models.md` — VA 五大架构族谱、World Model 五层分类 (L0-L4)、WAM efficiency 分析、ERA disaggregation 概念、speculative rollout
 - **WAM/Video WM/VA 最新论文 Web 调研**: `survey/papers/va-world-models-web.md` — 2025-2026 年 80+ 篇论文，覆盖 WAM、Video World Model、单步推理加速、WM+VLA 融合、NVIDIA Cosmos/Pi0 工业进展
+- **nano-world-model (CMU)**: `survey/papers/nano-world-model.md` — 极简 DiT WM 框架 (diffusion forcing), action injection ablation (additive > cross-attn), pred-v 优势, agentic-datapipe fitness evaluator
 - **Framework design spec**: `docs/superpowers/specs/2026-04-14-vlm-profiling-framework-design.md`
 - **Implementation plan**: `docs/superpowers/plans/2026-04-14-vlm-profiling-framework.md`
 - **EPDA Disaggregation Spec (exp08)**: `docs/specs/2026-04-26-epda-disaggregation-spec.md` — 四阶段干扰量化, L1→L2 跨越, DistServe-style motivation
