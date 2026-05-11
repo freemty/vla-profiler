@@ -16,7 +16,7 @@ model:
   paradigm: "parallel-mlp-regression"
   repo: "https://github.com/openvla/openvla"
 
-model_name: ""  # empty = base openvla-7b + random OFT head (sufficient for timing)
+model_name: "${oc.env:HF_HOME,/data1/ybyang/huggingface}/models--openvla--openvla-7b/snapshots/47a0ec7fc4ec123775a391911046cf33cf9ed83f"
 controller_name: "openvla_oft"
 
 controller_config:

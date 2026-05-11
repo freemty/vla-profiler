@@ -57,10 +57,15 @@ class OpenVLAOFTController(BaseVLAController):
         return 1
 
     def get_language_model(self) -> Optional[nn.Module]:
-        return self.pipeline.model.llm_backbone.llm
+        return self.pipeline.model.language_model
 
     def get_layer_blocks(self) -> List[nn.Module]:
-        return list(self.pipeline.model.llm_backbone.llm.model.layers)
+        lm = self.pipeline.model.language_model
+        if hasattr(lm, "model") and hasattr(lm.model, "layers"):
+            return list(lm.model.layers)
+        if hasattr(lm, "layers"):
+            return list(lm.layers)
+        return []
 
     def has_context_phase(self) -> bool:
         return True
@@ -75,40 +80,28 @@ class OpenVLAOFTController(BaseVLAController):
         - Random weights for timing (model_name empty or base openvla model)
         """
         from easydict import EasyDict as edict
-        from transformers import AutoModelForCausalLM, AutoProcessor
+        from transformers import AutoModelForVision2Seq, AutoProcessor
 
-        model_path = getattr(cfg, "model_name", "")
+        model_path = getattr(cfg, "model_name", "") or "openvla/openvla-7b"
         device = getattr(cfg, "device", "cuda:0")
         action_dim = getattr(cfg, "action_dim", 7)
         chunk_size = getattr(cfg, "chunk_size", 5)
 
-        if model_path:
-            model = AutoModelForCausalLM.from_pretrained(
-                model_path,
-                torch_dtype=torch.bfloat16,
-                attn_implementation="sdpa",
-                trust_remote_code=True,
-                low_cpu_mem_usage=True,
-            )
-            processor = AutoProcessor.from_pretrained(
-                model_path,
-                trust_remote_code=True,
-            )
-        else:
-            logger.warning(
-                "No model_name — loading base openvla-7b with random OFT head"
-            )
-            model = AutoModelForCausalLM.from_pretrained(
-                "openvla/openvla-7b",
-                torch_dtype=torch.bfloat16,
-                attn_implementation="sdpa",
-                trust_remote_code=True,
-                low_cpu_mem_usage=True,
-            )
-            processor = AutoProcessor.from_pretrained(
-                "openvla/openvla-7b",
-                trust_remote_code=True,
-            )
+        from transformers import AutoConfig
+        config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
+        config._attn_implementation = "eager"
+
+        model = AutoModelForVision2Seq.from_pretrained(
+            model_path,
+            config=config,
+            torch_dtype=torch.bfloat16,
+            trust_remote_code=True,
+            low_cpu_mem_usage=True,
+        )
+        processor = AutoProcessor.from_pretrained(
+            model_path,
+            trust_remote_code=True,
+        )
 
         model = model.to(device)
         model.eval()
@@ -149,8 +142,10 @@ class OpenVLAOFTController(BaseVLAController):
             name = entry.get("name", "unnamed")
             image_shape = entry.get("image_shape", [3, 224, 224])
 
+            # Prismatic dual encoder: DINOv2 (3ch) + SigLIP (3ch) = 6 channels
             pixel_values = torch.randn(
-                1, *image_shape, device=device, dtype=torch.bfloat16,
+                1, 6, image_shape[1], image_shape[2],
+                device=device, dtype=torch.bfloat16,
             )
 
             # Synthetic text tokens (matching Prismatic's expected input)
@@ -202,7 +197,9 @@ class OpenVLAOFTController(BaseVLAController):
         self.timer.mark_start("context")
         torch.cuda.synchronize()
 
-        text_embeds = model.llm_backbone.llm.model.embed_tokens(input_ids)
+        lm = model.language_model
+        lm_core = lm.model if hasattr(lm, "model") else lm
+        text_embeds = lm_core.embed_tokens(input_ids)
         combined_embeds = torch.cat([projected_features, text_embeds], dim=1)
         combined_mask = torch.ones(
             combined_embeds.shape[:2],
@@ -210,7 +207,7 @@ class OpenVLAOFTController(BaseVLAController):
             dtype=attention_mask.dtype,
         )
 
-        llm_output = model.llm_backbone.llm.model(
+        llm_output = lm_core(
             inputs_embeds=combined_embeds,
             attention_mask=combined_mask,
         )
