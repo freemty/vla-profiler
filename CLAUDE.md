@@ -209,4 +209,6 @@ Pipeline state tracked in .pipeline-state.json.
   - **exp07b (Pi-Zero real):** 225ms total (vs exp07a random 200ms, Δ=12%). Validates random-weight timing.
   - **exp04e (Fast-WAM LIBERO):** spatial 91.5% / object 100% / goal 97% / 10 89.5% — avg **94.5%** (800 ep, paper 93.7%).
 - **latest (v0.9.0):** Reproducibility pass + LIBERO eval. 4/7 real weights, random-weight timing Δ<12%.
-- **next:** Hao meeting → P1 候选 A (Action DiT 加速). 详见 `docs/TODO.md`。
+- **next:** Hao meeting → P1 候选 A (Action DiT 加速). exp11a/11b (OFT VLA profiling) planned. 详见 `docs/TODO.md`。
+- **exp11a (OpenVLA-OFT, planned):** Prismatic 7B + parallel MLP (OFT). Paper 109.7Hz/A100, LIBERO 97.1%. 需 E/C/A breakdown.
+- **exp11b (StarVLA-OFT, planned):** Qwen3-VL-4B + parallel MLP (OFT). LIBERO 96.6%. 论文零报告推理延迟.

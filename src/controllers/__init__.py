@@ -12,6 +12,13 @@ from src.controllers.lingbot_vla_controller import LingBotVLAController  # noqa:
 from src.controllers.lingbot_va_controller import LingBotVAController  # noqa: F401
 from src.controllers.nitrogen_controller import NitroGenController  # noqa: F401
 
+# OFT-style VLA controllers (parallel MLP action head)
+from src.controllers.openvla_oft_controller import OpenVLAOFTController  # noqa: F401
+try:
+    from src.controllers.starvla_oft_controller import StarVLAOFTController  # noqa: F401
+except ImportError:
+    pass
+
 # Pi-Zero requires separate conda env (openpi) — lazy import to avoid dependency crash
 try:
     from src.controllers.pizero_controller import PiZeroController  # noqa: F401

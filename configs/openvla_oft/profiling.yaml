@@ -1,0 +1,63 @@
+# OpenVLA-OFT E/C/A profiling config (exp11a)
+# Model: Prismatic (DINOv2+SigLIP → Llama-2 7B) + parallel MLP OFT head
+# Paper: arXiv:2502.19645 — 109.7Hz on A100, LIBERO 97.1%
+
+defaults:
+  - /base
+  - _self_
+
+experiment:
+  name: "exp11a_openvla_oft_profiling"
+  description: "OpenVLA-OFT E/C/A breakdown — parallel MLP action head, no denoise"
+
+model:
+  name: "OpenVLA-OFT"
+  type: "vla"
+  paradigm: "parallel-mlp-regression"
+  repo: "https://github.com/openvla/openvla"
+
+model_name: ""  # empty = base openvla-7b + random OFT head (sufficient for timing)
+controller_name: "openvla_oft"
+
+controller_config:
+  mode: profiling
+
+action_dim: 7
+chunk_size: 5
+
+num_warmup_runs: 15
+num_benchmark_runs: 20
+
+tasks:
+  - epd_profiling
+
+profiling:
+  gpu_id: 0
+  warmup: 15
+  iterations: 20
+  phases:
+    - encode    # DINOv2 + SigLIP dual vision encoder
+    - context   # Llama-2 7B prefill
+    - action    # Parallel MLP OFT head (single forward)
+
+inputs:
+  - name: "single_camera_224"
+    image_shape: [3, 224, 224]
+    seq_len: 300
+
+notes: |
+  OpenVLA-OFT replaces AR action decode with parallel MLP regression:
+  - Action head: Linear(hidden → action_dim × chunk_size), single forward
+  - Paper reports 109.7Hz on A100, 25-50x faster than base OpenVLA
+  - LIBERO 97.1% (from 76.5% base)
+
+  Key questions:
+  1. E/C/A breakdown — where is the bottleneck now that action is ~0ms?
+  2. Backbone (Prismatic 7B) encode + context dominates?
+  3. 109.7Hz on A100 → what Hz on RTX 5880 Ada?
+
+  Predictions:
+  - E: 10-15ms (DINOv2 + SigLIP, dual encoder)
+  - C: 30-50ms (Llama-2 7B, short context)
+  - A: <1ms (single MLP forward, no denoise)
+  - Total: 40-65ms (15-25 Hz on RTX 5880)

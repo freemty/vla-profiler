@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.10.0 @freemty — 2026-05-11
+
+### 新增 (OFT VLA profiling framework — exp11a/11b)
+- **OpenVLA-OFT controller** (`src/controllers/openvla_oft_controller.py`): Prismatic 7B + parallel MLP (OFT) action head, manual E/C/A phase timing. Paper: 109.7Hz on A100, LIBERO 97.1%.
+- **StarVLA-OFT controller** (`src/controllers/starvla_oft_controller.py`): Qwen3-VL-4B + parallel MLP (OFT) action head, dual init path (StarVLA API / Qwen3-VL fallback). Paper: LIBERO 96.6%, zero latency reporting.
+- **共享 OFT head helper** (`_get_or_create_oft_head`): 查找或创建 parallel MLP action head, 两个 controller 复用。
+- **exp11a spec**: OpenVLA-OFT E/C/A profiling — 补全速度王者的 phase-level breakdown
+- **exp11b spec**: StarVLA-OFT E/C/A profiling — 填补零 Hz 报告的 gap
+- Hydra configs: `configs/openvla_oft/profiling.yaml`, `configs/starvla_oft/profiling.yaml`
+- docs/README.md: +7 survey 论文索引补漏 (StarVLA / UVA-Cosmos / Cosmos Policy / nano-world-model / Dreamverse 等)
+
+### 设计要点
+- OFT 用 parallel MLP 替代 AR decode / flow denoise — A 阶段预测 <1ms, 瓶颈转移到 backbone (E+C)
+- 两个 controller 形成同方法 (OFT) × 不同 backbone (Prismatic 7B vs Qwen3-VL-4B) 对照
+- manual E/C/A timing (同 PiZero controller 模式), 不依赖 hook-based profiling
+
 ## v0.9.0 @freemty — 2026-04-29
 
 ### 新增 (Full reproducibility + LIBERO eval)
