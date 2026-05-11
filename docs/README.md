@@ -102,6 +102,7 @@ Project documentation map. All paths relative to repo root.
 | `docs/knowhow/debug-solutions/nitrogen-controller-deployment.md` | NitroGen 部署 5 个问题 + Codex 审查发现 |
 | `docs/knowhow/debug-solutions/pizero-integration.md` | Pi-Zero 集成 5 个陷阱 — vendor src/ 命名冲突、manual timing vs hooks、opaque infer_action、uv-over-conda、cv2/matplotlib 依赖 |
 | `docs/knowhow/debug-solutions/conda-env-model-compat.md` | **Conda env × 模型兼容矩阵** — 哪个 env 跑哪个模型, flash-attn/cuDNN/flax blockers |
+| `docs/knowhow/debug-solutions/openvla-oft-integration.md` | **OpenVLA/StarVLA OFT 集成 5 陷阱** — AutoModelForVision2Seq / eager attn / 6ch input / grid_thw / embed_tokens 路径 |
 | `docs/knowhow/debug-solutions/concurrent-cuda-stream-profiling-pitfalls.md` | 并发 CUDA stream profiling 陷阱 |
 
 ### Infrastructure
