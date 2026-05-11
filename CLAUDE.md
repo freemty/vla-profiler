@@ -129,7 +129,8 @@ slides/                # 演示文稿
 - **Domain papers:** survey/papers/
 - **TODO:** `docs/TODO.md` — Project action items and task backlog
 - **Learning plan:** `docs/learning-plan.md` — GPU systems 补课路径 (L0–L4 分层, 为 exp08 决策服务)
-- **Hao meeting prep:** `docs/hao-meeting-prep.md` — 第一次 meeting 大纲 (Action Model Design Space 四范式 + 7 实验版图, "Fast VLA first, serving later")
+- **Hao meeting prep:** `docs/hao-meeting-prep.md` — 第一次 meeting 大纲 v1 (四范式 + 7 实验)
+- **Hao meeting prep v2:** `docs/hao-meeting-prep-v2.md` — 升级版 (10 家 startup landscape + 9 模型 + OFT 瓶颈翻转 + design space 散点图)
 - **Meeting cheatsheet:** `docs/meeting-cheatsheet.md` — 面谈前 15 分钟速览 (FastVideo STA/VSA/蒸馏 + DistServe PD disagg + 数据速查)
 
 ## Knowhow
