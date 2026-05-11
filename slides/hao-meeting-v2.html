@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VLA/VA Design Space — Hao Meeting</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --font-display: 'EB Garamond', 'Noto Serif SC', serif;
+  --font-body: 'Inter', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+[data-theme="dark"] {
+  --bg: #0A0A0A;
+  --surface: #111111;
+  --text: #F0F0F0;
+  --text-secondary: #B0B0B0;
+  --text-tertiary: #999999;
+  --accent: #E53935;
+  --border: #222222;
+  --blue: #64B5F6;
+  --green: #66BB6A;
+  --yellow: #FDD835;
+  --purple: #BA68C8;
+}
+[data-theme="light"] {
+  --bg: #FFFFFF;
+  --surface: #F5F5F5;
+  --text: #000000;
+  --text-secondary: #333333;
+  --text-tertiary: #666666;
+  --accent: #C6011F;
+  --border: #E0E0E0;
+  --blue: #1976D2;
+  --green: #2E7D32;
+  --yellow: #F9A825;
+  --purple: #7B1FA2;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+
+.deck { width: 100vw; height: 100vh; position: relative; }
+.slide { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 48px 72px; overflow: hidden; }
+.slide.active { display: flex; }
+.slide-inner { width: 100%; max-width: 1100px; display: flex; flex-direction: column; gap: 20px; }
+
+.counter { position: fixed; bottom: 20px; right: 28px; font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary); z-index: 100; }
+.theme-toggle { position: fixed; top: 16px; right: 24px; font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary); background: none; border: 1px solid var(--border); border-radius: 4px; padding: 4px 10px; cursor: pointer; z-index: 100; }
+.theme-toggle:hover { color: var(--accent); border-color: var(--accent); }
+
+h1 { font-family: var(--font-display); font-size: 42px; font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; }
+h2 { font-family: var(--font-display); font-size: 28px; font-weight: 600; line-height: 1.25; }
+h3 { font-family: var(--font-body); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-tertiary); }
+p { font-size: 15px; line-height: 1.65; color: var(--text-secondary); }
+
+.accent { color: var(--accent); }
+.section-rule { width: 24px; height: 2px; background: var(--accent); margin-bottom: 8px; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 16px 20px; }
+.card.accent-left { border-left: 3px solid var(--accent); }
+.card.blue-left { border-left: 3px solid var(--blue); }
+.card.green-left { border-left: 3px solid var(--green); }
+
+.badge { display: inline-block; font-family: var(--font-mono); font-size: 11px; padding: 2px 8px; border-radius: 3px; }
+.badge.red { background: var(--accent); color: #fff; }
+.badge.blue { background: var(--blue); color: #000; }
+.badge.green { background: var(--green); color: #000; }
+.badge.muted { background: var(--border); color: var(--text-secondary); }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+td { padding: 7px 10px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+
+.phase-bar { display: flex; height: 28px; border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
+.phase-bar .seg { display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 10px; color: #fff; min-width: 0; }
+.seg-e { background: var(--blue); }
+.seg-c { background: var(--yellow); color: #000; }
+.seg-a { background: var(--accent); }
+
+.scatter-container { position: relative; width: 100%; height: 320px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); }
+.scatter-dot { position: absolute; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 9px; color: #fff; cursor: default; }
+.scatter-label { position: absolute; font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); }
+.scatter-line { position: absolute; border-top: 1px dashed var(--border); width: 100%; }
+.scatter-line-label { position: absolute; right: 8px; font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); }
+
+.callout { border-left: 3px solid var(--accent); padding: 12px 18px; font-size: 14px; color: var(--text-secondary); background: var(--surface); border-radius: 0 4px 4px 0; }
+.callout strong { color: var(--text); }
+
+ul.clean { list-style: none; }
+ul.clean li { padding: 4px 0 4px 14px; position: relative; font-size: 14px; color: var(--text-secondary); }
+ul.clean li::before { content: ""; position: absolute; left: 0; top: 11px; width: 6px; height: 6px; border-radius: 1px; background: var(--border); }
+ul.clean li strong { color: var(--text); }
+
+.mono { font-family: var(--font-mono); }
+.small { font-size: 12px; }
+.muted { color: var(--text-tertiary); }
+</style>
+</head>
+<body>
+<div class="deck">
+
+<!-- ====== SLIDE 0: TITLE ====== -->
+<div class="slide active">
+<div class="slide-inner" style="align-items:center; text-align:center; gap:28px;">
+  <div class="section-rule" style="margin:0 auto;"></div>
+  <h1>From 3ms to 2.5s<br><span class="muted" style="font-size:28px;">Mapping the VLA/VA Real-Time Design Space</span></h1>
+  <p style="font-size:16px; max-width:600px;">9 models, 11 experiments, 10 startups — the first latency landscape for action models.</p>
+  <div style="margin-top:24px;">
+    <span class="mono small muted">Yuanbo Yang &middot; UCSD &middot; Hao AI Lab</span><br>
+    <span class="mono small muted">2026-05</span>
+  </div>
+</div>
+</div>
+
+<!-- ====== SLIDE 1: INDUSTRIAL LANDSCAPE ====== -->
+<div class="slide">
+<div class="slide-inner">
+  <div class="section-rule"></div>
+  <h3>Industrial Landscape</h3>
+  <h2>Two Routes, Commercially Opposed</h2>
+  <p>2026-Q1: VLA and VA/WAM became <strong>belief-level divisions</strong>, not just academic preferences.</p>
+  <div class="two-col" style="margin-top:8px;">
+    <div class="card blue-left">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <span class="badge blue">VLA</span>
+        <span class="small muted">No runtime video gen</span>
+      </div>
+      <table>
+        <tr><td><strong>Physical Intelligence</strong></td><td>π0.7 (pipeline, 85 人)</td></tr>
+        <tr><td><strong>Generalist AI</strong></td><td>GEN-1 ("model is a system")</td></tr>
+        <tr><td><strong>Figure</strong></td><td>Helix (7-9Hz VLM + 200Hz motor)</td></tr>
+        <tr><td><strong>Google DeepMind</strong></td><td>Gemini Robotics 1.5</td></tr>
+        <tr><td><strong>NVIDIA</strong></td><td>GR00T N1.5</td></tr>
+      </table>
+    </div>
+    <div class="card accent-left">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <span class="badge red">VA / WAM</span>
+        <span class="small muted">Runtime video generation</span>
+      </div>
+      <table>
+        <tr><td><strong>1X Technologies</strong></td><td>1XWM ("video → action")</td></tr>
+        <tr><td><strong>Rhoda AI</strong></td><td>FutureVision ($450M, $1.7B)</td></tr>
+        <tr><td><strong>NVIDIA GEAR</strong></td><td>DreamZero (7Hz on GB200)</td></tr>
+        <tr><td><strong>Cosmos Policy</strong></td><td>2B DiT (LIBERO 98.5%)</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:12px;">
+    <strong>1XWM blog:</strong> explicitly names "PI0.6, Helix, Groot N1.5" as the opposing camp.<br>
+    <strong>Latency reality:</strong> VLA ~5Hz vs WAM ~0.4Hz — industry chose speed.
+  </div>
+</div>
+</div>
+
+<!-- ====== SLIDE 2: DESIGN SPACE SCATTER ====== -->
+<div class="slide">
+<div class="slide-inner">
+  <div class="section-rule"></div>
+  <h3>Design Space</h3>
+  <h2>Latency vs Action Head Complexity</h2>
+  <div class="scatter-container">
+    <!-- Y-axis labels -->
+    <span class="scatter-label" style="left:4px;bottom:20px;writing-mode:vertical-rl;transform:rotate(180deg);">Simple</span>
+    <span class="scatter-label" style="left:4px;top:20px;writing-mode:vertical-rl;transform:rotate(180deg);">Complex</span>
+    <!-- X-axis labels -->
+    <span class="scatter-label" style="bottom:4px;left:80px;">1ms</span>
+    <span class="scatter-label" style="bottom:4px;left:200px;">10ms</span>
+    <span class="scatter-label" style="bottom:4px;left:380px;">100ms</span>
+    <span class="scatter-label" style="bottom:4px;left:590px;">1000ms</span>
+    <!-- 10Hz line -->
+    <div class="scatter-line" style="left:380px;top:0;width:1px;height:100%;border-top:none;border-left:1px dashed var(--accent);"></div>
+    <span class="scatter-line-label" style="left:384px;top:8px;color:var(--accent);">10Hz</span>
+    <!-- 5Hz line -->
+    <div class="scatter-line" style="left:490px;top:0;width:1px;height:100%;border-top:none;border-left:1px dashed var(--border);"></div>
+    <span class="scatter-line-label" style="left:494px;top:8px;">5Hz</span>
+    <!-- Data points -->
+    <div class="scatter-dot" style="left:60px;bottom:40px;width:20px;height:20px;background:var(--green);" title="ACT 3ms">A</div>
+    <div class="scatter-dot" style="left:310px;bottom:65px;width:28px;height:28px;background:var(--green);" title="StarVLA-OFT 63ms">S</div>
+    <div class="scatter-dot" style="left:370px;bottom:60px;width:36px;height:36px;background:var(--green);" title="OpenVLA-OFT 109ms">O</div>
+    <div class="scatter-dot" style="left:330px;bottom:120px;width:26px;height:26px;background:var(--blue);" title="LingBot-VLA 75ms">L</div>
+    <div class="scatter-dot" style="left:440px;bottom:160px;width:30px;height:30px;background:var(--blue);" title="Pi-Zero 200ms">P</div>
+    <div class="scatter-dot" style="left:520px;bottom:180px;width:34px;height:34px;background:var(--blue);" title="Fast-WAM 407ms">F</div>
+    <div class="scatter-dot" style="left:570px;bottom:210px;width:30px;height:30px;background:var(--accent);" title="Cosmos 659ms">C</div>
+    <div class="scatter-dot" style="left:700px;bottom:260px;width:34px;height:34px;background:var(--accent);" title="LingBot-VA 2518ms">V</div>
+    <!-- Legend -->
+    <div style="position:absolute;bottom:8px;right:12px;display:flex;gap:12px;font-size:10px;font-family:var(--font-mono);color:var(--text-tertiary);">
+      <span><span style="color:var(--green);">&#9679;</span> OFT/MLP</span>
+      <span><span style="color:var(--blue);">&#9679;</span> Flow/DiT VLA</span>
+      <span><span style="color:var(--accent);">&#9679;</span> WAM</span>
+    </div>
+  </div>
+  <p class="small muted" style="text-align:center;">Bubble size = backbone params. All points from our measurements (RTX 5880 Ada). <span style="color:var(--accent);">Red line = 10Hz real-time threshold.</span></p>
+</div>
+</div>
+
+<!-- ====== SLIDE 3: OFT BOTTLENECK INVERSION ====== -->
+<div class="slide">
+<div class="slide-inner">
+  <div class="section-rule"></div>
+  <h3>New Finding</h3>
+  <h2>OFT: Bottleneck Inversion</h2>
+  <p>Parallel MLP replaces iterative denoise. Action drops from <strong>82%</strong> to <strong>0.2%</strong> of total latency.</p>
+  <div class="three-col" style="margin-top:12px;">
+    <div class="card">
+      <div class="mono small muted" style="margin-bottom:8px;">Pi-Zero (flow)</div>
+      <div class="phase-bar" style="margin-bottom:8px;">
+        <div class="seg seg-e" style="width:5%;" title="E 9ms"></div>
+        <div class="seg seg-c" style="width:13%;" title="C 26ms"></div>
+        <div class="seg seg-a" style="width:82%;" title="A 165ms">A 82%</div>
+      </div>
+      <div class="mono small">200ms &middot; <strong>5 Hz</strong></div>
+    </div>
+    <div class="card">
+      <div class="mono small muted" style="margin-bottom:8px;">OpenVLA-OFT (7B)</div>
+      <div class="phase-bar" style="margin-bottom:8px;">
+        <div class="seg seg-e" style="width:15%;" title="E 17ms"></div>
+        <div class="seg seg-c" style="width:84%;" title="C 92ms">C 84%</div>
+        <div class="seg seg-a" style="width:1%;" title="A 0.24ms"></div>
+      </div>
+      <div class="mono small">109ms &middot; <strong>9 Hz</strong></div>
+    </div>
+    <div class="card green-left">
+      <div class="mono small muted" style="margin-bottom:8px;">StarVLA-OFT (3B) <span class="badge green">16Hz</span></div>
+      <div class="phase-bar" style="margin-bottom:8px;">
+        <div class="seg seg-e" style="width:55%;" title="E 35ms">E 55%</div>
+        <div class="seg seg-c" style="width:44%;" title="C 28ms">C 45%</div>
+        <div class="seg seg-a" style="width:1%;" title="A 0.13ms"></div>
+      </div>
+      <div class="mono small">63ms &middot; <strong>16 Hz</strong></div>
+    </div>
+  </div>
+  <div style="display:flex;gap:14px;margin-top:12px;">
+    <div class="callout" style="flex:1;">
+      <strong>OFT MLP = 0.13ms</strong> — 1270x faster than flow head (165ms). Action bottleneck eliminated.
+    </div>
+    <div class="callout" style="flex:1;">
+      <strong>New bottleneck = backbone.</strong> 7B→3B = 1.7x speedup. Backbone size is the only knob left.
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SLIDE 4: FIVE JUMPS ====== -->
+<div class="slide">
+<div class="slide-inner">
+  <div class="section-rule"></div>
+  <h3>Design Space Walk-Through</h3>
+  <h2>Five Jumps — Capability vs Latency</h2>
+  <table style="font-size:14px;">
+    <thead>
+      <tr><th>Jump</th><th>Paradigm</th><th>What's Added</th><th>Latency</th><th>Hz</th><th>Exp</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="badge muted">1</span></td><td>Single-forward (ACT)</td><td>Baseline VLA</td><td class="mono">3ms</td><td class="mono">300</td><td class="mono small">02a</td></tr>
+      <tr><td><span class="badge muted">2</span></td><td>VLM + Flow head</td><td>Language + generalization</td><td class="mono">74ms</td><td class="mono">13</td><td class="mono small">03a</td></tr>
+      <tr><td><span class="badge muted">3</span></td><td>Independent Action DiT</td><td>Iterative refinement</td><td class="mono">200-407ms</td><td class="mono">2.5-5</td><td class="mono small">07a,04a</td></tr>
+      <tr><td><span class="badge muted">4</span></td><td>Full WAM (video gen)</td><td>Zero-shot imagination</td><td class="mono">2518ms</td><td class="mono">0.4</td><td class="mono small">04b</td></tr>
+      <tr style="background:var(--surface);"><td><span class="badge green">5</span></td><td><strong>OFT (parallel MLP)</strong></td><td>Kill action bottleneck</td><td class="mono"><strong>63-109ms</strong></td><td class="mono"><strong>9-16</strong></td><td class="mono small">11a,11b</td></tr>
+    </tbody>
+  </table>
+  <div class="callout" style="margin-top:12px;">
+    <strong>Jump 3 = main battlefield</strong> (Action DiT dominates 80-94%).<br>
+    <strong>Jump 5 = escape route</strong> — OFT proves you can cross 10Hz by removing the iterative head entirely. Trade-off: quality ceiling unknown beyond LIBERO.
+  </div>
+</div>
+</div>
+
+<!-- ====== SLIDE 5: DiT SCALING ====== -->
+<div class="slide">
+<div class="slide-inner">
+  <div class="section-rule"></div>
+  <h3>Action DiT</h3>
+  <h2>Scaling Curve — Super-Linear Growth</h2>
+  <table>
+    <thead><tr><th>Model</th><th>Params</th><th>Per-Step</th><th>Cross-Attn Tax</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr style="color:var(--green);"><td>OFT MLP</td><td>~2M</td><td class="mono">0.13ms</td><td>N/A</td><td class="mono small">exp11b</td></tr>
+      <tr><td>NitroGen DiT</td><td>174M</td><td class="mono">7.2ms</td><td>None (pure DiT)</td><td class="mono small">exp06a</td></tr>
+      <tr><td>Pi-Zero Expert</td><td>300M</td><td class="mono">16.5ms</td><td>+35% (KV from VLM)</td><td class="mono small">exp07a</td></tr>
+      <tr><td>Fast-WAM DiT</td><td>350M</td><td class="mono">32ms</td><td>+100% (30L MoT)</td><td class="mono small">exp04a</td></tr>
+      <tr><td>Cosmos Predict2</td><td>2B</td><td class="mono">76.8ms</td><td>Monolithic</td><td class="mono small">exp09a</td></tr>
+    </tbody>
+  </table>
+  <div class="two-col" style="margin-top:12px;">
+    <div class="callout">
+      <strong>174M→350M: 2x params, 4.4x latency</strong><br>
+      Transition from compute-bound to memory-BW-bound.
+    </div>
+    <div class="callout">
+      <strong>Cross-attn = hidden tax</strong><br>
+      300M should be ~12ms (linear), measured 16.5ms. MoT even worse.
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SLIDE 6: ATTENTION RESHAPED ====== -->
+<div class="slide">
+<div class="slide-inner">
+  <div class="section-rule"></div>
+  <h3>Unexpected Finding</h3>
+  <h2>VLA Fine-Tuning Reshapes Attention</h2>
+  <div class="two-col">
+    <div class="card">
+      <div class="mono small muted" style="margin-bottom:8px;">Vanilla VLM (exp01b)</div>
+      <ul class="clean">
+        <li><strong>Gini &gt; 0.91</strong> — extreme sparsity</li>
+        <li><strong>Pos 2</strong> = universal attention sink (12-28x)</li>
+        <li>Entropy V-shape across layers</li>
+        <li>Token pruning looks very viable</li>
+      </ul>
+    </div>
+    <div class="card accent-left">
+      <div class="mono small muted" style="margin-bottom:8px;">After VLA Fine-Tuning (exp05a)</div>
+      <ul class="clean">
+        <li><strong>Gini 0.91 → 0.07</strong> — near-uniform</li>
+        <li><strong>Sink migrates</strong> Pos 2 → Pos 64</li>
+        <li>Entropy becomes flat</li>
+        <li><strong>VLM pruning cannot transfer to VLA</strong></li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:14px;">
+    Disambiguation (exp05b): 3B vanilla Gini = 0.80-0.98 (same as 7B). <strong>Collapse is caused by VLA training objective, not model size.</strong>
+  </div>
+</div>
+</div>
+
+<!-- ====== SLIDE 7: GAPS + PRIORITIES ====== -->
+<div class="slide">
+<div class="slide-inner">
+  <div class="section-rule"></div>
+  <h3>Opportunities</h3>
+  <h2>Two Acceleration Paths</h2>
+  <div class="two-col">
+    <div class="card accent-left">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <span class="badge red">Path A</span>
+        <span class="small"><strong>Compress Action DiT</strong></span>
+      </div>
+      <ul class="clean">
+        <li>FastVideo STA/VSA → VLA DiT</li>
+        <li>Step distillation (50→4→1 step)</li>
+        <li>DiT caching (FastVideo-style)</li>
+        <li>Cross-attn overhead elimination</li>
+      </ul>
+      <p class="small muted" style="margin-top:8px;">Targets: Pi-Zero, Fast-WAM, Cosmos Policy</p>
+    </div>
+    <div class="card green-left">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <span class="badge green">Path A'</span>
+        <span class="small"><strong>Kill Action Head + Compress Backbone</strong></span>
+      </div>
+      <ul class="clean">
+        <li>OFT eliminates action bottleneck</li>
+        <li>Problem becomes pure VLM inference</li>
+        <li>Flash-attn / quantization / distillation</li>
+        <li>vLLM-style optimizations directly applicable</li>
+      </ul>
+      <p class="small muted" style="margin-top:8px;">Targets: OpenVLA-OFT, StarVLA-OFT</p>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:12px;">
+    <strong>"Fast VLA first, serving later."</strong> — Single-request latency is the bottleneck (2-10x gap to real-time), not throughput. This is the FastVideo stage, not the vLLM stage.
+  </div>
+</div>
+</div>
+
+<!-- ====== SLIDE 8: QUESTIONS ====== -->
+<div class="slide">
+<div class="slide-inner">
+  <div class="section-rule"></div>
+  <h3>Discussion</h3>
+  <h2>Five Questions</h2>
+  <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;">
+    <div class="card" style="display:flex;gap:14px;align-items:baseline;">
+      <span class="badge muted">1</span>
+      <span>VLA vs VA — <strong>which route do you believe in?</strong> PI/Figure don't do runtime video gen.</span>
+    </div>
+    <div class="card" style="display:flex;gap:14px;align-items:baseline;">
+      <span class="badge muted">2</span>
+      <span>OFT makes it a pure backbone problem — <strong>how does this relate to vLLM / FastVideo?</strong></span>
+    </div>
+    <div class="card" style="display:flex;gap:14px;align-items:baseline;">
+      <span class="badge muted">3</span>
+      <span>FastVideo STA / distillation — <strong>can it transfer directly to VLA Action DiT?</strong></span>
+    </div>
+    <div class="card" style="display:flex;gap:14px;align-items:baseline;">
+      <span class="badge muted">4</span>
+      <span>Should I start with <strong>Path A (Action DiT) or Path A' (OFT + backbone)?</strong></span>
+    </div>
+    <div class="card" style="display:flex;gap:14px;align-items:baseline;">
+      <span class="badge muted">5</span>
+      <span>Who in the lab is working on related problems?</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ====== SLIDE 9: REPRODUCIBILITY (BACKUP) ====== -->
+<div class="slide">
+<div class="slide-inner">
+  <div class="section-rule"></div>
+  <h3>Backup</h3>
+  <h2>Reproducibility — Real Weights Validation</h2>
+  <table>
+    <thead><tr><th>Model</th><th>Random (ms)</th><th>Real (ms)</th><th>Delta</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>NitroGen 500M</td><td class="mono">7.2/step</td><td class="mono">7.1/step</td><td class="mono" style="color:var(--green);">&lt;2%</td><td><span class="badge green">validated</span></td></tr>
+      <tr><td>Pi-Zero</td><td class="mono">200ms</td><td class="mono">225ms</td><td class="mono" style="color:var(--green);">+12%</td><td><span class="badge green">validated</span></td></tr>
+      <tr><td>Fast-WAM (LIBERO)</td><td colspan="2" style="text-align:center;">94.5% avg (paper 93.7%)</td><td class="mono" style="color:var(--green);">match</td><td><span class="badge green">validated</span></td></tr>
+      <tr><td>OpenVLA-OFT</td><td class="mono">—</td><td class="mono">109ms</td><td class="mono">real only</td><td><span class="badge green">validated</span></td></tr>
+    </tbody>
+  </table>
+  <div class="callout" style="margin-top:14px;">
+    <strong>Random-weight timing is faithful</strong> (Delta &lt;12%). Weight values don't change CUDA kernel compute graphs.
+  </div>
+</div>
+</div>
+
+<!-- ====== SLIDE 10: EPDA CONTENTION (BACKUP) ====== -->
+<div class="slide">
+<div class="slide-inner">
+  <div class="section-rule"></div>
+  <h3>Backup</h3>
+  <h2>EPDA Co-Location Interference</h2>
+  <p>6-pair interference matrix. M4 asymmetric model: <span class="mono">inflation(X|Y) = 1 + v_X &middot; a_Y</span>, R&sup2;=0.94</p>
+  <div class="two-col" style="margin-top:12px;">
+    <div class="card">
+      <div class="mono small muted" style="margin-bottom:8px;">Vulnerability (v)</div>
+      <table>
+        <tr><td>D (Decode)</td><td class="mono"><strong>1.52</strong></td><td><span class="badge red">fragile</span></td></tr>
+        <tr><td>P (Prefill)</td><td class="mono"><strong>1.61</strong></td><td><span class="badge red">fragile</span></td></tr>
+        <tr><td>E (Encode)</td><td class="mono">0.23</td><td><span class="badge green">robust</span></td></tr>
+        <tr><td>A (Action)</td><td class="mono">0.20</td><td><span class="badge green">robust</span></td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="mono small muted" style="margin-bottom:8px;">Aggressiveness (a)</div>
+      <table>
+        <tr><td>A (Action)</td><td class="mono"><strong>1.12</strong></td><td><span class="badge red">destructor</span></td></tr>
+        <tr><td>P (Prefill)</td><td class="mono">1.02</td><td></td></tr>
+        <tr><td>E (Encode)</td><td class="mono">0.96</td><td></td></tr>
+        <tr><td>D (Decode)</td><td class="mono">0.87</td><td><span class="badge green">gentle</span></td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:12px;">
+    <strong>Deployment rule:</strong> {E, A} safe to co-locate. {P, D} must disaggregate.
+  </div>
+</div>
+</div>
+
+<!-- ====== SLIDE 11: CLOSING ====== -->
+<div class="slide">
+<div class="slide-inner" style="align-items:center; text-align:center; gap:24px;">
+  <div class="section-rule" style="margin:0 auto;"></div>
+  <h2>One Page to Take Away</h2>
+  <div class="card" style="text-align:left; max-width:700px; margin:0 auto;">
+    <table style="font-size:14px;">
+      <tr><td class="mono small muted" style="width:120px;">Coverage</td><td><strong>9 models &times; 11 experiments</strong> = first VLA/VA latency landscape</td></tr>
+      <tr><td class="mono small muted">Finding 1</td><td>Action DiT = 80-94% of latency in mainstream VLA (Jump 3)</td></tr>
+      <tr><td class="mono small muted">Finding 2</td><td>OFT eliminates action bottleneck &rarr; backbone becomes the limit (Jump 5)</td></tr>
+      <tr><td class="mono small muted">Finding 3</td><td>Industry split: VLA (~5Hz) vs WAM (~0.4Hz) aligns with our measurements</td></tr>
+      <tr><td class="mono small muted">Finding 4</td><td>VLM attention pruning does NOT transfer to VLA</td></tr>
+      <tr><td class="mono small muted">Next</td><td><strong>Fast VLA first</strong> — Path A (compress Action DiT) or A' (OFT + compress backbone)</td></tr>
+    </table>
+  </div>
+  <p class="muted small" style="margin-top:16px;">Y<span style="color:var(--accent);">.</span> &middot; Yuanbo Yang &middot; UCSD Hao AI Lab &middot; 2026</p>
+</div>
+</div>
+
+</div><!-- end .deck -->
+
+<div class="counter"><span id="current">1</span> / <span id="total">11</span></div>
+<button class="theme-toggle" onclick="toggleTheme()">light/dark</button>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+let idx = 0;
+function show(i) {
+  slides.forEach(s => s.classList.remove('active'));
+  slides[i].classList.add('active');
+  document.getElementById('current').textContent = i + 1;
+  document.getElementById('total').textContent = slides.length;
+}
+show(0);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { idx = Math.min(idx + 1, slides.length - 1); show(idx); }
+  if (e.key === 'ArrowLeft' || e.key === 'PageUp') { idx = Math.max(idx - 1, 0); show(idx); }
+  if (e.key === 'Home') { idx = 0; show(idx); }
+  if (e.key === 'End') { idx = slides.length - 1; show(idx); }
+});
+function toggleTheme() {
+  const html = document.documentElement;
+  html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  localStorage.setItem('theme', html.getAttribute('data-theme'));
+}
+(function() { const s = localStorage.getItem('theme'); if (s) document.documentElement.setAttribute('data-theme', s); })();
+</script>
+</body>
+</html>
