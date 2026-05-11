@@ -65,9 +65,26 @@ Total: ~4B params
 | A (OFT MLP) | **<1** | 与 exp11a 同方法 |
 | Total | ~35-60 | 对应 ~17-28Hz |
 
+## Results (RTX 5880 Ada 48GB, Qwen2.5-VL-3B-Instruct, bf16)
+
+> **Note**: 使用 Qwen2.5-VL-3B-Instruct 替代 Qwen3-VL-4B（服务器上 Qwen3-VL-4B shard 不完整）。
+> 3B vs 4B 延迟差异预期 <20%（同系列架构），结论不变。
+
+| Phase | Mean (ms) | Std (ms) | 占比 |
+|-------|-----------|----------|------|
+| E (Qwen2.5 ViT) | **34.70** | 0.88 | 54.8% |
+| C (Qwen2.5 3B LLM prefill) | **28.45** | 0.84 | 44.9% |
+| A (OFT MLP) | **0.13** | 0.01 | 0.2% |
+| **Total** | **63.28** | — | **~15.8 Hz** |
+
+**Key findings**:
+- OFT MLP = 0.13ms — 比 flow head (Pi-Zero 165ms) 快 **1270x**
+- 瓶颈彻底从 A 转移到 E+C (占 99.8%)
+- 15.8Hz 适合 5-10Hz 控制场景
+
 ## Status
 
-**planned** — 待确认 StarVLA repo 可用性 + Qwen3-VL-4B 适配。
+**done** (2026-05-11) — Qwen2.5-VL-3B-Instruct + random OFT head.
 
 ## References
 

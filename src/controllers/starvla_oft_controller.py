@@ -162,7 +162,6 @@ class StarVLAOFTController(BaseVLAController):
         action_head = pipeline.action_head
         embed_tokens = pipeline.embed_tokens
         device = pipeline.device
-        hidden_size = pipeline.hidden_size
 
         pixel_values = inputs["pixel_values"]
         grid_thw = inputs["grid_thw"]
@@ -288,6 +287,8 @@ def _init_via_starvla(
         action_head = model.action_head
         embed_tokens = language_model.embed_tokens if hasattr(language_model, "embed_tokens") else language_model.model.embed_tokens
 
+        hidden_size = action_head.in_features if hasattr(action_head, "in_features") else 2048
+
         logger.info("StarVLA loaded via StarVLA API")
         return edict(
             model=model,
@@ -296,6 +297,7 @@ def _init_via_starvla(
             action_head=action_head,
             embed_tokens=embed_tokens,
             visual_projector=getattr(model, "projector", None),
+            hidden_size=hidden_size,
             device=device,
         )
     except (ImportError, FileNotFoundError, OSError) as e:

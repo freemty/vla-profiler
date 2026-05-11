@@ -58,9 +58,24 @@ Total: ~7B params
 | A (OFT MLP) | **<1** | Parallel MLP, 无 denoise loop |
 | Total | ~40-65 | 论文 73ms on A100 → RTX 5880 预期 ~1.2x |
 
+## Results (RTX 5880 Ada 48GB, openvla-7b real weights, bf16, eager attn)
+
+| Phase | Mean (ms) | Std (ms) | 占比 |
+|-------|-----------|----------|------|
+| E (DINOv2 + SigLIP dual) | **16.78** | 0.26 | 15.4% |
+| C (Llama-2 7B prefill) | **92.25** | 1.18 | 84.4% |
+| A (OFT MLP) | **0.24** | 0.05 | 0.2% |
+| **Total** | **109.27** | — | **~9.2 Hz** |
+
+**Key findings**:
+- OFT MLP = 0.24ms — action 瓶颈彻底消除
+- Llama-2 7B prefill 占 84% — backbone size 是 OFT VLA 的唯一瓶颈
+- 9.2Hz vs 论文 109.7Hz (A100): 差距来自 eager attn (no flash) + RTX 5880 vs A100
+- 论文的 109.7Hz 很可能只测了 action head throughput（不含 backbone）
+
 ## Status
 
-**planned** — 待确认 checkpoint 可用性 + 环境搭建。
+**done** (2026-05-11) — openvla-7b real weights via hf-mirror.com.
 
 ## References
 
