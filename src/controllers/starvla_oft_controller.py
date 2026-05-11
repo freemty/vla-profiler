@@ -116,21 +116,32 @@ class StarVLAOFTController(BaseVLAController):
             name = entry.get("name", "unnamed")
             image_shape = entry.get("image_shape", [3, 224, 224])
 
+            # Qwen2.5-VL ViT expects pre-patchified tensors + grid_thw
+            patch_size = 14
+            temporal = 2
+            img_h, img_w = image_shape[1], image_shape[2]
+            grid_h = img_h // patch_size
+            grid_w = img_w // patch_size
+            num_patches = grid_h * grid_w
+            patch_dim = image_shape[0] * temporal * patch_size * patch_size
+
             pixel_values = torch.randn(
-                1, *image_shape, device=device, dtype=torch.bfloat16,
+                num_patches, patch_dim, device=device, dtype=torch.bfloat16,
+            )
+            grid_thw = torch.tensor(
+                [[1, grid_h, grid_w]], device=device, dtype=torch.long,
             )
 
-            seq_len = entry.get("seq_len", 300)
+            seq_len = entry.get("seq_len", 50)
             input_ids = torch.randint(
                 1, 152064, (1, seq_len), device=device, dtype=torch.long,
             )
-            attention_mask = torch.ones_like(input_ids)
 
             inputs = [*inputs, {
                 "name": name,
                 "pixel_values": pixel_values,
+                "grid_thw": grid_thw,
                 "input_ids": input_ids,
-                "attention_mask": attention_mask,
             }]
 
         return inputs
@@ -142,8 +153,8 @@ class StarVLAOFTController(BaseVLAController):
         """
         Run StarVLA-OFT inference with manual E/C/A phase timing.
 
-        E: Qwen3 ViT vision encoder
-        C: Qwen3 LLM prefill
+        E: Qwen ViT vision encoder (pre-patchified input)
+        C: Qwen LLM prefill
         A: Parallel MLP action head (single forward)
         """
         vision_encoder = pipeline.vision_encoder
@@ -151,16 +162,17 @@ class StarVLAOFTController(BaseVLAController):
         action_head = pipeline.action_head
         embed_tokens = pipeline.embed_tokens
         device = pipeline.device
+        hidden_size = pipeline.hidden_size
 
         pixel_values = inputs["pixel_values"]
+        grid_thw = inputs["grid_thw"]
         input_ids = inputs["input_ids"]
-        attention_mask = inputs["attention_mask"]
 
         # --- Phase E: Vision encoder ---
         self.timer.mark_start("encode")
         torch.cuda.synchronize()
 
-        visual_features = vision_encoder(pixel_values)
+        visual_features = vision_encoder(pixel_values, grid_thw=grid_thw)
 
         torch.cuda.synchronize()
         self.timer.mark_end("encode")
@@ -170,27 +182,15 @@ class StarVLAOFTController(BaseVLAController):
         torch.cuda.synchronize()
 
         text_embeds = embed_tokens(input_ids)
-
-        if visual_features.dim() == 4:
-            bsz, c, h, w = visual_features.shape
-            visual_features = visual_features.reshape(bsz, c, h * w).permute(0, 2, 1)
-
-        if pipeline.visual_projector is not None:
-            visual_features = pipeline.visual_projector(visual_features)
-
+        # visual_features shape: (num_patches, hidden) → (1, num_patches, hidden)
+        if visual_features.dim() == 2:
+            visual_features = visual_features.unsqueeze(0)
         combined_embeds = torch.cat([visual_features, text_embeds], dim=1)
         combined_mask = torch.ones(
-            combined_embeds.shape[:2],
-            device=device,
-            dtype=attention_mask.dtype,
+            combined_embeds.shape[:2], device=device, dtype=torch.long,
         )
 
-        if hasattr(language_model, "model"):
-            lm_core = language_model.model
-        else:
-            lm_core = language_model
-
-        llm_output = lm_core(
+        llm_output = language_model(
             inputs_embeds=combined_embeds,
             attention_mask=combined_mask,
         )
@@ -330,13 +330,18 @@ def _init_via_qwen3(
         model, hidden_size, action_dim, chunk_size, device,
     )
 
+    lm = model.model
+    if hasattr(lm, "language_model"):
+        lm = lm.language_model
+
     return edict(
         model=model,
         vision_encoder=model.visual,
-        language_model=model.model,
+        language_model=lm,
         action_head=action_head,
-        embed_tokens=model.model.embed_tokens,
+        embed_tokens=lm.embed_tokens,
         visual_projector=None,
+        hidden_size=hidden_size,
         device=device,
     )
 

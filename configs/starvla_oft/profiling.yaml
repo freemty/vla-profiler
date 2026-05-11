@@ -18,7 +18,7 @@ model:
 
 # Qwen3-VL-4B backbone (StarVLA not strictly required for timing)
 model_name: ""
-backbone_path: "${oc.env:HF_HOME,/data1/ybyang/huggingface}/Qwen/Qwen3-VL-4B"
+backbone_path: "${oc.env:HF_HOME,/data1/ybyang/huggingface}/Qwen/Qwen2.5-VL-3B-Instruct"
 controller_name: "starvla_oft"
 
 controller_config:
