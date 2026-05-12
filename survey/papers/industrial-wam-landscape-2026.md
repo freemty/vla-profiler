@@ -31,18 +31,19 @@
 - **阵型对比**: 显式列出对立面 `PI0.6 / Helix / Groot N1.5` 为 VLA 派
 - **对我们项目**: **这是工业界最明确 runtime-video-gen 的 case**。候选 D' SLO benchmark 应把 "1XWM-style" 作为 worst-case tier，推理时 video gen 的 latency/显存特征与 exp04b 实测一致
 
-### 1.2 Rhoda AI — **FutureVision / Direct Video Action**
+### 1.2 Rhoda AI — **DVA (Direct Video-Action Model)** ⭐ 技术细节已公开
 
-- **URL**: https://www.rhoda.ai/ + https://www.rhoda.ai/news (stealth exit 2026-03-10)
+- **URL**: https://www.rhoda.ai/research/direct-video-action (2026-03 tech blog) + https://www.rhoda.ai/news (stealth exit 2026-03-10)
+- **深读**: `survey/papers/rhoda-dva-generalist-gen1-deep-dive.md`
 - **原话（逐字反验）**:
-  > *"FutureVision, a new approach to robotic intelligence based on **video-predictive control**."* (news page)
-  > *"We call this the **Direct Video Action model**."* (home page)
-  > *"Rather than relying on the current frame alone the model maintains memory, in the form of a **long history of frames**."*
-- **架构**: 1M+ 小时 web-scale video pretrain → 1-10h robot posttrain。推理时保留 video-prediction head
+  > *"To the best of our knowledge, our model is the first to **pre-train a causal video model from scratch** and also the first to **perform full video denoising during real-time closed-loop robot control**."*
+  > *"Non-causal video-to-action translation is a much more constrained problem. The complex decision making has already been handled at the video generation stage."*
+- **架构 (三件套)**: Causal Video Model (from scratch, Context Amortization 训练) → Inverse Dynamics Model (~10hr data, 极小) → Actions。推理时做完整 video denoising。
+- **Leapfrog Inference**: predict horizon > inference latency → overlap model inference & action execution。Action conditioning 保轨迹连续。
+- **部署**: Decanting (11hr data, 1.5hr 无干预, bimanual 10kg) + Container Breakdown (17hr data, 160min 无干预, 50lbs)。长 context memory (数百帧), one-shot demo following。
 - **融资**: $450M Series A, Bloomberg 报道 $1.7B 估值（2026-03-10）
-- **商业场景**: automotive / manufacturing / logistics / ecommerce
-- **信息缺口**: 无技术 blog、无 arxiv、无 inference FPS / model size 公开数字。research page 404 —— 属于"已 claim 路线但未 disclose 细节"的工业旗舰
-- **分类理由**: "video-predictive control" + "long history of frames memory" = 推理时显式 video prediction
+- **仍未报**: model size, Hz, latency 具体数字。只说 "multiple times per second"
+- **分类理由**: 推理时完整 video denoising + IDM action translation = 最纯粹的 runtime video-gen WAM
 
 ### 1.3 NVIDIA GEAR — **DreamZero**
 
