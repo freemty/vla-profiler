@@ -110,8 +110,8 @@ ul.clean li strong { color: var(--text); }
 <div class="slide active">
 <div class="slide-inner" style="align-items:center; text-align:center; gap:28px;">
   <div class="section-rule" style="margin:0 auto;"></div>
-  <h1>From 3ms to 2.5s<br><span class="muted" style="font-size:28px;">Mapping the VLA/VA Real-Time Design Space</span></h1>
-  <p style="font-size:16px; max-width:600px;">9 models, 11 experiments, 10 startups — the first latency landscape for action models.</p>
+  <h1>From 3ms to 2.5s<br><span class="muted" style="font-size:28px;">VLA/VA 实时推理 Design Space 全景</span></h1>
+  <p style="font-size:16px; max-width:600px;">9 个模型 · 11 组实验 · 10 家 startup — Action Model 延迟版图的第一张完整地图</p>
   <div style="margin-top:24px;">
     <span class="mono small muted">Yuanbo Yang &middot; UCSD &middot; Hao AI Lab</span><br>
     <span class="mono small muted">2026-05</span>
@@ -123,14 +123,14 @@ ul.clean li strong { color: var(--text); }
 <div class="slide">
 <div class="slide-inner">
   <div class="section-rule"></div>
-  <h3>Industrial Landscape</h3>
-  <h2>Two Routes, Commercially Opposed</h2>
-  <p>2026-Q1: VLA and VA/WAM became <strong>belief-level divisions</strong>, not just academic preferences.</p>
+  <h3>工业版图</h3>
+  <h2>两条路线，商业信念级对立</h2>
+  <p>2026-Q1：VLA 和 VA/WAM 已经不是学术偏好，而是<strong>商业信念层面的分野</strong>。</p>
   <div class="two-col" style="margin-top:8px;">
     <div class="card blue-left">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
         <span class="badge blue">VLA</span>
-        <span class="small muted">No runtime video gen</span>
+        <span class="small muted">推理时不做 video gen</span>
       </div>
       <table>
         <tr><td><strong>Physical Intelligence</strong></td><td>π0.7 (pipeline, 85 人)</td></tr>
@@ -143,7 +143,7 @@ ul.clean li strong { color: var(--text); }
     <div class="card accent-left">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
         <span class="badge red">VA / WAM</span>
-        <span class="small muted">Runtime video generation</span>
+        <span class="small muted">推理时生成 video 再出动作</span>
       </div>
       <table>
         <tr><td><strong>1X Technologies</strong></td><td>1XWM ("video → action")</td></tr>
@@ -154,8 +154,8 @@ ul.clean li strong { color: var(--text); }
     </div>
   </div>
   <div class="callout" style="margin-top:12px;">
-    <strong>1XWM blog:</strong> explicitly names "PI0.6, Helix, Groot N1.5" as the opposing camp.<br>
-    <strong>Latency reality:</strong> VLA ~5Hz vs WAM ~0.4Hz — industry chose speed.
+    <strong>1XWM blog 原文</strong>点名 "PI0.6, Helix, Groot N1.5" 为对立面。<br>
+    <strong>延迟现实：</strong>VLA ~5Hz vs WAM ~0.4Hz — 工业界选了速度。
   </div>
 </div>
 </div>
@@ -164,9 +164,9 @@ ul.clean li strong { color: var(--text); }
 <div class="slide">
 <div class="slide-inner">
   <div class="section-rule"></div>
-  <h3>Technical Landscape</h3>
-  <h2>Seven Systems That Define the Field</h2>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-top:4px;">
+  <h3>技术版图</h3>
+  <h2>定义这个领域的七个系统</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:4px;">
     <!-- π0.7 -->
     <div class="card blue-left" style="padding:10px 12px;">
       <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px;">
@@ -206,21 +206,8 @@ ul.clean li strong { color: var(--text); }
         <span class="mono" style="font-size:10px;color:var(--text-tertiary);">Ours: none (no arch disclosure)</span>
       </div>
     </div>
-    <!-- LingBot VA/VLA -->
-    <div class="card" style="padding:10px 12px;border-left:3px solid var(--purple);">
-      <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px;">
-        <span class="badge" style="border:1px solid var(--purple);color:var(--purple);">Both</span>
-        <strong style="font-size:13px;">LingBot</strong>
-      </div>
-      <div style="font-size:11px;color:var(--text-secondary);line-height:1.5;">
-        <span class="muted">开源 · VLA + VA 双版本</span><br>
-        <strong>VLA:</strong> 13Hz · <strong>VA:</strong> 0.4Hz (add video → 34x)<br>
-        <span class="mono" style="font-size:10px;">Clearest VLA↔WAM cost demo</span><br>
-        <span class="mono" style="font-size:10px;color:var(--green);">Ours: 74ms / 2518ms (exp03a/04b)</span>
-      </div>
-    </div>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px;">
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-top:10px;">
     <!-- Cosmos Policy -->
     <div class="card accent-left" style="padding:10px 12px;">
       <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px;">
@@ -247,6 +234,19 @@ ul.clean li strong { color: var(--text); }
         <span class="mono" style="font-size:10px;color:var(--text-tertiary);">Ours: none (needs 14B)</span>
       </div>
     </div>
+    <!-- LingBot VA -->
+    <div class="card accent-left" style="padding:10px 12px;">
+      <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px;">
+        <span class="badge red">WAM</span>
+        <strong style="font-size:13px;">LingBot-VA</strong>
+      </div>
+      <div style="font-size:11px;color:var(--text-secondary);line-height:1.5;">
+        <span class="muted">开源 · full WAM (video + action gen)</span><br>
+        <strong>5B DiT:</strong> video 20-step + action 50-step denoise<br>
+        <span class="mono" style="font-size:10px;">Same backbone as VLA → add video = 34x slower</span><br>
+        <span class="mono" style="font-size:10px;color:var(--accent);">Ours: 2518ms / 0.4Hz (exp04b)</span>
+      </div>
+    </div>
     <!-- Rhoda -->
     <div class="card accent-left" style="padding:10px 12px;">
       <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px;">
@@ -268,8 +268,8 @@ ul.clean li strong { color: var(--text); }
 <div class="slide">
 <div class="slide-inner">
   <div class="section-rule"></div>
-  <h3>Design Space</h3>
-  <h2>Latency vs Action Head Complexity</h2>
+  <h3>设计空间</h3>
+  <h2>延迟 × Action Head 复杂度</h2>
   <div class="scatter-container" id="scatter" style="position:relative;">
     <!-- Y-axis -->
     <span class="scatter-label" style="left:2px;bottom:15%;writing-mode:vertical-rl;transform:rotate(180deg);">Simple</span>
@@ -314,7 +314,7 @@ ul.clean li strong { color: var(--text); }
       <span><span style="color:var(--accent);">&#9679;</span> WAM</span>
     </div>
   </div>
-  <p class="small muted" style="text-align:center;">Bubble size ~ backbone params (not to scale). All points from our measurements (RTX 5880 Ada). <span style="color:var(--accent);">Red line = 10Hz threshold.</span></p>
+  <p class="small muted" style="text-align:center;">气泡大小 ~ backbone 参数量（非等比）。所有数据点来自我们的实测（RTX 5880 Ada）。<span style="color:var(--accent);">红线 = 10Hz 实时阈值。</span></p>
 </div>
 </div>
 
@@ -322,9 +322,9 @@ ul.clean li strong { color: var(--text); }
 <div class="slide">
 <div class="slide-inner">
   <div class="section-rule"></div>
-  <h3>New Finding</h3>
-  <h2>OFT: Bottleneck Inversion</h2>
-  <p>Parallel MLP replaces iterative denoise. Action drops from <strong>82%</strong> to <strong>0.2%</strong> of total latency.</p>
+  <h3>新发现</h3>
+  <h2>OFT：瓶颈翻转</h2>
+  <p>Parallel MLP 替代迭代 denoise。Action 从总延迟的 <strong>82%</strong> 降到 <strong>0.2%</strong>。</p>
   <div class="three-col" style="margin-top:12px;">
     <div class="card">
       <div class="mono small muted" style="margin-bottom:8px;">Pi-Zero (flow)</div>
@@ -356,10 +356,10 @@ ul.clean li strong { color: var(--text); }
   </div>
   <div style="display:flex;gap:14px;margin-top:12px;">
     <div class="callout" style="flex:1;">
-      <strong>OFT MLP = 0.13ms</strong> — 1270x faster than flow head (165ms). Action bottleneck eliminated.
+      <strong>OFT MLP = 0.13ms</strong> — 比 flow head (165ms) 快 1270x。Action 瓶颈被消灭。
     </div>
     <div class="callout" style="flex:1;">
-      <strong>New bottleneck = backbone.</strong> 7B→3B = 1.7x speedup. Backbone size is the only knob left.
+      <strong>新瓶颈 = backbone。</strong>7B→3B = 1.7x 加速。Backbone 大小是唯一剩下的旋钮。
     </div>
   </div>
 </div>
@@ -369,23 +369,23 @@ ul.clean li strong { color: var(--text); }
 <div class="slide">
 <div class="slide-inner">
   <div class="section-rule"></div>
-  <h3>Design Space Walk-Through</h3>
-  <h2>Five Jumps — Capability vs Latency</h2>
+  <h3>设计空间 Walk-Through</h3>
+  <h2>五次跳跃 — 能力 vs 延迟代价</h2>
   <table style="font-size:14px;">
     <thead>
-      <tr><th>Jump</th><th>Paradigm</th><th>What's Added</th><th>Latency</th><th>Hz</th><th>Exp</th></tr>
+      <tr><th>跳跃</th><th>范式</th><th>加了什么</th><th>延迟</th><th>Hz</th><th>实验</th></tr>
     </thead>
     <tbody>
-      <tr><td><span class="badge muted">1</span></td><td>Single-forward (ACT)</td><td>Baseline VLA</td><td class="mono">3ms</td><td class="mono">300</td><td class="mono small">02a</td></tr>
-      <tr><td><span class="badge muted">2</span></td><td>VLM + Flow head</td><td>Language + generalization</td><td class="mono">74ms</td><td class="mono">13</td><td class="mono small">03a</td></tr>
-      <tr><td><span class="badge muted">3</span></td><td>Independent Action DiT</td><td>Iterative refinement</td><td class="mono">200-407ms</td><td class="mono">2.5-5</td><td class="mono small">07a,04a</td></tr>
-      <tr><td><span class="badge muted">4</span></td><td>Full WAM (video gen)</td><td>Zero-shot imagination</td><td class="mono">2518ms</td><td class="mono">0.4</td><td class="mono small">04b</td></tr>
-      <tr style="background:var(--surface);"><td><span class="badge green">5</span></td><td><strong>OFT (parallel MLP)</strong></td><td>Kill action bottleneck</td><td class="mono"><strong>63-109ms</strong></td><td class="mono"><strong>9-16</strong></td><td class="mono small">11a,11b</td></tr>
+      <tr><td><span class="badge muted">1</span></td><td>Single-forward (ACT)</td><td>VLA 基线</td><td class="mono">3ms</td><td class="mono">300</td><td class="mono small">02a</td></tr>
+      <tr><td><span class="badge muted">2</span></td><td>VLM + Flow head</td><td>语言理解 + 泛化</td><td class="mono">74ms</td><td class="mono">13</td><td class="mono small">03a</td></tr>
+      <tr><td><span class="badge muted">3</span></td><td>独立 Action DiT</td><td>迭代精炼 (flow/diffusion)</td><td class="mono">200-407ms</td><td class="mono">2.5-5</td><td class="mono small">07a,04a</td></tr>
+      <tr><td><span class="badge muted">4</span></td><td>Full WAM (video gen)</td><td>Zero-shot 想象力</td><td class="mono">2518ms</td><td class="mono">0.4</td><td class="mono small">04b</td></tr>
+      <tr style="background:var(--surface);"><td><span class="badge green">5</span></td><td><strong>OFT (parallel MLP)</strong></td><td>消灭 action 瓶颈</td><td class="mono"><strong>63-109ms</strong></td><td class="mono"><strong>9-16</strong></td><td class="mono small">11a,11b</td></tr>
     </tbody>
   </table>
   <div class="callout" style="margin-top:12px;">
-    <strong>Jump 3 = main battlefield</strong> (Action DiT dominates 80-94%).<br>
-    <strong>Jump 5 = escape route</strong> — OFT proves you can cross 10Hz by removing the iterative head entirely. Trade-off: quality ceiling unknown beyond LIBERO.
+    <strong>跳跃 3 = 主战场</strong>（Action DiT 占 80-94% 延迟）。<br>
+    <strong>跳跃 5 = 逃逸路线</strong> — OFT 证明砍掉迭代 head 可以突破 10Hz。代价：LIBERO 之外的 quality ceiling 未知。
   </div>
 </div>
 </div>
@@ -395,7 +395,7 @@ ul.clean li strong { color: var(--text); }
 <div class="slide-inner">
   <div class="section-rule"></div>
   <h3>Action DiT</h3>
-  <h2>Scaling Curve — Super-Linear Growth</h2>
+  <h2>Scaling 曲线 — 超线性增长</h2>
   <table>
     <thead><tr><th>Model</th><th>Params</th><th>Per-Step</th><th>Cross-Attn Tax</th><th>Source</th></tr></thead>
     <tbody>
@@ -408,12 +408,12 @@ ul.clean li strong { color: var(--text); }
   </table>
   <div class="two-col" style="margin-top:12px;">
     <div class="callout">
-      <strong>174M→350M: 2x params, 4.4x latency</strong><br>
-      Transition from compute-bound to memory-BW-bound.
+      <strong>174M→350M：2x 参数，4.4x 延迟</strong><br>
+      从 compute-bound 进入 memory-BW-bound。
     </div>
     <div class="callout">
-      <strong>Cross-attn = hidden tax</strong><br>
-      300M should be ~12ms (linear), measured 16.5ms. MoT even worse.
+      <strong>Cross-attn = 隐藏税</strong><br>
+      300M 线性外推 ~12ms，实测 16.5ms。MoT 更严重。
     </div>
   </div>
 </div>
@@ -423,30 +423,30 @@ ul.clean li strong { color: var(--text); }
 <div class="slide">
 <div class="slide-inner">
   <div class="section-rule"></div>
-  <h3>Unexpected Finding</h3>
-  <h2>VLA Fine-Tuning Reshapes Attention</h2>
+  <h3>意外发现</h3>
+  <h2>VLA Fine-Tuning 彻底重塑 Attention</h2>
   <div class="two-col">
     <div class="card">
       <div class="mono small muted" style="margin-bottom:8px;">Vanilla VLM (exp01b)</div>
       <ul class="clean">
-        <li><strong>Gini &gt; 0.91</strong> — extreme sparsity</li>
+        <li><strong>Gini &gt; 0.91</strong> — 极端稀疏</li>
         <li><strong>Pos 2</strong> = universal attention sink (12-28x)</li>
-        <li>Entropy V-shape across layers</li>
-        <li>Token pruning looks very viable</li>
+        <li>Entropy V-shape 跨层分布</li>
+        <li>Token pruning 非常可行</li>
       </ul>
     </div>
     <div class="card accent-left">
       <div class="mono small muted" style="margin-bottom:8px;">After VLA Fine-Tuning (exp05a)</div>
       <ul class="clean">
-        <li><strong>Gini 0.91 → 0.07</strong> — near-uniform</li>
-        <li><strong>Sink migrates</strong> Pos 2 → Pos 64</li>
-        <li>Entropy becomes flat</li>
-        <li><strong>VLM pruning cannot transfer to VLA</strong></li>
+        <li><strong>Gini 0.91 → 0.07</strong> — 接近均匀</li>
+        <li><strong>Sink 迁移</strong> Pos 2 → Pos 64</li>
+        <li>Entropy 变 flat</li>
+        <li><strong>VLM pruning 不可迁移到 VLA</strong></li>
       </ul>
     </div>
   </div>
   <div class="callout" style="margin-top:14px;">
-    Disambiguation (exp05b): 3B vanilla Gini = 0.80-0.98 (same as 7B). <strong>Collapse is caused by VLA training objective, not model size.</strong>
+    消歧 (exp05b)：3B vanilla Gini = 0.80-0.98（与 7B 一致）。<strong>崩塌归因于 VLA 训练目标，非模型大小。</strong>
   </div>
 </div>
 </div>
@@ -455,13 +455,13 @@ ul.clean li strong { color: var(--text); }
 <div class="slide">
 <div class="slide-inner">
   <div class="section-rule"></div>
-  <h3>Opportunities</h3>
-  <h2>Two Acceleration Paths</h2>
+  <h3>机会</h3>
+  <h2>两条加速路径</h2>
   <div class="two-col">
     <div class="card accent-left">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
         <span class="badge red">Path A</span>
-        <span class="small"><strong>Compress Action DiT</strong></span>
+        <span class="small"><strong>压缩 Action DiT</strong></span>
       </div>
       <ul class="clean">
         <li>FastVideo STA/VSA → VLA DiT</li>
@@ -474,19 +474,19 @@ ul.clean li strong { color: var(--text); }
     <div class="card green-left">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
         <span class="badge green">Path A'</span>
-        <span class="small"><strong>Kill Action Head + Compress Backbone</strong></span>
+        <span class="small"><strong>砍 Action Head + 压 Backbone</strong></span>
       </div>
       <ul class="clean">
-        <li>OFT eliminates action bottleneck</li>
-        <li>Problem becomes pure VLM inference</li>
-        <li>Flash-attn / quantization / distillation</li>
-        <li>vLLM-style optimizations directly applicable</li>
+        <li>OFT 消灭 action 瓶颈</li>
+        <li>问题变成纯 VLM 推理优化</li>
+        <li>Flash-attn / 量化 / 蒸馏</li>
+        <li>vLLM-style 优化直接可用</li>
       </ul>
       <p class="small muted" style="margin-top:8px;">Targets: OpenVLA-OFT, StarVLA-OFT</p>
     </div>
   </div>
   <div class="callout" style="margin-top:12px;">
-    <strong>"Fast VLA first, serving later."</strong> — Single-request latency is the bottleneck (2-10x gap to real-time), not throughput. This is the FastVideo stage, not the vLLM stage.
+    <strong>"Fast VLA first, serving later."</strong> — 瓶颈是单请求延迟（离实时差 2-10x），不是吞吐。现在是 FastVideo 阶段，不是 vLLM 阶段。
   </div>
 </div>
 </div>
@@ -495,28 +495,28 @@ ul.clean li strong { color: var(--text); }
 <div class="slide">
 <div class="slide-inner">
   <div class="section-rule"></div>
-  <h3>Discussion</h3>
-  <h2>Five Questions</h2>
+  <h3>讨论</h3>
+  <h2>五个问题</h2>
   <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;">
     <div class="card" style="display:flex;gap:14px;align-items:baseline;">
       <span class="badge muted">1</span>
-      <span>VLA vs VA — <strong>which route do you believe in?</strong> PI/Figure don't do runtime video gen.</span>
+      <span>VLA vs VA — <strong>您看好哪条路线？</strong> PI/Figure 都不做推理时 video gen。</span>
     </div>
     <div class="card" style="display:flex;gap:14px;align-items:baseline;">
       <span class="badge muted">2</span>
-      <span>OFT makes it a pure backbone problem — <strong>how does this relate to vLLM / FastVideo?</strong></span>
+      <span>OFT 把问题变成纯 backbone 推理 — <strong>这跟 vLLM / FastVideo 的关系是什么？</strong></span>
     </div>
     <div class="card" style="display:flex;gap:14px;align-items:baseline;">
       <span class="badge muted">3</span>
-      <span>FastVideo STA / distillation — <strong>can it transfer directly to VLA Action DiT?</strong></span>
+      <span>FastVideo STA / 蒸馏 — <strong>能直接迁移到 VLA Action DiT 吗？</strong></span>
     </div>
     <div class="card" style="display:flex;gap:14px;align-items:baseline;">
       <span class="badge muted">4</span>
-      <span>Should I start with <strong>Path A (Action DiT) or Path A' (OFT + backbone)?</strong></span>
+      <span>我应该先做 <strong>Path A (压 Action DiT) 还是 Path A' (OFT + 压 backbone)？</strong></span>
     </div>
     <div class="card" style="display:flex;gap:14px;align-items:baseline;">
       <span class="badge muted">5</span>
-      <span>Who in the lab is working on related problems?</span>
+      <span>组里谁在做相关的？</span>
     </div>
   </div>
 </div>
@@ -527,7 +527,7 @@ ul.clean li strong { color: var(--text); }
 <div class="slide-inner">
   <div class="section-rule"></div>
   <h3>Backup</h3>
-  <h2>Reproducibility — Real Weights Validation</h2>
+  <h2>可复现性 — 真权重验证</h2>
   <table>
     <thead><tr><th>Model</th><th>Random (ms)</th><th>Real (ms)</th><th>Delta</th><th>Status</th></tr></thead>
     <tbody>
@@ -538,7 +538,7 @@ ul.clean li strong { color: var(--text); }
     </tbody>
   </table>
   <div class="callout" style="margin-top:14px;">
-    <strong>Random-weight timing is faithful</strong> (Delta &lt;12%). Weight values don't change CUDA kernel compute graphs.
+    <strong>Random-weight timing 是可信的</strong>（Δ&lt;12%）。权重值不改变 CUDA kernel 计算图。
   </div>
 </div>
 </div>
@@ -548,8 +548,8 @@ ul.clean li strong { color: var(--text); }
 <div class="slide-inner">
   <div class="section-rule"></div>
   <h3>Backup</h3>
-  <h2>EPDA Co-Location Interference</h2>
-  <p>6-pair interference matrix. M4 asymmetric model: <span class="mono">inflation(X|Y) = 1 + v_X &middot; a_Y</span>, R&sup2;=0.94</p>
+  <h2>EPDA 四阶段共存干扰</h2>
+  <p>6-pair 干扰矩阵。M4 非对称模型：<span class="mono">inflation(X|Y) = 1 + v_X &middot; a_Y</span>，R²=0.94</p>
   <div class="two-col" style="margin-top:12px;">
     <div class="card">
       <div class="mono small muted" style="margin-bottom:8px;">Vulnerability (v)</div>
@@ -571,7 +571,7 @@ ul.clean li strong { color: var(--text); }
     </div>
   </div>
   <div class="callout" style="margin-top:12px;">
-    <strong>Deployment rule:</strong> {E, A} safe to co-locate. {P, D} must disaggregate.
+    <strong>部署规则：</strong>{E, A} 可安全共卡。{P, D} 必须 disaggregate。
   </div>
 </div>
 </div>
@@ -580,15 +580,15 @@ ul.clean li strong { color: var(--text); }
 <div class="slide">
 <div class="slide-inner" style="align-items:center; text-align:center; gap:24px;">
   <div class="section-rule" style="margin:0 auto;"></div>
-  <h2>One Page to Take Away</h2>
+  <h2>一页带走</h2>
   <div class="card" style="text-align:left; max-width:700px; margin:0 auto;">
     <table style="font-size:14px;">
-      <tr><td class="mono small muted" style="width:120px;">Coverage</td><td><strong>9 models &times; 11 experiments</strong> = first VLA/VA latency landscape</td></tr>
-      <tr><td class="mono small muted">Finding 1</td><td>Action DiT = 80-94% of latency in mainstream VLA (Jump 3)</td></tr>
-      <tr><td class="mono small muted">Finding 2</td><td>OFT eliminates action bottleneck &rarr; backbone becomes the limit (Jump 5)</td></tr>
-      <tr><td class="mono small muted">Finding 3</td><td>Industry split: VLA (~5Hz) vs WAM (~0.4Hz) aligns with our measurements</td></tr>
-      <tr><td class="mono small muted">Finding 4</td><td>VLM attention pruning does NOT transfer to VLA</td></tr>
-      <tr><td class="mono small muted">Next</td><td><strong>Fast VLA first</strong> — Path A (compress Action DiT) or A' (OFT + compress backbone)</td></tr>
+      <tr><td class="mono small muted" style="width:120px;">覆盖</td><td><strong>9 模型 × 11 实验</strong> = VLA/VA 延迟版图的第一张完整地图</td></tr>
+      <tr><td class="mono small muted">发现 1</td><td>Action DiT = 主流 VLA 80-94% 延迟（跳跃 3）</td></tr>
+      <tr><td class="mono small muted">发现 2</td><td>OFT 消灭 action 瓶颈 → backbone 成为极限（跳跃 5）</td></tr>
+      <tr><td class="mono small muted">发现 3</td><td>工业分野：VLA (~5Hz) vs WAM (~0.4Hz) 和我们实测完全对齐</td></tr>
+      <tr><td class="mono small muted">发现 4</td><td>VLM attention pruning 不可迁移到 VLA</td></tr>
+      <tr><td class="mono small muted">下一步</td><td><strong>Fast VLA first</strong> — Path A (压 Action DiT) 或 A' (OFT + 压 backbone)</td></tr>
     </table>
   </div>
   <p class="muted small" style="margin-top:16px;">Y<span style="color:var(--accent);">.</span> &middot; Yuanbo Yang &middot; UCSD Hao AI Lab &middot; 2026</p>
@@ -600,7 +600,7 @@ ul.clean li strong { color: var(--text); }
 <div class="slide-inner" style="overflow-y:auto;">
   <div class="section-rule"></div>
   <h3>References</h3>
-  <h2>Citations &amp; Links</h2>
+  <h2>引用 &amp; 链接</h2>
   <div class="two-col" style="gap:20px;margin-top:8px;">
     <div>
       <h3 style="margin-bottom:8px;color:var(--blue);">VLA Systems</h3>
