@@ -1,7 +1,7 @@
 # TODO
 
 > Completed items moved to CHANGELOG (audit trail preserved there).
-> Last refresh: 2026-04-27 — **"Fast VLA first, serving later" 战略转向**。
+> Last refresh: 2026-05-12 — v0.10.0 OFT profiling done, slides v2 done, LIBERO eval 待跑。
 
 ## 战略判断
 
@@ -22,6 +22,20 @@ VLA 推理现在卡在**单请求太慢** (Pi-Zero 200ms=5Hz, 需要 10-50Hz)，
 - [x] **P0** 新 slide deck 按四幕叙事重做 — `slides/hao-meeting-2026-04-28.html` (10 页, Title/Opening/4 Jumps/Jump 3 deep dive/Spectrum bars/VLA attention/Priorities/Questions/exp08 backup/Closing) ✅
 - [x] **P0** 准备 exp08 一页总结 (备用) — `docs/meeting-cheatsheet.md` 末尾口头版 ✅
 - [x] **P0** 详见 `docs/hao-meeting-prep.md` — 四幕叙事结构已完成 ✅
+
+## P0 — LIBERO Eval (补 quality 数据)
+
+> 脚本已写好，等 xdlab23 网络稳定后 launch。
+
+- [ ] **P0** exp03b: LingBot-VLA LIBERO-4 eval — `scripts/run_exp03b_libero.py` 已上传, 20 ep × 4 suites × 10 tasks。vit-probe env, GPU 0。先跑 smoke test (`--episodes 2 --suite libero_spatial`) 确认 obs format
+- [ ] **P0** exp04d: LingBot-VA LIBERO eval — server-client 模式 (`run_libero_all.sh` 里有), 需确认 vit-probe env cuDNN 兼容性 (之前 crash 过)
+- [ ] **P0** exp07c: Pi-Zero LIBERO-4 eval — openpi server + client (`run_libero_all.sh` 里有), 需确认 flax/JAX 依赖 (被墙, 可能需要 scp .venv)
+
+## P0 — 实验补强 (补 depth)
+
+- [ ] **P0** Memory profiling — 每个 exp 加 `torch.cuda.max_memory_allocated()`, 补全 VRAM 数据 (目前只有 Cosmos 8816MB)
+- [ ] **P0** Batch size sweep — batch 1/2/4/8, 看 throughput scaling (目前全是 batch=1)
+- [ ] **P0** Kernel-level trace — 拿 Pi-Zero 跑一次 `torch.profiler`, 展示 action phase 里哪些 kernel 最重
 
 ## P1 — 候选方向 (Hao meeting 后启动)
 
