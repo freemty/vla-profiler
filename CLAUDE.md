@@ -210,7 +210,8 @@ Pipeline state tracked in .pipeline-state.json.
   - **exp04c (Fast-WAM 5-step):** 257ms / 3.9Hz (paper 190ms on A100, 1.35x RTX 5880). Per-step 41ms.
   - **exp07b (Pi-Zero real):** 225ms total (vs exp07a random 200ms, Δ=12%). Validates random-weight timing.
   - **exp04e (Fast-WAM LIBERO):** spatial 91.5% / object 100% / goal 97% / 10 89.5% — avg **94.5%** (800 ep, paper 93.7%).
-- **latest (v0.9.0):** Reproducibility pass + LIBERO eval. 4/7 real weights, random-weight timing Δ<12%.
-- **next:** Hao meeting → P1 候选 A (Action DiT 加速). exp11a/11b (OFT VLA profiling) planned. 详见 `docs/TODO.md`。
-- **exp11a (OpenVLA-OFT, planned):** Prismatic 7B + parallel MLP (OFT). Paper 109.7Hz/A100, LIBERO 97.1%. 需 E/C/A breakdown.
-- **exp11b (StarVLA-OFT, planned):** Qwen3-VL-4B + parallel MLP (OFT). LIBERO 96.6%. 论文零报告推理延迟.
+- **exp11a (OpenVLA-OFT, done):** E=16.8ms/C=92.3ms/A=0.24ms (total 109ms, 9.2Hz). Llama-2 7B prefill 占 84%. OFT MLP 仅 0.24ms.
+  - **exp11b (StarVLA-OFT, done):** E=34.7ms/C=28.5ms/A=0.13ms (total 63ms, 15.8Hz). OFT MLP 0.13ms = 1270x faster than flow. **瓶颈 100% 在 backbone (E+C)**. 用 Qwen2.5-VL-3B 替代 Qwen3-VL-4B (shard 不完整).
+- **latest (v0.10.0):** OFT VLA profiling (exp11a/11b) + Hao meeting v2 slides + 7 system landscape + Rhoda/GEN-1/Genesis survey.
+- **next:** Hao meeting → 双路径: Path A (压 Action DiT) 或 Path A' (OFT + 压 backbone). 详见 `docs/TODO.md` + `docs/hao-meeting-prep-v2.md`。
+- **slides:** `slides/hao-meeting-v2.html` — Swiss Knife dark design, 13 slides, 中英混排. 已部署: freemty.github.io/slides/vla-design-space.html

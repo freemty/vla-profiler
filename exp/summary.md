@@ -108,19 +108,19 @@ Cross-experiment flight recorder. Per-exp **目的 / 方法 / 结果 / 下一步
   - Peak VRAM 8816MB, 1.96B params
 - **下一步**：更新 Hao meeting slides 加入 Cosmos Policy 数据点；确认 1-step distillation quality loss on LIBERO。
 
-## exp11a — OpenVLA-OFT E/C/A Profiling · **planned**
+## exp11a — OpenVLA-OFT E/C/A Profiling · **done**
 
 - **目的**：补全开源纯 VLA 速度王者 OpenVLA-OFT 的 phase-level breakdown。论文报 109.7Hz (A100) 但无 E/C/A 分拆。
-- **方法**：Prismatic 7B (DINOv2+SigLIP → Llama2 7B) + parallel MLP (OFT) head，CUDA event timing，warmup=15。
-- **结果**：待测。预测 E~10-15ms / C~30-50ms / A<1ms → total ~40-65ms。
-- **下一步**：与 exp11b (StarVLA-OFT) 做同方法不同 backbone 对照。
+- **方法**：Prismatic 7B (DINOv2+SigLIP → Llama2 7B) + parallel MLP (OFT) head，openvla-7b 真权重 via hf-mirror，RTX 5880 Ada，eager attn，CUDA event timing，warmup=15 iter=20。
+- **结果**：E=16.78ms / C=92.25ms / A=0.24ms → total **109.3ms (~9.2Hz)**。**Llama-2 7B prefill 占 84%**。OFT MLP action head 仅 0.24ms。
+- **下一步**：与 exp11b 对比 backbone 差异；论文 109.7Hz 可能只测了 action head throughput。
 
-## exp11b — StarVLA-OFT E/C/A Profiling · **planned**
+## exp11b — StarVLA-OFT E/C/A Profiling · **done**
 
-- **目的**：填补 StarVLA 完全不报推理延迟的 gap。同 OFT method，Qwen3-VL-4B backbone。
-- **方法**：Qwen3-VL-4B + parallel MLP (OFT) head，CUDA event timing，warmup=15。
-- **结果**：待测。预测 E~15-25ms / C~20-35ms / A<1ms → total ~35-60ms (~17-28Hz)。
-- **下一步**：与 exp11a 对比 backbone 差异；合并 StarVLA accuracy + 我们 latency = Pareto frontier。
+- **目的**：填补 StarVLA 完全不报推理延迟的 gap。同 OFT method，Qwen2.5-VL-3B backbone（替代 Qwen3-VL-4B，服务器 shard 不完整）。
+- **方法**：Qwen2.5-VL-3B-Instruct + random OFT MLP head，pre-patchified ViT input + grid_thw，CUDA event timing，warmup=15 iter=20。
+- **结果**：E=34.70ms / C=28.45ms / A=0.13ms → total **63.3ms (~15.8Hz)**。**OFT MLP = 0.13ms，比 flow head (165ms) 快 1270x**。瓶颈 100% 在 E+C (backbone)。
+- **下一步**：合并 StarVLA accuracy + 我们 latency = Pareto frontier。等 Qwen3-VL-4B 补全后可重测。
 
 ---
 
@@ -149,5 +149,5 @@ Cross-experiment flight recorder. Per-exp **目的 / 方法 / 结果 / 下一步
 | exp04e | Fast-WAM LIBERO-4 eval | **done** | 94.5% avg (spatial 91.5 / object 100 / goal 97 / 10 89.5), 800 ep, real ckpt 5-step |
 | exp07c | Pi-Zero LIBERO-4 eval | **planned** | pi0-base real ckpt, 20 ep/task × 4 suites |
 | exp09a | Cosmos Policy direct-mode profiling | **done** | Action-only 659ms/1.5Hz, full 1363ms/0.73Hz. **Per-step DiT = 76.8ms** (linear R²=0.9975). Fixed cost 265ms. 1-step → 342ms/2.9Hz. |
-| exp11a | OpenVLA-OFT E/C/A profiling | **planned** | Prismatic 7B + parallel MLP (OFT). Paper: 109.7Hz on A100, LIBERO 97.1%. 需 phase breakdown. |
-| exp11b | StarVLA-OFT E/C/A profiling | **planned** | Qwen3-VL-4B + parallel MLP (OFT). LIBERO 96.6% @30K steps. 论文零报告推理延迟. |
+| exp11a | OpenVLA-OFT E/C/A profiling | **done** | E=16.8/C=92.3/A=0.24 → 109ms (9.2Hz). Llama-2 7B prefill 占 84%. OFT MLP 0.24ms. |
+| exp11b | StarVLA-OFT E/C/A profiling | **done** | E=34.7/C=28.5/A=0.13 → 63ms (15.8Hz). OFT MLP 0.13ms (1270x faster than flow). 瓶颈 100% backbone. |
