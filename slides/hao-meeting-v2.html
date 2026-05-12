@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark light">
 <title>VLA/VA Design Space — Hao Meeting</title>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -64,9 +65,9 @@ p { font-size: 15px; line-height: 1.65; color: var(--text-secondary); }
 .card.green-left { border-left: 3px solid var(--green); }
 
 .badge { display: inline-block; font-family: var(--font-mono); font-size: 11px; padding: 2px 8px; border-radius: 3px; }
-.badge.red { background: var(--accent); color: #fff; }
-.badge.blue { background: var(--blue); color: #000; }
-.badge.green { background: var(--green); color: #000; }
+.badge.red { border: 1px solid var(--accent); color: var(--accent); background: transparent; }
+.badge.blue { border: 1px solid var(--blue); color: var(--blue); background: transparent; }
+.badge.green { border: 1px solid var(--green); color: var(--green); background: transparent; }
 .badge.muted { background: var(--border); color: var(--text-secondary); }
 
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -165,38 +166,67 @@ ul.clean li strong { color: var(--text); }
   <div class="section-rule"></div>
   <h3>Design Space</h3>
   <h2>Latency vs Action Head Complexity</h2>
-  <div class="scatter-container">
-    <!-- Y-axis labels -->
-    <span class="scatter-label" style="left:4px;bottom:20px;writing-mode:vertical-rl;transform:rotate(180deg);">Simple</span>
-    <span class="scatter-label" style="left:4px;top:20px;writing-mode:vertical-rl;transform:rotate(180deg);">Complex</span>
-    <!-- X-axis labels -->
-    <span class="scatter-label" style="bottom:4px;left:80px;">1ms</span>
-    <span class="scatter-label" style="bottom:4px;left:200px;">10ms</span>
-    <span class="scatter-label" style="bottom:4px;left:380px;">100ms</span>
-    <span class="scatter-label" style="bottom:4px;left:590px;">1000ms</span>
-    <!-- 10Hz line -->
-    <div class="scatter-line" style="left:380px;top:0;width:1px;height:100%;border-top:none;border-left:1px dashed var(--accent);"></div>
-    <span class="scatter-line-label" style="left:384px;top:8px;color:var(--accent);">10Hz</span>
-    <!-- 5Hz line -->
-    <div class="scatter-line" style="left:490px;top:0;width:1px;height:100%;border-top:none;border-left:1px dashed var(--border);"></div>
-    <span class="scatter-line-label" style="left:494px;top:8px;">5Hz</span>
-    <!-- Data points -->
-    <div class="scatter-dot" style="left:60px;bottom:40px;width:20px;height:20px;background:var(--green);" title="ACT 3ms">A</div>
-    <div class="scatter-dot" style="left:310px;bottom:65px;width:28px;height:28px;background:var(--green);" title="StarVLA-OFT 63ms">S</div>
-    <div class="scatter-dot" style="left:370px;bottom:60px;width:36px;height:36px;background:var(--green);" title="OpenVLA-OFT 109ms">O</div>
-    <div class="scatter-dot" style="left:330px;bottom:120px;width:26px;height:26px;background:var(--blue);" title="LingBot-VLA 75ms">L</div>
-    <div class="scatter-dot" style="left:440px;bottom:160px;width:30px;height:30px;background:var(--blue);" title="Pi-Zero 200ms">P</div>
-    <div class="scatter-dot" style="left:520px;bottom:180px;width:34px;height:34px;background:var(--blue);" title="Fast-WAM 407ms">F</div>
-    <div class="scatter-dot" style="left:570px;bottom:210px;width:30px;height:30px;background:var(--accent);" title="Cosmos 659ms">C</div>
-    <div class="scatter-dot" style="left:700px;bottom:260px;width:34px;height:34px;background:var(--accent);" title="LingBot-VA 2518ms">V</div>
-    <!-- Legend -->
-    <div style="position:absolute;bottom:8px;right:12px;display:flex;gap:12px;font-size:10px;font-family:var(--font-mono);color:var(--text-tertiary);">
+  <div class="scatter-container" id="scatter">
+    <div style="position:absolute;bottom:8px;right:12px;display:flex;gap:12px;font-size:10px;font-family:var(--font-mono);color:var(--text-tertiary);z-index:2;">
       <span><span style="color:var(--green);">&#9679;</span> OFT/MLP</span>
       <span><span style="color:var(--blue);">&#9679;</span> Flow/DiT VLA</span>
       <span><span style="color:var(--accent);">&#9679;</span> WAM</span>
     </div>
   </div>
-  <p class="small muted" style="text-align:center;">Bubble size = backbone params. All points from our measurements (RTX 5880 Ada). <span style="color:var(--accent);">Red line = 10Hz real-time threshold.</span></p>
+  <p class="small muted" style="text-align:center;">Bubble size ~ backbone params (not to scale). All points from our measurements (RTX 5880 Ada). <span style="color:var(--accent);">Red line = 10Hz threshold.</span></p>
+  <script>
+  (function(){
+    const data = [
+      {label:'A',name:'ACT 3ms',ms:3,y:0.1,size:18,color:'green'},
+      {label:'S',name:'StarVLA-OFT 63ms',ms:63,y:0.2,size:26,color:'green'},
+      {label:'O',name:'OpenVLA-OFT 109ms',ms:109,y:0.18,size:34,color:'green'},
+      {label:'L',name:'LingBot-VLA 75ms',ms:75,y:0.4,size:26,color:'blue'},
+      {label:'P',name:'Pi-Zero 200ms',ms:200,y:0.55,size:30,color:'blue'},
+      {label:'F',name:'Fast-WAM 407ms',ms:407,y:0.6,size:34,color:'blue'},
+      {label:'C',name:'Cosmos 659ms',ms:659,y:0.72,size:30,color:'accent'},
+      {label:'V',name:'LingBot-VA 2518ms',ms:2518,y:0.88,size:34,color:'accent'},
+    ];
+    const el=document.getElementById('scatter');
+    const pad={l:50,r:20,t:20,b:30};
+    function render(){
+      const W=el.offsetWidth, H=el.offsetHeight;
+      const pw=W-pad.l-pad.r, ph=H-pad.t-pad.b;
+      const logMin=Math.log10(1), logMax=Math.log10(5000);
+      const lx=v=>(Math.log10(v)-logMin)/(logMax-logMin)*pw+pad.l;
+      const ly=v=>pad.t+(1-v)*ph;
+      let html='';
+      // Y axis
+      html+='<span class="scatter-label" style="left:4px;bottom:'+pad.b+'px;writing-mode:vertical-rl;transform:rotate(180deg);">Simple</span>';
+      html+='<span class="scatter-label" style="left:4px;top:'+pad.t+'px;writing-mode:vertical-rl;transform:rotate(180deg);">Complex</span>';
+      // X axis ticks
+      [1,10,100,1000].forEach(v=>{
+        const x=lx(v);
+        html+='<span class="scatter-label" style="bottom:4px;left:'+x+'px;">'+v+'ms</span>';
+        html+='<div style="position:absolute;left:'+x+'px;top:'+pad.t+'px;width:1px;height:'+ph+'px;border-left:1px dotted var(--border);opacity:0.4;"></div>';
+      });
+      // 10Hz line (100ms)
+      const x10=lx(100);
+      html+='<div style="position:absolute;left:'+x10+'px;top:0;width:1px;height:100%;border-left:2px dashed var(--accent);"></div>';
+      html+='<span class="scatter-line-label" style="left:'+(x10+4)+'px;top:8px;color:var(--accent);">10Hz</span>';
+      // 5Hz line (200ms)
+      const x5=lx(200);
+      html+='<div style="position:absolute;left:'+x5+'px;top:0;width:1px;height:100%;border-left:1px dashed var(--border);"></div>';
+      html+='<span class="scatter-line-label" style="left:'+(x5+4)+'px;top:8px;">5Hz</span>';
+      // Data dots
+      const cmap={green:'var(--green)',blue:'var(--blue)',accent:'var(--accent)'};
+      data.forEach(d=>{
+        const cx=lx(d.ms)-d.size/2, cy=ly(d.y)-d.size/2;
+        html+='<div class="scatter-dot" style="left:'+cx+'px;top:'+cy+'px;width:'+d.size+'px;height:'+d.size+'px;background:'+cmap[d.color]+';" title="'+d.name+'">'+d.label+'</div>';
+      });
+      // Keep legend
+      const legend=el.querySelector('[style*="z-index:2"]');
+      const legendHTML=legend?legend.outerHTML:'';
+      el.innerHTML=html+legendHTML;
+    }
+    render();
+    window.addEventListener('resize',render);
+  })();
+  </script>
 </div>
 </div>
 
@@ -493,8 +523,8 @@ function show(i) {
 }
 show(0);
 document.addEventListener('keydown', e => {
-  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { idx = Math.min(idx + 1, slides.length - 1); show(idx); }
-  if (e.key === 'ArrowLeft' || e.key === 'PageUp') { idx = Math.max(idx - 1, 0); show(idx); }
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); idx = Math.min(idx + 1, slides.length - 1); show(idx); }
+  if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); idx = Math.max(idx - 1, 0); show(idx); }
   if (e.key === 'Home') { idx = 0; show(idx); }
   if (e.key === 'End') { idx = slides.length - 1; show(idx); }
 });
