@@ -80,6 +80,7 @@ slides/                # 演示文稿
 - **StarVLA 精读 (2026-04)**: `survey/papers/starvla-deep-dive.md` — HKUST 开源 VLA 训练平台, backbone×action-head 可组合 (FAST/OFT/π/GR00T × Qwen3-VL/Cosmos), L=L_action+L_aux 统一公式 (convenient reframing), LIBERO 96.6% @30K steps, **完全不测 inference efficiency** — 恰好是我们 profiling 填补的 gap。我们的 latency data + 他们的 accuracy data = 第一张公平 VLA Pareto frontier
 - **UVA vs Cosmos Policy 对比精读**: `survey/papers/uva-cosmos-policy-comparative.md` — 同一组人 (Yihuai Gao + Shuran Song, Stanford) 从 decoupled (UVA 0.5B, 55-95ms, 均衡型 E/C/A) 到 monolithic (Cosmos 2B, ~440ms, denoise-dominated) 的演进。Scale 改变架构选择: <1B decoupled 更高效, 2B+ monolithic 更简洁。Step distillation 是 monolithic 的杀手级优化 (50→5 步)
 - **Rhoda DVA + Generalist GEN-1 对比精读**: `survey/papers/rhoda-dva-generalist-gen1-deep-dive.md` — 2026 Q1 两条 "Post-VLA" 路线。Rhoda DVA: causal video from scratch + IDM + Leapfrog Inference (latency-hiding), 10-20hr data, 工业部署 1.5hr+ 无干预。Generalist GEN-1: 99% params from scratch, 500K+hr 穿戴设备 pretrain, 1hr task data → 99% 成功率 + 3x faster, "Beyond WM & VLA" 方法论宣言 (Pete Florence)。**两家都不报 Hz** — profiling gap 进一步确认
+- **Robotics FM Landscape 五家横评 (2026 Q2)**: `survey/papers/robotics-fm-landscape-2026-q2.md` — Skild Brain (hierarchical, 100K morphology sim, $14B) / Rhoda DVA (causal video→IDM) / Generalist GEN-1 (from-scratch, 500K+hr) / PI π0.7 (4-component pipeline) / Genesis GENE-26.5 (flow matching + 自研 20-DOF hand, 3ms control)。**五个不同赌注**: 形态多样性/物理理解/训练范式/系统分工/硬件精度。五家全都不报 inference Hz — profiling gap 横跨整个行业
 - **Documentation index**: `docs/README.md` — 全项目文档结构索引 (survey, experiments, knowhow, specs, notes, viewer)
 
 ## Survey Dimensions
@@ -213,5 +214,6 @@ Pipeline state tracked in .pipeline-state.json.
 - **exp11a (OpenVLA-OFT, done):** E=16.8ms/C=92.3ms/A=0.24ms (total 109ms, 9.2Hz). Llama-2 7B prefill 占 84%. OFT MLP 仅 0.24ms.
   - **exp11b (StarVLA-OFT, done):** E=34.7ms/C=28.5ms/A=0.13ms (total 63ms, 15.8Hz). OFT MLP 0.13ms = 1270x faster than flow. **瓶颈 100% 在 backbone (E+C)**. 用 Qwen2.5-VL-3B 替代 Qwen3-VL-4B (shard 不完整).
 - **latest (v0.10.0):** OFT VLA profiling (exp11a/11b) + Hao meeting v2 slides + 7 system landscape + Rhoda/GEN-1/Genesis survey.
-- **next:** Hao meeting → 双路径: Path A (压 Action DiT) 或 Path A' (OFT + 压 backbone). 详见 `docs/TODO.md` + `docs/hao-meeting-prep-v2.md`。
-- **slides:** `slides/hao-meeting-v2.html` — Swiss Knife dark design, 13 slides, 中英混排. 已部署: freemty.github.io/slides/vla-design-space.html
+- **next:** 1) LIBERO eval: exp03b (脚本已写) / exp04d / exp07c; 2) 实验补强: memory profiling + batch sweep + kernel trace; 3) Hao meeting → 双路径 Path A / A'. 详见 `docs/TODO.md`。
+- **slides:** `slides/hao-meeting-v2.html` — Swiss Knife dark design, 14 slides, 中英混排, lean text (每页一句+数据). 已部署: freemty.github.io/slides/vla-design-space.html
+- **skill:** `~/.claude/skills/slides-voice/` — slide 文案审核 skill (去 overclaim/filler/大词)
