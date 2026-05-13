@@ -102,7 +102,46 @@ if not hasattr(transformers.utils, "LossKwargs"):
 
 已应用到: `scripts/run_exp03b_libero.py`
 
-验证：`from src.controllers.lingbot_vla_controller import LingBotVLAController` 在 vit-probe env 也成功。
+### Error 3-6: 更多 transformers 4.57 不兼容 (解决于 2026-05-13)
+
+shim 路线可行但需要多层修复：
+
+**Error 3: apply_rotary_emb / flash_attn_varlen_func**
+`qwenvl_in_vla.py` 在 try block 里 import 这些函数，transformers 4.57 已移除。
+**Fix**: 脚本里 shim `_mfa.apply_rotary_emb = None` 等（函数走 eager attention 不被调用）
+
+**Error 4: TypedDict 继承冲突**
+`KwargsForCausalLM(FlashAttentionKwargs, LossKwargs)` — FlashAttentionKwargs 在 4.57 是 TypedDict。
+**Fix**: LossKwargs shim 改为 `class _LossKwargs(TypedDict, total=False): pass`
+
+**Error 5: use_flash_attention_2 已废弃**
+`_from_config(vlm_config, use_flash_attention_2=True)` 在 4.57 报错。
+**Fix**: 远端 sed 删除 `use_flash_attention_2=True` 参数（3 处）
+
+**Error 6: _attn_implementation 默认 sdpa**
+lingbotvla 只注册了 `eager` 和 `flash_attention_2`，但 4.57 默认 `sdpa`。
+**Fix**: 远端 sed 在 _from_config 调用前加 `config._attn_implementation = "eager"`
+
+**Error 7: rotate_half 未定义**
+旧版 transformers 全局导出 `rotate_half`，4.57 没有。
+**Fix**: 远端在 qwenvl_in_vla.py 顶部加标准 rotate_half 定义
+
+### 远端 patch 汇总 (xdlab23)
+```bash
+# modeling_lingbot_vla.py: 删 use_flash_attention_2, 加 _attn_implementation="eager", 直接构造 expert
+sed -i 's/_from_config(vlm_config, use_flash_attention_2=True)/_from_config(vlm_config)/' modeling_lingbot_vla.py
+sed -i '/_from_config(vlm_config)/i\        vlm_config._attn_implementation = "eager"' modeling_lingbot_vla.py
+sed -i 's/Qwen2ForCausalLM._from_config(self.config.qwen_expert_config, use_flash_attention_2=True, eval=eval)/Qwen2ForCausalLM(self.config.qwen_expert_config, eval=eval)/' modeling_lingbot_vla.py
+sed -i '/Qwen2ForCausalLM(self.config.qwen_expert_config/i\        self.config.qwen_expert_config._attn_implementation = "eager"' modeling_lingbot_vla.py
+
+# qwenvl_in_vla.py: 删 use_flash_attention_2, 加 _attn_implementation, 加 rotate_half
+sed -i 's/_from_config(config.vision_config, use_flash_attention_2=True)/_from_config(config.vision_config)/' qwenvl_in_vla.py
+sed -i '/_from_config(config.vision_config)/i\        config.vision_config._attn_implementation = "eager"' qwenvl_in_vla.py
+# rotate_half: 在第一个 class 定义前插入
+sed -i '1,/^class /{/^class /i\def rotate_half(x):\n    x1 = x[..., : x.shape[-1] // 2]\n    x2 = x[..., x.shape[-1] // 2 :]\n    return torch.cat((-x2, x1), dim=-1)\n}' qwenvl_in_vla.py
+```
+
+验证：exp03b smoke test (1 ep × 10 tasks) 跑通，transformers 4.57.1 + lerobot_stub。
 
 ## Notes
 - Date: 2026-04-20 (初版) / 2026-05-13 (LIBERO eval 兼容性追加)
