@@ -159,7 +159,7 @@ def run_standalone_mode(suite, episodes, out_dir, seed=195):
     model = get_model(cfg)
     dataset_stats = load_dataset_stats(cfg.dataset_stats_path)
     init_t5_text_embeddings_cache(cfg.t5_text_embeddings_path)
-    resize_size = get_image_resize_size(cfg)
+    resize_size = get_image_resize_size(cfg.model_family)
 
     cfg.unnorm_key = suite
     if suite not in model.norm_stats and f"{suite}_no_noops" in model.norm_stats:
