@@ -1,249 +1,99 @@
-# vlla — VLM/VLA Real-Time Inference Profiling & Analysis
+# vlla — VLM/VLA Real-Time Inference Profiling
 
-Hook-based profiling and attention analysis framework for Vision-Language Models (VLM) and Vision-Language-Action (VLA) models. Measures phase-level latency breakdown and captures attention patterns for interpretability research.
+Phase-level latency profiling for Vision-Language-Action models. Measures E/C/A breakdown (Encode / Context / Action) across 9 models spanning 5 paradigms.
 
-PhD research direction: VLM/VLA real-time inference systems.
-Advisor: Hao Zhang (UCSD) — vLLM / FastVideo / Chatbot Arena.
+PhD research @ UCSD Hao AI Lab (advisor: Hao Zhang — vLLM / FastVideo / Chatbot Arena).
 
-## Status Overview
+## Key Findings
 
-### Done
+| Paradigm | Model | Total | Hz | Bottleneck |
+|----------|-------|-------|-----|-----------|
+| Single-forward | ACT | 3ms | 300 | Encode 80% |
+| VLM + flow head | LingBot-VLA (3B) | 74ms | 13 | E ≈ C, A free |
+| VLM + OFT MLP | StarVLA-OFT (3B) | 63ms | 16 | E+C 99.8% |
+| VLM + OFT MLP | OpenVLA-OFT (7B) | 109ms | 9 | C (7B prefill) 84% |
+| Dual-stream flow | Pi-Zero (2.7B) | 200ms | 5 | Action Expert 82% |
+| WAM skip-imagination | Fast-WAM (5B) | 407ms | 2.5 | Action DiT 89% |
+| Monolithic DiT | Cosmos Policy (2B) | 659ms | 1.5 | DiT denoise 90%+ |
+| Full WAM | LingBot-VA (5B) | 2518ms | 0.4 | Video+Action 93% |
 
-| Component | Status | Details |
-|-----------|--------|---------|
-| **Framework core** | Done | `model-probe-core` submodule (shared with rope2sink), BaseController / StoreMixin / HookManager / Registry |
-| **VLM controller** | Done | BaseVLMController (E/P/D phases) -> QwenVLController (Qwen2.5-VL-7B) |
-| **VLA controller** | Done | BaseVLAController (E/C/A phases) -> ACTController, LingBotVLAController, NitroGenController, PiZeroController |
-| **Profiling task** | Done | `epd_profiling` — CUDA event timing, median/P10/P90/P99/CV stats |
-| **Attention tasks** | Done | `visual_text_attention`, `sink_detection`, `per_layer_stats` |
-| **Attention overlay** | Done | Interpretability Mixin + OverlayRenderer (heatmap/strip/GIF) |
-| **Timing validation** | Done | `timing_validation` — PhaseTimer vs torch.profiler cross-check |
-| **PhaseTimer** | Done | CUDA event wrapper with CPU fallback, cumulative decode support |
-| **Server deployment** | Done | xdlab23 scripts (sync/launch/download/monitor) |
-| **Hydra configs** | Done | base.yaml + qwen_vl_{7b,3b}/* + act/profiling + lingbot_vla_4b/* + nitrogen/profiling + pizero/profiling |
-| **Survey** | Done | 180+ papers across 4 documents (landscape, recent-papers, va-world-models, va-world-models-web) |
-| **Profiling survey** | Done | 8-system ML profiling comparison (vLLM/SGLang/FastVideo/TensorRT-LLM/DeepSpeed/Triton/llama.cpp/MLC LLM) |
-| **Tests** | Done | Unit tests for timing, registry, attention task, overlay renderer, interpretability mixin, attention overlay task |
-| **Viewer** | Done | Flask server + research presentation viewer (hub, slides, experiments) |
+Hardware: RTX 5880 Ada 48GB, bf16, CUDA event timing, warmup=15, iter=20, median.
 
-### Experiment Results
-
-| Exp | Model | Paradigm | Key Finding |
-|-----|-------|----------|-------------|
-| **exp01a** | Qwen2.5-VL-7B | VLM (AR) | Encode 253ms (58%), D=18-21ms/tok. Scales linearly with images. |
-| **exp01b** | Qwen2.5-VL-7B | VLM (AR) | Pos 2 = universal attention sink (12-28x). Gini >0.91 (extreme sparsity). |
-| **exp02a** | ACT (LeRobot) | VA (CVAE) | Total ~3ms, 850x faster than VLM. Encode 80%, Action 20%. |
-| **exp03a** | LingBot-VLA-4B | Flow VLA | E=35.7ms/C=38.3ms/A=0.48ms (total 74.5ms ≈ 13Hz). 3B 7x faster than 7B. |
-| **exp04a** | Fast-WAM (6.7B) | WAM (skip) | @10step: E=7.6ms/C=36.7ms/A=362ms (total 407ms, 2.5Hz). Action 89%. |
-| **exp04b** | LingBot-VA (5B) | WAM (full) | E=75.5ms/V=592.5ms/A=1423ms (total 2091ms, 0.5Hz). Full WAM 5x slower. |
-| **exp05a** | LingBot-VLA-4B | Flow VLA | VLA fine-tuning reshapes attention: Gini 0.91→0.07, sink Pos2→64, entropy flat. |
-| **exp05b** | Qwen2.5-VL-3B | VLM (AR) | Disambiguation: Gini collapse = VLA fine-tuning, not model size. 3B Gini 0.80-0.98. |
-| **exp06a** | NitroGen 500M | VA (flow DiT) | Per-step 7.2ms, linear. k=1: 55.9Hz, k=16: 7.9Hz. BW transition at 174-350M. |
-| **pi-zero** | Pi-Zero (3.2B) | Flow VLA | Total 211ms ≈ 4.7Hz (random weights, bf16, 10 denoise steps). |
-
-Hardware: RTX 5880 Ada 48GB on xdlab23, 10 benchmark runs + 3 warmup.
-
-### TODO
-
-| Item | Priority | Status | Notes |
-|------|----------|--------|-------|
-| **Attention overlay on server** | High | Not started | Config ready (`qwen_vl_7b/attention_overlay`), needs to run on xdlab23 |
-| **OpenVLA profiling** | High | Config ready | Controller + config done. Blocked: HF model weights download |
-| **DreamZero profiling** | High | Not started | DiT caching in memory-BW-bound regime, Wan2.1-14B + DreamZero-DROID checkpoint |
-| **DreamZero DiT layer activation variance** | High | Not started | Which DiT layers can be cached? Activation change rate per layer |
-| **Imagination value quantification** | High | Not started | Full WAM (592ms video gen) vs skip — does imagination improve task success? |
-| **OpenVLA attention analysis** | Medium | Config ready | `openvla_7b/attention.yaml`, depends on profiling run |
-| **Pi-Zero E/C/A breakdown** | Medium | Baseline done | Total 211ms/4.7Hz (random). Need pretrained weights |
-| **WAM step-count sensitivity** | Medium | Not started | Fast-WAM @5/10/20 steps done; sweep finer grid for latency-quality Pareto |
-| **Gradient saliency** | Low | Not started | Extend interpretability framework beyond attention |
-| **More VLA models** | Low | Not started | InternVL, Llava, etc. — controller stubs needed |
+**Two acceleration paths identified:**
+- **Path A**: Compress Action DiT (FastVideo STA / step distillation / caching)
+- **Path A'**: Kill action head entirely (OFT MLP) + compress backbone (flash-attn / quantization)
 
 ## Architecture
 
 ```
-probe_core.BaseController           # Model-agnostic: hook lifecycle, StoreMixin, HookMode
-  |
-  +-> BaseVLMController             # VLM: E/P/D phases (Encode/Prefill/Decode), PhaseTimer
-  |     +-> QwenVLController        # Qwen2.5-VL: model loading, QKV hooks, VLMInterpretabilityMixin
-  |     +-> OpenVLAController       # OpenVLA (AR VLA): DINOv2+SigLIP -> Llama-2 7B
-  |
-  +-> BaseVLAController             # VLA: E/C/A phases (Encode/Context/Action)
-        +-> ACTController           # ACT (LeRobot): ResNet18 -> CVAE -> action chunk
-        +-> LingBotVLAController    # LingBot-VLA-4B: Qwen2.5-VL-3B + 10-step flow action head
-        +-> LingBotVAController     # LingBot-VA (full WAM): E/V/A phases, 5B shared DiT
-        +-> NitroGenController     # NitroGen 500M: SigLIP -> VL-SA -> DiT flow matching
-        +-> PiZeroController        # Pi-Zero: SigLIP -> Gemma 2B + Gemma 300M Expert
+probe_core.BaseController
+  ├── BaseVLMController (E/P/D)     → QwenVLController, OpenVLAController
+  └── BaseVLAController (E/C/A)     → ACT, LingBot-VLA, LingBot-VA, NitroGen,
+                                       PiZero, OpenVLA-OFT, StarVLA-OFT
 ```
 
-Phase models:
-- **VLM (BaseVLMController):** E/P/D — Encode / Prefill / Decode (autoregressive)
-- **VLA (BaseVLAController):** E/C/A — Encode / Context / Action (C optional, A may iterate)
-- **WAM (LingBotVAController):** E/V/A — Encode / Video-denoise / Action-denoise (shared DiT, `action_mode` flag switches routing)
+Two modes:
+- **Profiling** — CUDA event timing at phase boundaries, zero overhead
+- **Analysis** — QKV tensor capture for attention study
 
-Interpretability layer (multi-inheritance mixin):
+## Quick Start
 
+```bash
+# Clone
+git clone --recursive <repo-url> && cd vlla
+
+# Install
+uv sync  # or: conda activate vit-probe
+
+# Run profiling
+export HF_HOME=/path/to/huggingface
+CUDA_VISIBLE_DEVICES=0 python -m src.run_tasks \
+    --config-path ../configs --config-name pizero/profiling
+
+# Run on xdlab23
+bash scripts/sync_to_remote.sh
+bash scripts/launch_exp.sh 0 pizero/profiling
+bash scripts/download-results.sh
 ```
-BaseInterpretabilityMixin           # ABC: token spatial mapping, attention-to-image projection
-  +-> VLMInterpretabilityMixin      # Qwen2.5-VL: image_grid_thw -> patch grid, <|image_pad|> scan
-  +-> VLAInterpretabilityMixin      # Pi-Zero placeholder
-```
-
-Two strict modes:
-- **Profiling** — CUDA event timing at phase boundaries (no tensor copies, no overhead)
-- **Analysis** — QKV tensor capture for attention study (sink detection, sparsity, entropy)
 
 ## Project Structure
 
 ```
-src/
-  core/                 -> model-probe-core submodule (shared with rope2sink)
-  controllers/          BaseVLMController, BaseVLAController, Qwen/OpenVLA/ACT/LingBot-VA/PiZero
-  tasks/                profiling_task, attention_task, attention_overlay_task, validation_task
-  interpretability/     Mixin system for attention-to-image mapping
-  viz/                  OverlayRenderer (heatmap, strip, GIF)
-  utils/                PhaseTimer
-  run_tasks.py          Hydra entry point
-vendor/
-  open_pi_zero/         Vendored open-pi-zero model code (allenzren/open-pi-zero)
-configs/                Hydra experiment configs (base + per-model)
-scripts/                Server deployment and experiment scripts
-survey/                 Literature survey (180+ papers, 4 documents)
-exp/                    Experiment log and results
-docs/knowhow/           Infrastructure, toolchain, debug solutions, runbooks
-viewer/                 Flask server + survey dashboard
-tests/                  Unit tests
-pyproject.toml          uv project definition (torch>=2.5, transformers>=4.47)
+src/controllers/    9 model controllers (VLM + VLA + OFT)
+src/tasks/          profiling, attention, validation tasks
+src/utils/          PhaseTimer (CUDA event + CPU fallback)
+configs/            Hydra configs per model × task
+scripts/            server deploy, experiment launch, LIBERO eval
+survey/             180+ paper survey (landscape, deep-dives)
+exp/                experiment specs + results
+slides/             presentation deck (Swiss Knife design)
+viewer/             Flask dashboard
 ```
 
-## Getting Started
+## Adding Models
 
-### Prerequisites
+1. Create `src/controllers/your_controller.py` extending `BaseVLAController`
+2. Implement: `get_vision_encoder()`, `get_action_head()`, `init_pipeline()`, `prepare_inputs()`, `model_inference()`
+3. Register: `CONTROLLER_REGISTRY.register("name", YourController)`
+4. Add Hydra config: `configs/your_model/profiling.yaml`
 
-```bash
-# Option A: uv (recommended for Pi-Zero / LingBot-VLA)
-uv sync                     # core deps (torch, transformers, hydra, etc.)
-uv sync --extra qwen        # + qwen-vl-utils
+## Server
 
-# Option B: conda (legacy, for Qwen/OpenVLA/ACT)
-conda activate vit-probe
-```
-
-### Clone
-
-```bash
-git clone --recursive <repo-url>
-cd vlla
-```
-
-### Run Locally (if GPU available)
-
-```bash
-export HF_HOME=/path/to/huggingface/cache
-CUDA_VISIBLE_DEVICES=0 python -m src.run_tasks \
-    --config-path ../configs --config-name qwen_vl_7b/profiling
-```
-
-### Run on Server (xdlab23)
-
-```bash
-# 1. Sync code
-bash scripts/sync_to_remote.sh
-
-# 2. Launch experiment (from local — runs on server via SSH)
-bash scripts/run_remote.sh 0 qwen_vl_7b/profiling
-
-# 3. Monitor (optional)
-bash scripts/monitor_exp.sh exp01a
-
-# 4. Download results
-bash scripts/download-results.sh
-```
-
-See `docs/knowhow/runbooks/deploy-to-xdlab23.md` for first-time setup.
-
-## Scripts
-
-| Script | Purpose | Usage |
-|--------|---------|-------|
-| `scripts/sync_to_remote.sh` | Git bundle sync to xdlab23 (GitHub blocked by firewall) | `bash scripts/sync_to_remote.sh` |
-| `scripts/launch_exp.sh` | Launch experiment on server (run after SSH) | `bash scripts/launch_exp.sh <GPU> <CONFIG>` |
-| `scripts/run_remote.sh` | One-command remote launch via SSH | `bash scripts/run_remote.sh <GPU> <CONFIG>` |
-| `scripts/download-results.sh` | Rsync results from server to local | `bash scripts/download-results.sh [MODEL_DIR]` |
-| `scripts/monitor_exp.sh` | Check experiment status (for /loop) | `bash scripts/monitor_exp.sh <EXP_ID>` |
-| `scripts/run_local.sh` | Run experiment locally (for testing) | `bash scripts/run_local.sh <GPU> <CONFIG>` |
-| `scripts/run_viewer.sh` | Start Flask viewer server | `bash scripts/run_viewer.sh [PORT]` |
-| `scripts/run_tests.sh` | Run test suite with coverage | `bash scripts/run_tests.sh` |
-| `scripts/profile_fastwam.py` | Fast-WAM standalone E/C/A profiling | `python scripts/profile_fastwam.py --mode random --gpu 0` |
-| `scripts/profile_lingbot_va.py` | LingBot-VA standalone E/V/A profiling | `python scripts/profile_lingbot_va.py --mode random --gpu 0` |
-
-## Configuration
-
-Hydra-based. Add new experiments by creating YAML under `configs/`:
-
-```yaml
-# configs/your_model/profiling.yaml
-defaults:
-  - /base
-  - _self_
-
-model_name: "${oc.env:HF_HOME,...}/your/model-path"
-controller_name: "your_model"
-controller_config:
-  mode: "profiling"       # or "analysis"
-tasks:
-  - "epd_profiling"
-inputs:
-  - name: "single_image"
-    messages:
-      - role: "user"
-        content:
-          - type: "image"
-            image: "path/or/url"
-          - type: "text"
-            text: "Describe this image."
-```
-
-Available configs:
-
-| Config | Model | Tasks |
-|--------|-------|-------|
-| `qwen_vl_3b/attention` | Qwen2.5-VL-3B | Attention analysis (vanilla 3B baseline for exp05b) |
-| `qwen_vl_7b/profiling` | Qwen2.5-VL-7B | E/P/D timing |
-| `qwen_vl_7b/attention` | Qwen2.5-VL-7B | Attention analysis (sink, sparsity, entropy) |
-| `qwen_vl_7b/attention_overlay` | Qwen2.5-VL-7B | Attention heatmap overlay on input images |
-| `qwen_vl_7b/demo` | Qwen2.5-VL-7B | Demo reproduction (text generation verify) |
-| `act/profiling` | ACT (LeRobot) | E/A timing |
-| `act/demo` | ACT (LeRobot) | Demo reproduction (action shape verify) |
-| `openvla_7b/profiling` | OpenVLA-7B | E/P/D timing |
-| `openvla_7b/attention` | OpenVLA-7B | Attention analysis |
-| `openvla_7b/demo` | OpenVLA-7B | Demo reproduction (7 discrete action tokens) |
-| `lingbot_vla_4b/profiling` | LingBot-VLA-4B | E/C/A timing (flow VLA, requires uv env) |
-| `lingbot_vla_4b/attention` | LingBot-VLA-4B | Attention analysis (3B backbone patterns) |
-| `lingbot_vla_4b/demo` | LingBot-VLA-4B | Demo reproduction (flow action verify) |
-| `fastwam/profiling` | Fast-WAM (6.7B) | E/C/A timing (standalone script, fastwam conda env) |
-| `nitrogen/profiling` | NitroGen (500M) | E/C/A timing + k sweep (SigLIP→VL-SA→DiT) |
-| `pizero/profiling` | Pi-Zero (3.2B) | E/C/A timing (open-pi-zero backend, vendored) |
-| `pizero/demo` | Pi-Zero (3.2B) | Demo reproduction (action shape + clip verify) |
-
-## Adding New Models
-
-1. Create `src/controllers/your_model_controller.py`
-2. Extend `BaseVLMController` (for autoregressive VLM/VLA) or `BaseVLAController` (for non-AR VLA)
-3. Implement: `get_vision_encoder()`, `get_language_model()`, `get_layer_blocks()`, `init_pipeline()`, `prepare_inputs()`, `model_inference()`
-4. Register: `CONTROLLER_REGISTRY.register("your_model", YourModelController)`
-5. Add Hydra config YAML under `configs/your_model/`
-
-## Server (xdlab23)
-
-| Item | Value |
-|------|-------|
+| | |
+|---|---|
 | SSH | `ssh xdlab23_yang` (port 66) |
-| Path | `/data1/ybyang/vlla` |
-| Conda | `vit-probe` (shared with rope2sink, Qwen/OpenVLA/ACT/LingBot-VA) |
-| uv venv | `.venvs/lingbot-vla/` (LingBot-VLA, PyTorch 2.8) |
-| Conda (WAM) | `fastwam` (Fast-WAM, Python 3.10, PyTorch 2.7.1+cu128) |
-| GPUs | 8x RTX 5880 Ada 48GB |
-| HF cache | `/data1/ybyang/huggingface` |
-| Fast-WAM repo | `/data1/ybyang/FastWAM` |
-| LingBot-VA repo | `/data1/ybyang/lingbot-va` |
-| Code sync | Git bundle (GitHub blocked by firewall) |
+| GPUs | 8× RTX 5880 Ada 48GB |
+| Sync | Git bundle (GitHub blocked by firewall) |
+| Envs | `vit-probe` (default), `fastwam` (WAM), `.venvs/pizero` (Pi-Zero) |
+
+## Slides
+
+Live: [freemty.github.io/slides/vla-design-space.html](https://freemty.github.io/slides/vla-design-space.html)
+
+## Docs
+
+See `CLAUDE.md` for full index. Key docs:
+- `exp/summary.md` — experiment flight recorder
+- `docs/TODO.md` — prioritized task backlog
+- `docs/hao-meeting-prep-v2.md` — meeting outline
+- `survey/papers/` — 20+ deep-dive survey notes
