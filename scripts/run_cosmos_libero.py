@@ -162,8 +162,9 @@ def run_standalone_mode(suite, episodes, out_dir, seed=195):
     resize_size = get_image_resize_size(cfg.model_family)
 
     cfg.unnorm_key = suite
-    if suite not in model.norm_stats and f"{suite}_no_noops" in model.norm_stats:
-        cfg.unnorm_key = f"{suite}_no_noops"
+    if hasattr(model, "norm_stats"):
+        if suite not in model.norm_stats and f"{suite}_no_noops" in model.norm_stats:
+            cfg.unnorm_key = f"{suite}_no_noops"
 
     import libero.libero.benchmark as benchmark_mod
     bench = benchmark_mod.get_benchmark(suite)()
