@@ -90,13 +90,19 @@ ImportError: cannot import name 'LossKwargs' from 'transformers.utils'
 
 **无法 patch**——`LossKwargs` 被用在 class 定义里，不是简单的 import 替换。
 
-### 解法
-不用 lingbotvla 包加载模型。用我们自己的 `LingBotVLAController` 的加载路径：
-1. 直接用 `lerobot.policies.pi0.configuration_pi0.PI0Config`
-2. 用 `safetensors.safe_open` 加载权重
-3. 手动构建 `LingbotVlaPolicy`（绕过 `modeling_lingbot_vla.py` 的 import chain）
+### 解法 (最终采用: LossKwargs shim)
+在 import lingbotvla 之前注入 dummy shim:
+```python
+import transformers.utils
+if not hasattr(transformers.utils, "LossKwargs"):
+    transformers.utils.LossKwargs = type("LossKwargs", (dict,), {})
+```
+`LossKwargs` 只在 loss 计算时使用, eval 模式不计算 loss, 所以 dummy dict 完全安全。
+这比重写 load_policy 更简洁——保留原始加载路径不变, 只加 4 行 shim。
 
-验证：`from src.controllers.lingbot_vla_controller import LingBotVLAController` 在 vit-probe env 成功。
+已应用到: `scripts/run_exp03b_libero.py`
+
+验证：`from src.controllers.lingbot_vla_controller import LingBotVLAController` 在 vit-probe env 也成功。
 
 ## Notes
 - Date: 2026-04-20 (初版) / 2026-05-13 (LIBERO eval 兼容性追加)

@@ -25,25 +25,21 @@ VLA 推理现在卡在**单请求太慢** (Pi-Zero 200ms=5Hz, 需要 10-50Hz)，
 
 ## P0 — LIBERO Eval (补 quality 数据)
 
-> **Blocker**: lingbotvla 包和 vit-probe env 不兼容 (transformers 4.57 缺 `LossKwargs`, lerobot 0.5.1 路径 `lerobot.common.policies` → `lerobot.policies`)。已 patch lerobot import，但 transformers `LossKwargs` 无法 patch。
+> **Blockers 已解除** (2026-05-13): LossKwargs shim + 直接加载绕过 openpi/flax + Cosmos vendor wrapper 全部就绪。
 
 - [ ] **P0** exp03b: LingBot-VLA LIBERO-4 eval
-  - **脚本**: `scripts/run_exp03b_libero.py` 已上传到 xdlab23
-  - **Blocker**: `lingbotvla.models.vla.pi0.modeling_lingbot_vla` import `LossKwargs` from transformers → 4.57 没有
-  - **Fix 方案**: 重写 `load_policy()`，不 import lingbotvla 包，改用我们 `LingBotVLAController` 的加载路径 (PI0Config + safetensors 直接加载)。Controller import 已确认 OK。
-  - **已完成的 patch**: xdlab23 上 lingbotvla 的 `lerobot.common.policies` → `lerobot.policies` (8 处, sed 批量修)
-  - **下一步**: 重写 load_policy 绕过 lingbotvla → smoke test → full 20 ep × 4 suites
+  - **脚本**: `scripts/run_exp03b_libero.py` — LossKwargs shim 已加 (dummy dict, eval 安全)
+  - **下一步**: sync 到 xdlab23 → smoke test (2 ep) → full 20 ep × 4 suites
 - [ ] **P0** exp04d: LingBot-VA LIBERO eval
-  - server-client 模式 (`run_libero_all.sh` 里有)
-  - **Blocker**: lingbot-va 也可能有同样的 transformers/lerobot 兼容问题；之前 cuDNN crash 过
-  - **下一步**: 先等 exp03b 跑通再看
+  - **脚本**: `scripts/run_exp04d_libero.sh` — server-client 模式, 独立 bash 脚本
+  - **下一步**: sync 到 xdlab23 → smoke test → 确认 cuDNN 是否还 crash
 - [ ] **P0** exp07c: Pi-Zero LIBERO-4 eval
-  - openpi server + client (`run_libero_all.sh` 里有)
-  - **Blocker**: flax/JAX 依赖，uv env 需要 GitHub (被墙)
-  - **下一步**: 检查是否可以用我们的 PiZeroController + LIBERO env loop 绕过 openpi
+  - **脚本**: `scripts/run_exp07c_libero.py` — 绕过 openpi, 直接用 PiZeroController 加载
+  - **下一步**: sync 到 xdlab23 → smoke test → 确认 vendor 路径 + .pt ckpt 存在
 - [ ] **P0** Cosmos Policy LIBERO eval
-  - 需要新写 eval 脚本
-  - **下一步**: 参考 exp09a 的 `get_action()` 接口 + LIBERO env loop
+  - **脚本**: `scripts/run_cosmos_libero.py` — 双模式 (vendor draccus / standalone env loop)
+  - **下一步**: sync 到 xdlab23 → standalone smoke test → full eval
+- [ ] **P0** 全量运行: `bash scripts/run_libero_all.sh 20` — 5 模型并行 (GPU 0-4)
 
 ## P0 — 实验补强 (补 depth)
 

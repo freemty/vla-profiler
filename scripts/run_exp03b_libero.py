@@ -25,6 +25,12 @@ sys.path.insert(0, "/data1/ybyang/vlla")
 os.environ["MUJOCO_GL"] = "egl"
 os.environ["HF_HOME"] = "/data1/ybyang/huggingface"
 
+# Shim: LossKwargs was removed in transformers 4.57 but lingbotvla class defs reference it.
+# Inject a dummy before any lingbotvla import. Safe for eval (no loss computation).
+import transformers.utils
+if not hasattr(transformers.utils, "LossKwargs"):
+    transformers.utils.LossKwargs = type("LossKwargs", (dict,), {})
+
 
 def load_policy(ckpt_path, qwen_path, device="cuda:0"):
     from lingbotvla.models.vla.pi0.modeling_lingbot_vla import LingbotVlaPolicy

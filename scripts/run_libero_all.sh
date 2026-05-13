@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Run LIBERO-4 eval for Fast-WAM / LingBot-VA / Pi-Zero on separate GPUs.
-# Each model uses its own conda env + eval interface.
+# Run LIBERO-4 eval for all VLA/WAM models on separate GPUs.
+# Models: Fast-WAM(GPU0) / Pi-Zero(GPU1) / LingBot-VA(GPU2) / LingBot-VLA(GPU3) / Cosmos(GPU4)
 # Usage: bash scripts/run_libero_all.sh [episodes_per_task]
 #   Default: 2 (smoke test). Use 20 for full eval.
 set -euo pipefail
@@ -88,50 +88,73 @@ run_lingbotva() {
 }
 
 ########################################
-# Pi-Zero (exp07c) — openpi env, server-client interface
+# Pi-Zero (exp07c) — direct load via PiZeroController (no openpi/flax/JAX)
 ########################################
 run_pizero() {
   local GPU=1
-  local OPENPI=/data1/ybyang/openpi
-  local CKPT=/data1/ybyang/huggingface/models--allenzren--open-pi-zero
+  local CKPT=/data1/ybyang/huggingface/models--allenzren--open-pi-zero/open_pi_zero_bridge.pt
   local OUT=/data1/ybyang/vlla/exp/exp07c
   mkdir -p "$OUT"
 
   eval "$(/home/ybyang/miniconda3/bin/conda shell.bash hook)"
   conda activate vit-probe
 
-  cd "$OPENPI"
-  export PYTHONPATH=${OPENPI}/third_party/libero:${PYTHONPATH:-}
-
-  for suite in $SUITES; do
-    echo "[Pi-Zero] $suite (GPU $GPU, $EP ep)"
-
-    # Start server
-    CUDA_VISIBLE_DEVICES=$GPU python scripts/serve_policy.py \
-      --env LIBERO policy:checkpoint \
-      --policy.config pi0_libero --policy.dir "$CKPT" \
-      > "$OUT/${suite}_server.log" 2>&1 &
-    local SERVER_PID=$!
-    echo "[Pi-Zero] Server PID=$SERVER_PID, waiting 60s..."
-    sleep 60
-
-    # Run client
-    python examples/libero/main.py \
-      --args.task-suite-name "$suite" \
-      --args.num-episodes "$EP" \
-      --args.save-dir "$OUT/${suite}/" \
-      2>&1 | tee "$OUT/${suite}_client.log" || echo "[Pi-Zero] $suite FAILED"
-
-    kill $SERVER_PID 2>/dev/null || true
-    sleep 5
-  done
+  cd /data1/ybyang/vlla
+  echo "[Pi-Zero] Running direct eval (GPU $GPU, $EP ep)"
+  CUDA_VISIBLE_DEVICES=$GPU python scripts/run_exp07c_libero.py \
+    --ckpt "$CKPT" \
+    --episodes "$EP" \
+    --out "$OUT" \
+    2>&1 | tee "$OUT/eval.log" || echo "[Pi-Zero] FAILED"
   echo "[Pi-Zero] all suites done"
 }
 
 ########################################
-# Run all three in parallel (each in subshell for separate conda env)
+# LingBot-VLA (exp03b) — vit-probe env, direct load (LossKwargs shim)
 ########################################
-echo "[run_libero_all] Starting 3 evals in parallel on GPUs 0/1/2..."
+run_lingbotvla() {
+  local GPU=3
+  local OUT=/data1/ybyang/vlla/exp/exp03b
+  mkdir -p "$OUT"
+
+  eval "$(/home/ybyang/miniconda3/bin/conda shell.bash hook)"
+  conda activate vit-probe
+
+  cd /data1/ybyang/vlla
+  echo "[LingBot-VLA] Running direct eval (GPU $GPU, $EP ep)"
+  CUDA_VISIBLE_DEVICES=$GPU python scripts/run_exp03b_libero.py \
+    --episodes "$EP" \
+    --out "$OUT" \
+    2>&1 | tee "$OUT/eval.log" || echo "[LingBot-VLA] FAILED"
+  echo "[LingBot-VLA] all suites done"
+}
+
+########################################
+# Cosmos Policy — cosmos-policy venv, vendor draccus CLI
+########################################
+run_cosmos() {
+  local GPU=4
+  local OUT=/data1/ybyang/vlla/exp/cosmos_libero
+  mkdir -p "$OUT"
+
+  eval "$(/home/ybyang/miniconda3/bin/conda shell.bash hook)"
+  conda activate vit-probe
+
+  cd /data1/ybyang/vlla
+  echo "[Cosmos] Running eval (GPU $GPU, $EP ep)"
+  CUDA_VISIBLE_DEVICES=$GPU python scripts/run_cosmos_libero.py \
+    --all \
+    --episodes "$EP" \
+    --out "$OUT" \
+    --standalone \
+    2>&1 | tee "$OUT/eval.log" || echo "[Cosmos] FAILED"
+  echo "[Cosmos] all suites done"
+}
+
+########################################
+# Run all five in parallel (each in subshell for separate conda env)
+########################################
+echo "[run_libero_all] Starting 5 evals in parallel on GPUs 0-4..."
 
 (run_fastwam) &
 PID_FW=$!
@@ -142,6 +165,12 @@ PID_PZ=$!
 (run_lingbotva) &
 PID_LV=$!
 
-echo "[run_libero_all] PIDs: FastWAM=$PID_FW Pi-Zero=$PID_PZ LingBot-VA=$PID_LV"
-wait $PID_FW $PID_PZ $PID_LV
+(run_lingbotvla) &
+PID_VLA=$!
+
+(run_cosmos) &
+PID_CS=$!
+
+echo "[run_libero_all] PIDs: FastWAM=$PID_FW Pi-Zero=$PID_PZ LingBot-VA=$PID_LV LingBot-VLA=$PID_VLA Cosmos=$PID_CS"
+wait $PID_FW $PID_PZ $PID_LV $PID_VLA $PID_CS
 echo "[run_libero_all] All evals complete."
