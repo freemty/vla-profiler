@@ -251,7 +251,7 @@ def run_suite(pipeline, suite_name, num_episodes, out_dir):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ckpt", default="/data1/ybyang/huggingface/models--allenzren--open-pi-zero/open_pi_zero_bridge.pt")
+    parser.add_argument("--ckpt", default="/data1/ybyang/huggingface/models--allenzren--open-pi-zero/snapshots/8518347d4ae0c6cfc69fbdda970b3f38c6ff76ca/bridge_beta_step19296_2024-12-26_22-30_42.pt")
     parser.add_argument("--episodes", type=int, default=20)
     parser.add_argument("--suite", default=None)
     parser.add_argument("--denoise-steps", type=int, default=10)

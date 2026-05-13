@@ -146,12 +146,12 @@ def run_standalone_mode(suite, episodes, out_dir, seed=195):
         ar_qvalue_prediction: bool = False
         planning_model_config_name: str = ""
         planning_model_ckpt_path: str = ""
-        seed: int = seed
+        seed: int = 195
         randomize_seed: bool = False
         deterministic: bool = True
-        task_suite_name: str = suite
+        task_suite_name: str = "libero_spatial"
 
-    cfg = EvalCfg()
+    cfg = EvalCfg(seed=seed, task_suite_name=suite)
 
     set_seed_everywhere(cfg.seed)
 

@@ -92,7 +92,7 @@ run_lingbotva() {
 ########################################
 run_pizero() {
   local GPU=1
-  local CKPT=/data1/ybyang/huggingface/models--allenzren--open-pi-zero/open_pi_zero_bridge.pt
+  local CKPT=/data1/ybyang/huggingface/models--allenzren--open-pi-zero/snapshots/8518347d4ae0c6cfc69fbdda970b3f38c6ff76ca/bridge_beta_step19296_2024-12-26_22-30_42.pt
   local OUT=/data1/ybyang/vlla/exp/exp07c
   mkdir -p "$OUT"
 
