@@ -19,17 +19,31 @@ import time
 import numpy as np
 import torch
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+VLLA_ROOT = os.path.dirname(SCRIPT_DIR)
+
+# lerobot stub must be on path BEFORE lingbotvla (provides minimal PI0Config/PreTrainedPolicy
+# without pulling the full lerobot package and its transformers version conflicts).
+sys.path.insert(0, os.path.join(SCRIPT_DIR, "lerobot_stub"))
 sys.path.insert(0, "/data1/ybyang/lingbot-vla")
-sys.path.insert(0, "/data1/ybyang/vlla")
+sys.path.insert(0, VLLA_ROOT)
 
 os.environ["MUJOCO_GL"] = "egl"
 os.environ["HF_HOME"] = "/data1/ybyang/huggingface"
 
-# Shim: LossKwargs was removed in transformers 4.57 but lingbotvla class defs reference it.
-# Inject a dummy before any lingbotvla import. Safe for eval (no loss computation).
+# Shim: transformers 4.57 removed several internal APIs that lingbotvla references.
+# Inject dummies before any lingbotvla import. Safe for eval (no loss/training code paths).
 import transformers.utils
 if not hasattr(transformers.utils, "LossKwargs"):
     transformers.utils.LossKwargs = type("LossKwargs", (dict,), {})
+
+import transformers.modeling_flash_attention_utils as _mfa
+if not hasattr(_mfa, "apply_rotary_emb"):
+    _mfa.apply_rotary_emb = None
+if not hasattr(_mfa, "flash_attn_varlen_func"):
+    _mfa.flash_attn_varlen_func = None
+if not hasattr(_mfa, "flash_attn_supports_top_left_mask"):
+    _mfa.flash_attn_supports_top_left_mask = lambda: False
 
 
 def load_policy(ckpt_path, qwen_path, device="cuda:0"):
