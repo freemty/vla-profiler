@@ -35,7 +35,10 @@ os.environ["HF_HOME"] = "/data1/ybyang/huggingface"
 # Inject dummies before any lingbotvla import. Safe for eval (no loss/training code paths).
 import transformers.utils
 if not hasattr(transformers.utils, "LossKwargs"):
-    transformers.utils.LossKwargs = type("LossKwargs", (dict,), {})
+    from typing import TypedDict
+    class _LossKwargs(TypedDict, total=False):
+        pass
+    transformers.utils.LossKwargs = _LossKwargs
 
 import transformers.modeling_flash_attention_utils as _mfa
 if not hasattr(_mfa, "apply_rotary_emb"):
