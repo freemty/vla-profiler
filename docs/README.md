@@ -31,6 +31,9 @@ Project documentation map. All paths relative to repo root.
 | `survey/papers/vla-wam-efficiency-systems-deep-research.md` | **VLA/WAM 效率系统** — 双轨解读 (通用 serving vs 机器人 VLA), 三层分类, OpenVLA-OFT 25-50x 加速, GenAI-Perf 工具链 |
 | `survey/papers/nano-world-model.md` | **nano-world-model (CMU)** — 极简 DiT WM 框架, action injection ablation, pred-v 优势 |
 | `survey/papers/dreamverse-fastvideo-realtime.md` | **Dreamverse/FastVideo real-time 1080p** — Hao 最新全栈 Blackwell 优化, 单 B200 4.55s 5s 1080p |
+| `survey/papers/rhoda-dva-generalist-gen1-deep-dive.md` | **Rhoda DVA + Generalist GEN-1 对比精读** — 两条 Post-VLA 路线: causal video→IDM+Leapfrog (Rhoda) vs from-scratch multimodal+Harmonic Reasoning (Generalist), 两家都不报 Hz |
+| `survey/papers/robotics-fm-landscape-2026-q2.md` | **Robotics FM Landscape 五家横评 (2026 Q2)** — Skild/Rhoda/Generalist/PI/Genesis 架构・数据・硬件・任务・赌注全维度对比, 五家全不报 inference Hz |
+| `survey/papers/awesome-wam-survey-2026.md` | **Awesome-WAM Survey (Fudan OpenMOSS, arXiv:2605.12090)** — WAM 领域首篇系统性 survey, 64 篇, Cascaded vs Joint 分类体系, Challenge #5 "latency too slow" = 我们的方向 |
 
 ## Experiment Results
 

@@ -64,7 +64,41 @@ sed -i 's/self.qwenvl_with_expert.forward(/self.qwenvl_with_expert(/' modeling_l
 
 **教训:** 新建 Controller 子类时，检查 analysis hooks 方法的继承来源。两条继承链 (VLM vs VLA) 各自需要独立的 hook 方法。
 
+## LIBERO Eval 兼容性问题 (2026-05-13)
+
+### Problem
+用 vit-probe env (transformers 4.57, lerobot 0.5.1) 跑 `lingbotvla` 包做 LIBERO eval 时连续报错。
+
+### Error 1: lerobot import 路径变更
+```
+ModuleNotFoundError: No module named 'lerobot.common'
+```
+lerobot 0.5.1 把 `lerobot.common.policies.pi0` 改成了 `lerobot.policies.pi0`。lingbotvla 包 8 处硬编码旧路径。
+
+**Fix**: 批量 sed
+```bash
+find /data1/ybyang/lingbot-vla/lingbotvla -name "*.py" -not -path "*__pycache__*" \
+  -exec sed -i "s/from lerobot\.common\.policies/from lerobot.policies/g" {} + \
+  -exec sed -i "s/from lerobot\.common\.datasets/from lerobot.datasets/g" {} +
+```
+
+### Error 2: transformers 4.57 缺 LossKwargs
+```
+ImportError: cannot import name 'LossKwargs' from 'transformers.utils'
+```
+`modeling_lingbot_vla.py` import `LossKwargs`，这个 class 在 transformers 4.57 里不存在（可能是 4.40 时代的 API）。
+
+**无法 patch**——`LossKwargs` 被用在 class 定义里，不是简单的 import 替换。
+
+### 解法
+不用 lingbotvla 包加载模型。用我们自己的 `LingBotVLAController` 的加载路径：
+1. 直接用 `lerobot.policies.pi0.configuration_pi0.PI0Config`
+2. 用 `safetensors.safe_open` 加载权重
+3. 手动构建 `LingbotVlaPolicy`（绕过 `modeling_lingbot_vla.py` 的 import chain）
+
+验证：`from src.controllers.lingbot_vla_controller import LingBotVLAController` 在 vit-probe env 成功。
+
 ## Notes
-- Date: 2026-04-20
-- Environment: xdlab23, uv venv `.venvs/lingbot-vla/`, PyTorch 2.8
-- Server patches: `/data1/ybyang/lingbot-vla/lingbotvla/models/vla/pi0/` (utils.py, modeling_lingbot_vla.py)
+- Date: 2026-04-20 (初版) / 2026-05-13 (LIBERO eval 兼容性追加)
+- Environment: xdlab23, vit-probe conda env (transformers 4.57, lerobot 0.5.1)
+- Server patches: `/data1/ybyang/lingbot-vla/lingbotvla/` (lerobot import 8 处已 sed 修)
