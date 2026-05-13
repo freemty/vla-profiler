@@ -25,21 +25,20 @@ VLA 推理现在卡在**单请求太慢** (Pi-Zero 200ms=5Hz, 需要 10-50Hz)，
 
 ## P0 — LIBERO Eval (补 quality 数据)
 
-> **Blockers 已解除** (2026-05-13): LossKwargs shim + 直接加载绕过 openpi/flax + Cosmos vendor wrapper 全部就绪。
+> **Status (2026-05-13)**: Cosmos ✅ running / exp04d ✅ running / exp03b ❌ no LIBERO ckpt / exp07c ❌ no LIBERO ckpt
+> **Key fix**: `LD_LIBRARY_PATH` 前置 pip cuDNN 9.10 覆盖系统 9.1.1 (所有 DiT 模型的共同 blocker)
 
-- [ ] **P0** exp03b: LingBot-VLA LIBERO-4 eval
-  - **脚本**: `scripts/run_exp03b_libero.py` — LossKwargs shim 已加 (dummy dict, eval 安全)
-  - **下一步**: sync 到 xdlab23 → smoke test (2 ep) → full 20 ep × 4 suites
-- [ ] **P0** exp04d: LingBot-VA LIBERO eval
-  - **脚本**: `scripts/run_exp04d_libero.sh` — server-client 模式, 独立 bash 脚本
-  - **下一步**: sync 到 xdlab23 → smoke test → 确认 cuDNN 是否还 crash
-- [ ] **P0** exp07c: Pi-Zero LIBERO-4 eval
-  - **脚本**: `scripts/run_exp07c_libero.py` — 绕过 openpi, 直接用 PiZeroController 加载
-  - **下一步**: sync 到 xdlab23 → smoke test → 确认 vendor 路径 + .pt ckpt 存在
-- [ ] **P0** Cosmos Policy LIBERO eval
-  - **脚本**: `scripts/run_cosmos_libero.py` — 双模式 (vendor draccus / standalone env loop)
-  - **下一步**: sync 到 xdlab23 → standalone smoke test → full eval
-- [ ] **P0** 全量运行: `bash scripts/run_libero_all.sh 20` — 5 模型并行 (GPU 0-4)
+- [ ] **P0** Cosmos Policy LIBERO eval — **GPU 4, 20 ep × 4 suites 在跑**
+  - **脚本**: `scripts/run_cosmos_libero.py --standalone --all --episodes 20`
+  - smoke test 100% spatial (10/10)
+  - **log**: `exp/cosmos_libero/eval_full.log`
+- [ ] **P0** exp04d: LingBot-VA LIBERO eval — **GPU 2, smoke test 在跑 (2 ep)**
+  - **脚本**: `scripts/run_exp04d_libero.sh 20 2`
+  - server-client 模式, cuDNN fix 后启动成功 (25GB VRAM)
+  - **下一步**: smoke test 跑完后改 20 ep full eval
+- [x] ~~**P0** exp03b: LingBot-VLA LIBERO-4 eval~~ — **搁置**: `lingbot-vla-4b` 是 pretrained foundation model, 没有 LIBERO finetune, 0% 成功率是预期的
+- [x] ~~**P0** exp07c: Pi-Zero LIBERO-4 eval~~ — **搁置**: 只有 bridge 权重, 没有 LIBERO-finetuned checkpoint (HF 被墙无法下载)
+- [ ] **P0** 全量运行: exp04d + Cosmos 跑完后, 汇总到 `exp/reproducibility_matrix.json`
 
 ## P0 — 实验补强 (补 depth)
 
