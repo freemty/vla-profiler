@@ -157,8 +157,8 @@ def run_standalone_mode(suite, episodes, out_dir, seed=195):
 
     print(f"[cosmos-standalone] Loading model...")
     model = get_model(cfg)
-    dataset_stats = load_dataset_stats(cfg)
-    init_t5_text_embeddings_cache(cfg)
+    dataset_stats = load_dataset_stats(cfg.dataset_stats_path)
+    init_t5_text_embeddings_cache(cfg.t5_text_embeddings_path)
     resize_size = get_image_resize_size(cfg)
 
     cfg.unnorm_key = suite
