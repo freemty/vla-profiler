@@ -20,7 +20,7 @@ PhD 研究方向调研项目：Vision-Language Model (VLM) / Vision-Language-Act
 
 ```
 src/                   # Profiling & analysis framework
-  core/                # Git submodule → model-probe-core (shared with rope2sink)
+  core/                # probe_core: BaseController, HookManager, Registry, StoreMixin
   controllers/         # BaseVLMController, QwenVLController
   tasks/               # profiling_task, attention_task
   utils/               # PhaseTimer
@@ -59,7 +59,7 @@ slides/                # 演示文稿
 - **Reproducibility Spec (v0.9.0)**: `docs/specs/2026-04-28-reproducibility-spec.md` — 7 模型官方配置合约, 已知偏差文档化
 - **Reproducibility Plan**: `docs/superpowers/plans/2026-04-28-full-reproducibility-libero.md` — 18 tasks, 5 phases
 - **Reproducibility Dashboard**: `viewer/static/reproducibility.html` — latency old-vs-new + LIBERO-4 success heatmap
-- **Shared core (model-probe-core)**: `src/core/` — submodule, also used by rope2sink
+- **Core infra**: `src/core/probe_core/` — BaseController, HookManager, Registry, StoreMixin (inlined, no longer submodule)
 - **SGLang profiling 深度调研**: `notes/sglang-profiling-deep-survey.md` — SGLang 的 torch.profiler 集成、Prometheus metrics、benchmark 套件、prefill/decode 分离 profiling、内存追踪的实现级分析
 - **ML Inference Profiling Systems 横向调研**: `survey/papers/profiling-systems-survey.md` — FastVideo/TensorRT-LLM/DeepSpeed/Triton/vLLM/SGLang/llama.cpp/MLC LLM 8大系统的 profiling 实现对比，timing 机制、phase 定义、warmup 策略、统计方法、memory tracking 全面分析
 - **ML Profiling 综合调研报告**: `survey/papers/ml-profiling-systems-comprehensive-survey.md` — 4 agent 并行调研的综合报告，含 PhaseTimer 代码审查、CUDA timing 最佳实践、三层 profiling 架构建议

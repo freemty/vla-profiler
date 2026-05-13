@@ -20,34 +20,17 @@ git bundle create "$BUNDLE_PATH" "$BRANCH"
 echo "Uploading bundle..."
 scp -P 66 "$BUNDLE_PATH" "$REMOTE_HOST:/tmp/"
 
-# Step 3: Also sync submodule (model-probe-core)
-echo "Syncing model-probe-core submodule..."
-cd "$LOCAL_DIR/src/core"
-git bundle create /tmp/model-probe-core.bundle main
-scp -P 66 /tmp/model-probe-core.bundle "$REMOTE_HOST:/tmp/"
-
-# Step 4: Apply on remote
+# Step 3: Apply on remote
 echo "Applying on remote..."
 ssh -p 66 "$REMOTE_HOST" "
-    # Initialize vlla repo if first time
     if [ ! -d '$REMOTE_DIR/.git' ]; then
         git clone /tmp/vlla.bundle '$REMOTE_DIR'
-        cd '$REMOTE_DIR'
-        # Initialize submodule from bundle
-        mkdir -p src/core
-        cd src/core
-        git clone /tmp/model-probe-core.bundle .
-        cd '$REMOTE_DIR'
     else
         cd '$REMOTE_DIR'
         git stash 2>/dev/null || true
         git fetch /tmp/vlla.bundle '$BRANCH':refs/remotes/local/'$BRANCH'
         git merge local/'$BRANCH'
         git stash pop 2>/dev/null || true
-        # Update submodule
-        cd src/core
-        git fetch /tmp/model-probe-core.bundle main:refs/remotes/local/main
-        git merge local/main
     fi
 "
 
