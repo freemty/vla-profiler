@@ -13,6 +13,8 @@ echo "[run_libero_all] Suites: $SUITES"
 
 export MUJOCO_GL=egl
 export HF_HOME=/data1/ybyang/huggingface
+# cuDNN 9.10 from pip overrides system cuDNN 9.1.1 (needed by torch 2.9 DiT ops)
+export LD_LIBRARY_PATH=/home/ybyang/miniconda3/envs/vit-probe/lib/python3.12/site-packages/nvidia/cudnn/lib:${LD_LIBRARY_PATH:-}
 
 ########################################
 # Fast-WAM (exp04e) — fastwam conda env, Hydra interface

@@ -22,6 +22,7 @@ SUITES="libero_spatial libero_object libero_goal libero_10"
 
 export MUJOCO_GL=egl
 export HF_HOME=/data1/ybyang/huggingface
+export LD_LIBRARY_PATH=/home/ybyang/miniconda3/envs/vit-probe/lib/python3.12/site-packages/nvidia/cudnn/lib:${LD_LIBRARY_PATH:-}
 
 mkdir -p "$OUT"
 
