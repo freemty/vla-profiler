@@ -148,6 +148,17 @@ def make_obs(env_obs, policy, config, device):
     return images, img_masks, state_tensor
 
 
+def _make_env(task, resolution=256):
+    """Create LIBERO env from task description (same as cosmos-policy's get_libero_env)."""
+    from libero.libero.envs import OffScreenRenderEnv
+    from libero.libero import get_libero_path
+
+    bddl_file = os.path.join(get_libero_path("bddl_files"), task.problem_folder, task.bddl_file)
+    env = OffScreenRenderEnv(bddl_file_name=bddl_file, camera_heights=resolution, camera_widths=resolution)
+    env.seed(0)
+    return env
+
+
 def run_suite(policy, config, suite_name, num_episodes, device, out_dir):
     import libero.libero.benchmark as benchmark
 
@@ -165,7 +176,8 @@ def run_suite(policy, config, suite_name, num_episodes, device, out_dir):
     for task_id in range(num_tasks):
         task = bench.get_task(task_id)
         task_name = task_names[task_id]
-        env = bench.get_env(task_id)
+        env = _make_env(task)
+        initial_states = bench.get_task_init_states(task_id)
 
         instruction = task.language
         lang = tokenizer(instruction, return_tensors="pt", padding="max_length",
@@ -175,7 +187,8 @@ def run_suite(policy, config, suite_name, num_episodes, device, out_dir):
 
         successes = 0
         for ep in range(num_episodes):
-            obs = env.reset()
+            env.reset()
+            obs = env.set_init_state(initial_states[ep % len(initial_states)])
             done = False
             step = 0
             max_steps = 600
