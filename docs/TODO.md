@@ -25,20 +25,17 @@ VLA 推理现在卡在**单请求太慢** (Pi-Zero 200ms=5Hz, 需要 10-50Hz)，
 
 ## P0 — LIBERO Eval (补 quality 数据)
 
-> **Status (2026-05-13)**: Cosmos ✅ running / exp04d ✅ running / exp03b ❌ no LIBERO ckpt / exp07c ❌ no LIBERO ckpt
-> **Key fix**: `LD_LIBRARY_PATH` 前置 pip cuDNN 9.10 覆盖系统 9.1.1 (所有 DiT 模型的共同 blocker)
+> **Status (2026-05-13)**: Cosmos ✅ done 97.4% / exp04d 🔄 running 4-GPU / exp03b ❌ shelved / exp07c ❌ shelved
+> **Key fixes**: cuDNN `LD_LIBRARY_PATH` + LossKwargs TypedDict shim + lerobot_stub + rotate_half
 
-- [ ] **P0** Cosmos Policy LIBERO eval — **GPU 4, 20 ep × 4 suites 在跑**
-  - **脚本**: `scripts/run_cosmos_libero.py --standalone --all --episodes 20`
-  - smoke test 100% spatial (10/10)
-  - **log**: `exp/cosmos_libero/eval_full.log`
-- [ ] **P0** exp04d: LingBot-VA LIBERO eval — **GPU 2, smoke test 在跑 (2 ep)**
-  - **脚本**: `scripts/run_exp04d_libero.sh 20 2`
-  - server-client 模式, cuDNN fix 后启动成功 (25GB VRAM)
-  - **下一步**: smoke test 跑完后改 20 ep full eval
-- [x] ~~**P0** exp03b: LingBot-VLA LIBERO-4 eval~~ — **搁置**: `lingbot-vla-4b` 是 pretrained foundation model, 没有 LIBERO finetune, 0% 成功率是预期的
-- [x] ~~**P0** exp07c: Pi-Zero LIBERO-4 eval~~ — **搁置**: 只有 bridge 权重, 没有 LIBERO-finetuned checkpoint (HF 被墙无法下载)
-- [ ] **P0** 全量运行: exp04d + Cosmos 跑完后, 汇总到 `exp/reproducibility_matrix.json`
+- [x] **P0** Cosmos Policy LIBERO eval — **97.4% avg** (spatial 96/object 100/goal 98/10 95.5), 800 ep
+- [ ] **P0** exp04d: LingBot-VA LIBERO eval — **4 GPU (3/5/6/7) 并行, 20 ep × 4 suites**
+  - **脚本**: `scripts/run_exp04d_parallel.sh 20`
+  - 预计 ~20 小时完成 (2026-05-14 下午)
+  - **log**: `exp/exp04d/{libero_spatial,libero_object,libero_goal,libero_10}.log`
+- [x] ~~**P0** exp03b: LingBot-VLA LIBERO-4 eval~~ — **搁置**: pretrained foundation model, 无 LIBERO finetune
+- [x] ~~**P0** exp07c: Pi-Zero LIBERO-4 eval~~ — **搁置**: 仅 bridge 权重, 无 LIBERO checkpoint
+- [ ] **P0** 汇总: exp04d 跑完后, 更新 `exp/reproducibility_matrix.json` + design-space 散点图
 
 ## P0 — 实验补强 (补 depth)
 
