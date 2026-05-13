@@ -1,7 +1,7 @@
 # TODO
 
 > Completed items moved to CHANGELOG (audit trail preserved there).
-> Last refresh: 2026-05-12 — v0.10.0 OFT profiling done, slides v2 done, LIBERO eval 待跑。
+> Last refresh: 2026-05-13 — LIBERO eval 开始调试，发现 lingbotvla 依赖不兼容。
 
 ## 战略判断
 
@@ -25,11 +25,25 @@ VLA 推理现在卡在**单请求太慢** (Pi-Zero 200ms=5Hz, 需要 10-50Hz)，
 
 ## P0 — LIBERO Eval (补 quality 数据)
 
-> 脚本已写好，等 xdlab23 网络稳定后 launch。
+> **Blocker**: lingbotvla 包和 vit-probe env 不兼容 (transformers 4.57 缺 `LossKwargs`, lerobot 0.5.1 路径 `lerobot.common.policies` → `lerobot.policies`)。已 patch lerobot import，但 transformers `LossKwargs` 无法 patch。
 
-- [ ] **P0** exp03b: LingBot-VLA LIBERO-4 eval — `scripts/run_exp03b_libero.py` 已上传, 20 ep × 4 suites × 10 tasks。vit-probe env, GPU 0。先跑 smoke test (`--episodes 2 --suite libero_spatial`) 确认 obs format
-- [ ] **P0** exp04d: LingBot-VA LIBERO eval — server-client 模式 (`run_libero_all.sh` 里有), 需确认 vit-probe env cuDNN 兼容性 (之前 crash 过)
-- [ ] **P0** exp07c: Pi-Zero LIBERO-4 eval — openpi server + client (`run_libero_all.sh` 里有), 需确认 flax/JAX 依赖 (被墙, 可能需要 scp .venv)
+- [ ] **P0** exp03b: LingBot-VLA LIBERO-4 eval
+  - **脚本**: `scripts/run_exp03b_libero.py` 已上传到 xdlab23
+  - **Blocker**: `lingbotvla.models.vla.pi0.modeling_lingbot_vla` import `LossKwargs` from transformers → 4.57 没有
+  - **Fix 方案**: 重写 `load_policy()`，不 import lingbotvla 包，改用我们 `LingBotVLAController` 的加载路径 (PI0Config + safetensors 直接加载)。Controller import 已确认 OK。
+  - **已完成的 patch**: xdlab23 上 lingbotvla 的 `lerobot.common.policies` → `lerobot.policies` (8 处, sed 批量修)
+  - **下一步**: 重写 load_policy 绕过 lingbotvla → smoke test → full 20 ep × 4 suites
+- [ ] **P0** exp04d: LingBot-VA LIBERO eval
+  - server-client 模式 (`run_libero_all.sh` 里有)
+  - **Blocker**: lingbot-va 也可能有同样的 transformers/lerobot 兼容问题；之前 cuDNN crash 过
+  - **下一步**: 先等 exp03b 跑通再看
+- [ ] **P0** exp07c: Pi-Zero LIBERO-4 eval
+  - openpi server + client (`run_libero_all.sh` 里有)
+  - **Blocker**: flax/JAX 依赖，uv env 需要 GitHub (被墙)
+  - **下一步**: 检查是否可以用我们的 PiZeroController + LIBERO env loop 绕过 openpi
+- [ ] **P0** Cosmos Policy LIBERO eval
+  - 需要新写 eval 脚本
+  - **下一步**: 参考 exp09a 的 `get_action()` 接口 + LIBERO env loop
 
 ## P0 — 实验补强 (补 depth)
 
