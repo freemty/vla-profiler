@@ -96,6 +96,13 @@ Cross-experiment flight recorder. Per-exp **目的 / 方法 / 结果 / 下一步
 - **结果**：**M4 R²=0.94**（M1=0.21，M2=-3.44，M3=1.0 查表上界）。公式 `inflation(X|Y) = 1 + v_X·a_Y`。学到 v=(D:1.52, P:1.61, E:0.23, A:0.20)；a=(A:1.12, E:0.96, P:1.02, D:0.87)。**A 是隐形破坏者**（自身鲁棒但对他人干扰最大）；**E 最安全 co-locate**。部署建议：{E,A} 同卡，{P,D} 必须 disaggregate。
 - **下一步**：用 exp08b triple/quad 数据验证 M4 外推 → 若 R² 依旧 >0.9 即可作为 mechanism-study 论文核心。
 
+## Cosmos Policy LIBERO-4 eval · **done**
+
+- **目的**：补全 Cosmos Policy 的 LIBERO quality 数据，对标论文 98.5%。
+- **方法**：standalone env loop + get_action()，20 ep/task × 4 suites (800 episodes total)，RTX 5880 Ada GPU 0/1/4 并行。
+- **结果**：**spatial 96.0% / object 100% / goal 98.0% / 10 95.5% → overall 97.4%**（论文 98.5%，差 1.1pp，RTX vs A100 + seed 差异）。
+- **下一步**：写入 reproducibility matrix，与 Fast-WAM 94.5% 对比形成 Pareto。
+
 ## exp09a — Cosmos Policy direct-mode latency profiling · **done**
 
 - **目的**：测量 Cosmos Policy (Cosmos-Predict2-2B, LIBERO 98.5%) 的 direct-mode 推理延迟。论文 (arXiv:2601.16163) 零报告该数字，只说 planning 5s/chunk。
@@ -142,12 +149,13 @@ Cross-experiment flight recorder. Per-exp **目的 / 方法 / 结果 / 下一步
 | exp08b | Full 6-pair EPDA matrix | **done (pairs)** | D/P 脆弱 (2.4–2.9x) vs E/A 鲁棒 (<1.3x)。Triples/quad pending。 |
 | exp08c | GPU contention model fit | **done (v1)** | M4 asymmetric R²=0.94. inflation=1+v_X·a_Y. 部署: {E,A} 同卡 / {P,D} 必 disagg。 |
 | exp04c | Fast-WAM 5-step paper-aligned | **done** | 257ms / 3.9Hz @ 5-step (paper 190ms on A100). Per-step ~41ms. |
-| exp04d | LingBot-VA real-weight LIBERO eval | **planned** | ckpt found: robbyant/lingbot-va-posttrain-libero-long (22.7GB) |
+| exp04d | LingBot-VA real-weight LIBERO eval | **running** | 4 suites parallel on GPU 3/5/6/7, 20 ep/task |
 | exp06b | NitroGen full 500M real-weight | **done** | 7.1ms/step — identical to exp06a (DiT=181M, not 500M). |
 | exp07b | Pi-Zero real-weight profiling | **done** | 225ms total. vs exp07a 200ms (+12%). Random-weight timing ≈ faithful. |
-| exp03b | LingBot-VLA LIBERO-4 eval | **planned** | 4B real ckpt, 20 ep/task × 4 suites |
+| exp03b | LingBot-VLA LIBERO-4 eval | **shelved** | 4B ckpt is pretrained foundation (no LIBERO finetune), 0% expected |
 | exp04e | Fast-WAM LIBERO-4 eval | **done** | 94.5% avg (spatial 91.5 / object 100 / goal 97 / 10 89.5), 800 ep, real ckpt 5-step |
-| exp07c | Pi-Zero LIBERO-4 eval | **planned** | pi0-base real ckpt, 20 ep/task × 4 suites |
+| exp07c | Pi-Zero LIBERO-4 eval | **shelved** | only bridge weights (no LIBERO finetune), GitHub firewall blocks download |
+| cosmos_libero | Cosmos Policy LIBERO-4 eval | **done** | **97.4% avg** (spatial 96.0 / object 100 / goal 98.0 / 10 95.5), 800 ep, paper 98.5% |
 | exp09a | Cosmos Policy direct-mode profiling | **done** | Action-only 659ms/1.5Hz, full 1363ms/0.73Hz. **Per-step DiT = 76.8ms** (linear R²=0.9975). Fixed cost 265ms. 1-step → 342ms/2.9Hz. |
 | exp11a | OpenVLA-OFT E/C/A profiling | **done** | E=16.8/C=92.3/A=0.24 → 109ms (9.2Hz). Llama-2 7B prefill 占 84%. OFT MLP 0.24ms. |
 | exp11b | StarVLA-OFT E/C/A profiling | **done** | E=34.7/C=28.5/A=0.13 → 63ms (15.8Hz). OFT MLP 0.13ms (1270x faster than flow). 瓶颈 100% backbone. |

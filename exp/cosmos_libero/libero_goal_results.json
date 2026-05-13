@@ -1,0 +1,57 @@
+{
+  "open_the_middle_drawer_of_the_cabinet": {
+    "success_rate": 1.0,
+    "successes": 20,
+    "episodes": 20
+  },
+  "put_the_bowl_on_the_stove": {
+    "success_rate": 1.0,
+    "successes": 20,
+    "episodes": 20
+  },
+  "put_the_wine_bottle_on_top_of_the_cabinet": {
+    "success_rate": 0.9,
+    "successes": 18,
+    "episodes": 20
+  },
+  "open_the_top_drawer_and_put_the_bowl_inside": {
+    "success_rate": 0.9,
+    "successes": 18,
+    "episodes": 20
+  },
+  "put_the_bowl_on_top_of_the_cabinet": {
+    "success_rate": 1.0,
+    "successes": 20,
+    "episodes": 20
+  },
+  "push_the_plate_to_the_front_of_the_stove": {
+    "success_rate": 1.0,
+    "successes": 20,
+    "episodes": 20
+  },
+  "put_the_cream_cheese_in_the_bowl": {
+    "success_rate": 1.0,
+    "successes": 20,
+    "episodes": 20
+  },
+  "turn_on_the_stove": {
+    "success_rate": 1.0,
+    "successes": 20,
+    "episodes": 20
+  },
+  "put_the_bowl_on_the_plate": {
+    "success_rate": 1.0,
+    "successes": 20,
+    "episodes": 20
+  },
+  "put_the_wine_bottle_on_the_rack": {
+    "success_rate": 1.0,
+    "successes": 20,
+    "episodes": 20
+  },
+  "_average": {
+    "success_rate": 0.98,
+    "total_success": 196,
+    "total_episodes": 200
+  }
+}
