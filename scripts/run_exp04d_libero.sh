@@ -51,6 +51,7 @@ if ! kill -0 $SERVER_PID 2>/dev/null; then
 fi
 
 FAILED=0
+export PYTHONPATH=$LVA:${PYTHONPATH:-}
 for suite in $SUITES; do
   echo "[exp04d] $suite (GPU $GPU, $EP ep/task)"
   python evaluation/libero/client.py \
