@@ -17,13 +17,22 @@
 - **Cosmos vendor 5 处 bug**: EvalCfg scoping / get_model tuple unpack / load_dataset_stats string arg / get_image_resize_size / norm_stats guard
 
 ### 变更
+- **Repo 更名**: `vlla` → `vla-profiler` (GitHub + README + CLAUDE.md + SKILL.md)
 - **run_libero_all.sh**: 从 3 模型扩展到 5 模型并行 (GPU 0-4), 含 cuDNN LD_LIBRARY_PATH
 - **exp03b/07c 搁置**: VLA 无 LIBERO finetune checkpoint, Pi-Zero checkpoint 需 Physical Intelligence gated 授权
+- **Slides v2 升级**: 17 页 (新增 Target Task/Eval Bench 列 + Recent Industry Progress + WAM Roadmap Coverage + Three Directions), 英文版 `hao-meeting-v2-en.html` 含 per-slide citation footers
+- **Slides 质感对齐主页**: transitions 0.2s ease, letter-spacing hierarchy, hover effects, ::selection highlight, 间距加大 (gap 20→28px)
+- **Swiss Knife skill 补充**: transitions/micro-interactions, typography weight hierarchy (4档), spacing rules, 7 条新 common mistakes
+
+### 文档
+- **LIBERO eval 推理流程对比**: `docs/specs/libero-eval-inference-flows.md` — Fast-WAM / LingBot-VA / Cosmos Policy 三模型闭环推理 (无状态 vs 有状态 KV cache vs unified latent)
+- **Project skill v9**: exp09a/11a/11b + Cosmos 97.4% + OFT 瓶颈翻转 + 8 条新 engineering lessons
 
 ### 关键发现
-- **Cosmos Policy 97.4%**: 首次在 RTX 5880 上复现, 与论文 98.5% 接近
+- **Cosmos Policy 97.4%**: RTX 5880 上复现, 与论文 98.5% 差 1.1pp
 - **exp03b 0% 预期**: lingbot-vla-4b 是 pretrained foundation model, 非 LIBERO finetune
 - **cuDNN 是 DiT 统一 blocker**: 系统 9.1.1 vs torch 需 9.10, pip 包已有但 LD_LIBRARY_PATH 未设
+- **三个加速方向**: A) Algorithmic reduction (sparse attn/caching) B) Pipeline bubble mining (DistServe-style) C) Computation ablation (skip-imagination variants)
 
 ## v0.10.0 @freemty — 2026-05-11/12
 
