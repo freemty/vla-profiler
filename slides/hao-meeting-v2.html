@@ -186,7 +186,7 @@ ul.clean li strong { color: var(--text); }
       <tr><td class="mono small muted">权重</td><td>real: Pi-Zero, Cosmos, OpenVLA-OFT<br>random: 其余 6 个 (验证 Δ&lt;12%, exp07b)</td></tr>
     </tbody>
   </table>
-  <p class="small muted" style="margin-top:12px;">warmup=15 来自 exp07a: 前 12 次 GPU 功率爬坡导致 bimodal 分布 (1.25x)。nvidia-smi -pm 1 后仍需 warmup。</p>
+  <p class="small muted" style="margin-top:12px;">warmup=15: 前 12 次 GPU 功率爬坡致 bimodal (1.25x)。</p>
 </div>
 </div>
 
@@ -418,25 +418,25 @@ ul.clean li strong { color: var(--text); }
     <div class="card accent-left" style="padding:14px 16px;">
       <div style="margin-bottom:6px;"><span class="badge red">A</span> <strong style="font-size:13px;">Algorithmic Reduction</strong></div>
       <p style="font-size:11px;line-height:1.6;">
-        观察 DiT attention pattern → 发现 sparsity → 设计 sparse attention / step caching / token pruning<br><br>
-        <strong>类比:</strong> FastVideo VSA (temporal sparse attn) / AutoGaze (4-100x token pruning, CVPR'26) / step distillation<br><br>
-        <strong>切入:</strong> 我们已有 exp01b/05a attention heatmap + exp04a per-step timing → 直接观察哪些 step/token 可以跳
+        观察 DiT attention → 发现 sparsity → sparse attn / step caching / token pruning<br><br>
+        <strong>类比:</strong> FastVideo VSA / AutoGaze (4-100x pruning, CVPR'26)<br><br>
+        <strong>切入:</strong> 已有 attention heatmap (exp01b/05a) + per-step timing (exp04a)
       </p>
     </div>
     <div class="card blue-left" style="padding:14px 16px;">
       <div style="margin-bottom:6px;"><span class="badge blue">B</span> <strong style="font-size:13px;">Pipeline Bubble Mining</strong></div>
       <p style="font-size:11px;line-height:1.6;">
-        在 LingBot-VA / Rhoda 的真实闭环 pipeline 里找"气泡"：E→V→A 串行等待、KV cache 更新开销<br><br>
-        <strong>类比:</strong> DistServe PD disagg / Rhoda Leapfrog Inference (video gen ∥ action exec)<br><br>
-        <strong>切入:</strong> exp04d 闭环数据 (server log timing) → 量化 compute_kv_cache 开销 → overlap 可行性分析
+        LingBot-VA / Rhoda 闭环 pipeline: E→V→A 串行等待 + KV cache 更新<br><br>
+        <strong>类比:</strong> DistServe PD disagg / Rhoda Leapfrog (video gen ∥ action exec)<br><br>
+        <strong>切入:</strong> exp04d server log timing → 量化 bubble → overlap 可行性
       </p>
     </div>
     <div class="card green-left" style="padding:14px 16px;">
       <div style="margin-bottom:6px;"><span class="badge green">C</span> <strong style="font-size:13px;">Computation Ablation</strong></div>
       <p style="font-size:11px;line-height:1.6;">
-        Fast-WAM skip video → 94.5%。哪些计算可以去掉仍然 work？<br><br>
-        <strong>消融:</strong> 去 video denoise / 减 action steps / 去 cross-attn / 减 DiT layers → quality degradation curve<br><br>
-        <strong>切入:</strong> Fast-WAM 5→1 step sweep (exp04c) + Cosmos step sweep (exp09a) 已有 → 扩展到 layer/head ablation
+        Fast-WAM skip video → 94.5%。哪些计算可以去掉？<br><br>
+        <strong>消融:</strong> 去 video / 减 action steps / 去 cross-attn / 减 layers → degradation curve<br><br>
+        <strong>切入:</strong> 已有 step sweep (exp04c, exp09a) → 扩展到 layer/head ablation
       </p>
     </div>
   </div>
@@ -455,19 +455,19 @@ ul.clean li strong { color: var(--text); }
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:4px;">
     <div class="card accent-left">
       <div style="margin-bottom:6px;"><strong>π0.7</strong> <span class="badge red">PI · 2026-04</span></div>
-      <p style="font-size:12px;">从 "model" 变 "pipeline system"。4 组件: High-Level Policy + World Model (subgoal image) + VLA 主干 + Action Expert。Compositional generalization 首现。<br><strong>信号:</strong> model 是 system 的一部分，不是全部。</p>
+      <p style="font-size:12px;">4 组件 pipeline: High-Level Policy + World Model + VLA + Action Expert。<br><strong>信号:</strong> model 是 system 的一部分。</p>
     </div>
     <div class="card accent-left">
       <div style="margin-bottom:6px;"><strong>GEN-1</strong> <span class="badge red">Generalist AI · 2026-04</span></div>
-      <p style="font-size:12px;">99% params from scratch (非 VLM finetune)。500K+ hr 穿戴 pretrain + 1hr task data → 99% 成功率 + 3x faster。<br>Pete Florence blog: <em>"GEN-1 is a system. Beyond World Models & VLAs."</em></p>
+      <p style="font-size:12px;">99% params from scratch。500K+ hr pretrain + 1hr task data → 99% success, 3x faster。<br>Pete Florence: <em>"GEN-1 is a system."</em></p>
     </div>
     <div class="card blue-left">
       <div style="margin-bottom:6px;"><strong>GENE-26.5</strong> <span class="badge blue">Genesis AI · 2026-05</span></div>
-      <p style="font-size:12px;">Flow matching + 自研 20-DoF dexterous hand + $105M seed。3ms control loop。<br><strong>赌注:</strong> 硬件精度 (hand) > 数据规模。</p>
+      <p style="font-size:12px;">Flow matching + 自研 20-DoF hand。$105M seed。3ms control。<br><strong>赌注:</strong> 硬件精度 > 数据规模。</p>
     </div>
     <div class="card blue-left">
       <div style="margin-bottom:6px;"><strong>Rhoda DVA</strong> <span class="badge blue">Rhoda AI · 2026-03</span></div>
-      <p style="font-size:12px;">Direct Video Action: causal video from scratch → IDM (inverse dynamics) 提取 action。Leapfrog Inference 隐藏 video gen 延迟。$450M Series A, $1.7B val。<br><strong>赌注:</strong> 物理理解在 video 里，不需要显式 policy。</p>
+      <p style="font-size:12px;">Causal video → IDM 提取 action。Leapfrog Inference 隐藏 video gen 延迟。$450M / $1.7B。<br><strong>赌注:</strong> 物理理解在 video 里。</p>
     </div>
   </div>
   <div class="callout" style="margin-top:12px;">
@@ -505,7 +505,7 @@ ul.clean li strong { color: var(--text); }
       </div>
     </div>
   </div>
-  <p class="small muted" style="text-align:center;">首篇 WAM 系统性 survey (64 篇论文)。无任何 latency benchmark — profiling gap 被学术 survey 正式确认。</p>
+  <p class="small muted" style="text-align:center;">64 篇论文，无 latency benchmark。Profiling gap 被学术 survey 确认。</p>
 </div>
 </div>
 
