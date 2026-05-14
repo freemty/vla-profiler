@@ -7,9 +7,9 @@ note: "v9 — LIBERO eval pipeline (Cosmos 97.4%, Fast-WAM 94.5%, exp04d running
 updated_at: "2026-05-14"
 ---
 
-# vlla — Project Knowledge
+# vla-profiler — Project Knowledge
 
-> VLM/VLA Real-Time Systems Survey & Research
+> VLM/VLA Real-Time Inference Profiling & Research
 > UCSD PhD 方向调研项目 | 导师: 张昊 (Hao Zhang) — vLLM/FastVideo/Chatbot Arena 作者
 > v9 — **LIBERO eval pipeline** (Cosmos 97.4%, Fast-WAM 94.5%, exp04d running) + **OFT bottleneck flip** (Action 82% → Backbone 84-99%). 9 models profiled, 3 LIBERO evals complete. Two acceleration paths: **Path A** (Action DiT 加速) vs **Path A'** (OFT + backbone compression).
 
@@ -17,7 +17,7 @@ updated_at: "2026-05-14"
 
 ## 1. Project Overview & Current State
 
-**项目名称:** vlla (VLM/VLA Real-Time Systems)
+**项目名称:** vla-profiler (VLM/VLA Real-Time Inference Profiling)
 **核心问题:** 如何让 VLM/VLA 在实时约束下高效运行？
 **研究定位:** 从 ML Systems 视角审视 VLM/VLA inference efficiency 的技术前沿与开放问题
 

@@ -1,4 +1,4 @@
-# vlla — VLM/VLA Real-Time Inference Profiling
+# vla-profiler — VLM/VLA Real-Time Inference Profiling
 
 Phase-level latency profiling for Vision-Language-Action models. Measures E/C/A breakdown (Encode / Context / Action) across 9 models spanning 5 paradigms.
 

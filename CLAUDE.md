@@ -1,4 +1,4 @@
-# VLLA — VLM/VLA Real-Time Systems Survey & Research
+# vla-profiler — VLM/VLA Real-Time Inference Profiling & Research
 
 ## Project Overview
 
