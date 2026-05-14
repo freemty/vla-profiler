@@ -408,7 +408,45 @@ ul.clean li strong { color: var(--text); }
 </div>
 </div>
 
-<!-- S13: Recent Industry Progress -->
+<!-- S13: Three Directions -->
+<div class="slide">
+<div class="slide-inner" style="gap:14px;">
+  <div class="section-rule"></div>
+  <h3>Next Steps</h3>
+  <h2>三个方向</h2>
+  <div class="three-col">
+    <div class="card accent-left" style="padding:14px 16px;">
+      <div style="margin-bottom:6px;"><span class="badge red">A</span> <strong style="font-size:13px;">Algorithmic Reduction</strong></div>
+      <p style="font-size:11px;line-height:1.6;">
+        观察 DiT attention pattern → 发现 sparsity → 设计 sparse attention / step caching / token pruning<br><br>
+        <strong>类比:</strong> FastVideo VSA (temporal sparse attn) / AutoGaze (4-100x token pruning, CVPR'26) / step distillation<br><br>
+        <strong>切入:</strong> 我们已有 exp01b/05a attention heatmap + exp04a per-step timing → 直接观察哪些 step/token 可以跳
+      </p>
+    </div>
+    <div class="card blue-left" style="padding:14px 16px;">
+      <div style="margin-bottom:6px;"><span class="badge blue">B</span> <strong style="font-size:13px;">Pipeline Bubble Mining</strong></div>
+      <p style="font-size:11px;line-height:1.6;">
+        在 LingBot-VA / Rhoda 的真实闭环 pipeline 里找"气泡"：E→V→A 串行等待、KV cache 更新开销<br><br>
+        <strong>类比:</strong> DistServe PD disagg / Rhoda Leapfrog Inference (video gen ∥ action exec)<br><br>
+        <strong>切入:</strong> exp04d 闭环数据 (server log timing) → 量化 compute_kv_cache 开销 → overlap 可行性分析
+      </p>
+    </div>
+    <div class="card green-left" style="padding:14px 16px;">
+      <div style="margin-bottom:6px;"><span class="badge green">C</span> <strong style="font-size:13px;">Computation Ablation</strong></div>
+      <p style="font-size:11px;line-height:1.6;">
+        Fast-WAM skip video → 94.5%。哪些计算可以去掉仍然 work？<br><br>
+        <strong>消融:</strong> 去 video denoise / 减 action steps / 去 cross-attn / 减 DiT layers → quality degradation curve<br><br>
+        <strong>切入:</strong> Fast-WAM 5→1 step sweep (exp04c) + Cosmos step sweep (exp09a) 已有 → 扩展到 layer/head ablation
+      </p>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:8px;">
+    <strong>共同前提:</strong> profiling 数据告诉我们在哪里砍。10 模型 × E/C/A breakdown = 砍刀的瞄准镜。
+  </div>
+</div>
+</div>
+
+<!-- S14: Recent Industry Progress -->
 <div class="slide">
 <div class="slide-inner">
   <div class="section-rule"></div>
@@ -504,7 +542,7 @@ ul.clean li strong { color: var(--text); }
 
 </div><!-- end .deck -->
 
-<div class="counter"><span id="current">1</span> / <span id="total">16</span></div>
+<div class="counter"><span id="current">1</span> / <span id="total">17</span></div>
 <button class="theme-toggle" onclick="toggleTheme()">light/dark</button>
 
 <script>
