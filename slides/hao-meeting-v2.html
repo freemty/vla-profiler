@@ -154,17 +154,17 @@ ul.clean li strong { color: var(--text); }
 <div class="slide-inner">
   <div class="section-rule"></div>
   <h2>八个系统</h2>
-  <table style="font-size:13px;">
-    <thead><tr><th>系统</th><th>一句话</th><th>我们的数据</th></tr></thead>
+  <table style="font-size:12px;">
+    <thead><tr><th>系统</th><th>一句话</th><th>Target Task</th><th>我们的数据</th></tr></thead>
     <tbody>
-      <tr><td><strong>π0.7</strong></td><td>Cascaded WAM: planner → WM (goal image) → VLA → Action Expert</td><td class="mono">200ms / 5Hz</td></tr>
-      <tr><td><strong>GEN-1</strong></td><td>99% from scratch, 500K hr 穿戴数据, 1hr→99% 成功率</td><td class="muted">无</td></tr>
-      <tr><td><strong>GENE-26.5</strong></td><td>Flow matching + 自研 20-DoF hand, 3ms control</td><td class="muted">无</td></tr>
-      <tr><td><strong>Skild Brain</strong></td><td>100K morphology sim pretrain, hierarchical hi/lo freq</td><td class="muted">无</td></tr>
-      <tr><td><strong>Cosmos Policy</strong></td><td>Joint WAM: 2B DiT, action = latent frame</td><td class="mono">659ms / 1.5Hz</td></tr>
-      <tr><td><strong>DreamZero</strong></td><td>Joint WAM: 14B video DiT, zero-shot policy</td><td class="muted">无</td></tr>
-      <tr><td><strong>LingBot-VA</strong></td><td>Joint WAM: video + action DiT cross-attn, 慢 34x</td><td class="mono">2518ms / 0.4Hz</td></tr>
-      <tr><td><strong>Rhoda DVA</strong></td><td>Cascaded WAM: causal video → IDM, Leapfrog Inference</td><td class="muted">无</td></tr>
+      <tr><td><strong>π0.7</strong></td><td>Cascaded WAM: planner → WM → VLA → Expert</td><td>ALOHA bimanual, DROID</td><td class="mono">200ms / 5Hz</td></tr>
+      <tr><td><strong>GEN-1</strong></td><td>99% from scratch, 500K hr 穿戴数据</td><td>Tabletop / kitchen (proprietary)</td><td class="muted">无</td></tr>
+      <tr><td><strong>GENE-26.5</strong></td><td>Flow matching + 自研 20-DoF hand</td><td>Dexterous manipulation</td><td class="muted">无</td></tr>
+      <tr><td><strong>Skild Brain</strong></td><td>100K morphology sim pretrain</td><td>Multi-morphology locomotion+manip</td><td class="muted">无</td></tr>
+      <tr><td><strong>Cosmos Policy</strong></td><td>Joint WAM: 2B DiT, action = latent frame</td><td><strong>LIBERO</strong> 98.5% / RoboCasa</td><td class="mono">659ms / <span style="color:var(--green);">97.4%</span></td></tr>
+      <tr><td><strong>DreamZero</strong></td><td>Joint WAM: 14B video DiT, zero-shot</td><td>DROID kitchen (zero-shot)</td><td class="muted">无</td></tr>
+      <tr><td><strong>LingBot-VA</strong></td><td>Joint WAM: video + action DiT, 慢 34x</td><td><strong>LIBERO</strong> / RoboTwin</td><td class="mono">2518ms / <span class="muted">eval中</span></td></tr>
+      <tr><td><strong>Rhoda DVA</strong></td><td>Cascaded WAM: causal video → IDM</td><td>Industrial deployment (1.5hr+)</td><td class="muted">无</td></tr>
     </tbody>
   </table>
 </div>
@@ -271,17 +271,17 @@ ul.clean li strong { color: var(--text); }
 <div class="slide-inner">
   <div class="section-rule"></div>
   <h2>五次跳跃</h2>
-  <table style="font-size:14px;">
-    <thead><tr><th></th><th>范式</th><th>延迟</th><th>Hz</th></tr></thead>
+  <table style="font-size:13px;">
+    <thead><tr><th></th><th>范式</th><th>代表模型</th><th>延迟</th><th>Hz</th><th>Eval Bench</th></tr></thead>
     <tbody>
-      <tr><td><span class="badge muted">1</span></td><td>ACT (single forward)</td><td class="mono">3ms</td><td class="mono">300</td></tr>
-      <tr><td><span class="badge muted">2</span></td><td>VLM + flow head</td><td class="mono">74ms</td><td class="mono">13</td></tr>
-      <tr><td><span class="badge muted">3</span></td><td>Action DiT</td><td class="mono">200-407ms</td><td class="mono">2.5-5</td></tr>
-      <tr><td><span class="badge muted">4</span></td><td>Full WAM</td><td class="mono">2518ms</td><td class="mono">0.4</td></tr>
-      <tr style="background:var(--surface);"><td><span class="badge green">5</span></td><td><strong>OFT</strong></td><td class="mono"><strong>63-109ms</strong></td><td class="mono"><strong>9-16</strong></td></tr>
+      <tr><td><span class="badge muted">1</span></td><td>Single forward</td><td>ACT</td><td class="mono">3ms</td><td class="mono">300</td><td class="muted">ALOHA sim</td></tr>
+      <tr><td><span class="badge muted">2</span></td><td>VLM + flow head</td><td>LingBot-VLA</td><td class="mono">74ms</td><td class="mono">13</td><td class="muted">LIBERO (无 finetune ckpt)</td></tr>
+      <tr><td><span class="badge muted">3</span></td><td>Action DiT</td><td>Pi-Zero / Fast-WAM</td><td class="mono">200-407ms</td><td class="mono">2.5-5</td><td>LIBERO <span class="mono" style="color:var(--green);">94.5%</span></td></tr>
+      <tr><td><span class="badge muted">4</span></td><td>Full WAM</td><td>LingBot-VA / Cosmos</td><td class="mono">659-2518ms</td><td class="mono">0.4-1.5</td><td>LIBERO <span class="mono" style="color:var(--green);">97.4%</span></td></tr>
+      <tr style="background:var(--surface);"><td><span class="badge green">5</span></td><td><strong>OFT</strong></td><td>OpenVLA / StarVLA</td><td class="mono"><strong>63-109ms</strong></td><td class="mono"><strong>9-16</strong></td><td><strong>LIBERO 97.1%</strong> (paper)</td></tr>
     </tbody>
   </table>
-  <p class="small muted" style="margin-top:8px;">跳跃 3 最重。跳跃 5 砍迭代换速度。</p>
+  <p class="small muted" style="margin-top:8px;">跳跃 3 最重。跳跃 5 砍迭代换速度。所有 LIBERO 数据 = 闭环仿真 800 episodes。</p>
 </div>
 </div>
 
