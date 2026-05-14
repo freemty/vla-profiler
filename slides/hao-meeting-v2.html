@@ -438,7 +438,40 @@ ul.clean li strong { color: var(--text); }
 </div>
 </div>
 
-<!-- S14: References -->
+<!-- S14: WAM Roadmap Coverage -->
+<div class="slide">
+<div class="slide-inner" style="gap:12px;">
+  <div class="section-rule"></div>
+  <h3>Awesome-WAM Survey (Fudan OpenMOSS, arXiv:2605.12090)</h3>
+  <h2>WAM Roadmap — 我们覆盖了什么</h2>
+  <div style="text-align:center;margin:4px 0;">
+    <img src="https://openmoss.github.io/Awesome-WAM/figs/roadmap.svg" style="max-width:100%;max-height:280px;border:1px solid var(--border);border-radius:4px;background:#fff;" alt="WAM Roadmap">
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div class="card green-left" style="padding:10px 14px;">
+      <div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:4px;">✓ 已覆盖 (4/6 大类)</div>
+      <div style="font-size:11px;color:var(--text-secondary);line-height:1.7;">
+        <strong>Cascaded/Explicit pixel</strong> — Fast-WAM (skip-imagination)<br>
+        <strong>Joint/Single-DiT</strong> — LingBot-VA, Cosmos Policy<br>
+        <strong>Joint/AR</strong> — (π0 系列 flow matching 变体)<br>
+        <strong>Decoupled VLA</strong> — Pi-Zero, OpenVLA-OFT, StarVLA-OFT
+      </div>
+    </div>
+    <div class="card accent-left" style="padding:10px 14px;">
+      <div style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:4px;">✗ 未覆盖 (2/6 大类)</div>
+      <div style="font-size:11px;color:var(--text-secondary);line-height:1.7;">
+        <strong>Cascaded/Implicit latent</strong> — UVA, Dreamforce 等<br>
+        <strong>Joint/Multi-DiT</strong> — DreamZero (14B Wan2.1-I2V)<br>
+        <br>
+        <span class="muted">Challenge #5 "inference latency too slow" = 我们的核心方向</span>
+      </div>
+    </div>
+  </div>
+  <p class="small muted" style="text-align:center;">首篇 WAM 系统性 survey (64 篇论文)。无任何 latency benchmark — profiling gap 被学术 survey 正式确认。</p>
+</div>
+</div>
+
+<!-- S15: References -->
 <div class="slide">
 <div class="slide-inner" style="overflow-y:auto;">
   <div class="section-rule"></div>
@@ -471,7 +504,7 @@ ul.clean li strong { color: var(--text); }
 
 </div><!-- end .deck -->
 
-<div class="counter"><span id="current">1</span> / <span id="total">15</span></div>
+<div class="counter"><span id="current">1</span> / <span id="total">16</span></div>
 <button class="theme-toggle" onclick="toggleTheme()">light/dark</button>
 
 <script>
