@@ -123,40 +123,7 @@ ul.clean li strong { color: var(--text); font-weight: 600; }
 </div>
 </div>
 
-<!-- S1: VLA vs VA -->
-<div class="slide">
-<div class="slide-inner">
-  <div class="section-rule"></div>
-  <h2>VLA vs VA: Who does inference-time video gen?</h2>
-  <div class="two-col">
-    <div class="card blue-left">
-      <div style="margin-bottom:8px;"><span class="badge blue">VLA</span> <span class="small muted">No video gen</span></div>
-      <table>
-        <tr><td><strong>PI</strong></td><td>π0.7</td></tr>
-        <tr><td><strong>Generalist</strong></td><td>GEN-1</td></tr>
-        <tr><td><strong>Figure</strong></td><td>Helix</td></tr>
-        <tr><td><strong>Google</strong></td><td>Gemini Robotics</td></tr>
-        <tr><td><strong>NVIDIA</strong></td><td>GR00T N1.5</td></tr>
-      </table>
-    </div>
-    <div class="card accent-left">
-      <div style="margin-bottom:8px;"><span class="badge red">VA / WAM</span> <span class="small muted">Generates video at inference</span></div>
-      <table>
-        <tr><td><strong>1X</strong></td><td>1XWM</td></tr>
-        <tr><td><strong>Rhoda</strong></td><td>FutureVision ($450M)</td></tr>
-        <tr><td><strong>NVIDIA</strong></td><td>DreamZero</td></tr>
-        <tr><td><strong>NVIDIA+Stanford</strong></td><td>Cosmos Policy</td></tr>
-      </table>
-    </div>
-  </div>
-  <p class="mono small" style="text-align:center;margin-top:8px;">VLA ~5Hz vs WAM ~0.4Hz</p>
-  <div style="position:absolute;bottom:16px;left:72px;right:72px;font-size:9px;font-family:var(--font-mono);color:var(--text-tertiary);opacity:0.5;line-height:1.5;">
-    <a href="https://arxiv.org/abs/2410.24164" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">π0.7 PI 2026-04</a><br><a href="https://generalistai.com/blog/apr-02-2026-GEN-1" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">GEN-1 Generalist AI 2026-04</a><br><a href="https://arxiv.org/abs/2601.16163" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">Cosmos Policy arXiv:2601.16163</a><br><a href="https://arxiv.org/abs/2505.04622" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">DreamZero NVIDIA GEAR 2026</a><br><a href="https://www.rhoda.ai/research/direct-video-action" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">Rhoda AI 2026-03</a>
-  </div>
-</div>
-</div>
-
-<!-- S2: Eight Systems -->
+<!-- S1: Eight Systems + VLA vs VA -->
 <div class="slide">
 <div class="slide-inner">
   <div class="section-rule"></div>
@@ -174,8 +141,13 @@ ul.clean li strong { color: var(--text); font-weight: 600; }
       <tr><td><strong>Rhoda DVA</strong></td><td>Cascaded WAM: causal video → IDM</td><td>Industrial deployment (1.5hr+)</td><td class="muted">N/A</td></tr>
     </tbody>
   </table>
+  <div class="two-col" style="margin-top:4px;">
+    <div style="font-size:11px;color:var(--text-tertiary);"><span class="badge blue" style="font-size:9px;">VLA</span> No video gen: PI, Generalist, Figure, Google, NVIDIA</div>
+    <div style="font-size:11px;color:var(--text-tertiary);"><span class="badge red" style="font-size:9px;">VA/WAM</span> Video at inference: 1X, Rhoda, NVIDIA, Cosmos</div>
+  </div>
+  <p class="mono small muted" style="text-align:center;">VLA ~5Hz vs WAM ~0.4Hz</p>
   <div style="position:absolute;bottom:16px;left:72px;right:72px;font-size:9px;font-family:var(--font-mono);color:var(--text-tertiary);opacity:0.5;line-height:1.5;">
-    <a href="https://arxiv.org/abs/2410.24164" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">π0.7 PI 2026-04</a><br><a href="https://generalistai.com/blog/apr-02-2026-GEN-1" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">GEN-1 Generalist AI 2026-04</a><br><a href="https://arxiv.org/abs/2601.16163" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">Cosmos Policy arXiv:2601.16163</a><br><a href="https://arxiv.org/abs/2505.04622" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">DreamZero NVIDIA GEAR 2026</a><br><a href="https://www.rhoda.ai/research/direct-video-action" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">Rhoda AI 2026-03</a><br><a href="https://www.skild.ai" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">Skild Brain</a><br><a href="https://genesis-embodied-ai.github.io" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">GENE-26.5 Genesis AI 2026-05</a>
+    <a href="https://arxiv.org/abs/2410.24164" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">π0.7 PI 2026-04</a><br><a href="https://generalistai.com/blog/apr-02-2026-GEN-1" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">GEN-1 Generalist AI 2026-04</a><br><a href="https://arxiv.org/abs/2601.16163" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">Cosmos Policy arXiv:2601.16163</a><br><a href="https://arxiv.org/abs/2505.04622" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">DreamZero NVIDIA GEAR 2026</a><br><a href="https://www.rhoda.ai/research/direct-video-action" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">Rhoda AI 2026-03</a>
   </div>
 </div>
 </div>
@@ -390,59 +362,6 @@ ul.clean li strong { color: var(--text); font-weight: 600; }
 </div>
 </div>
 
-<!-- S11: Backup Reproducibility -->
-<div class="slide">
-<div class="slide-inner">
-  <div class="section-rule"></div>
-  <h3>Backup</h3>
-  <h2>Reproducibility</h2>
-  <table>
-    <thead><tr><th>Model</th><th>Random</th><th>Real</th><th>Δ</th></tr></thead>
-    <tbody>
-      <tr><td>NitroGen</td><td class="mono">7.2ms/step</td><td class="mono">7.1ms/step</td><td class="mono" style="color:var(--green);">&lt;2%</td></tr>
-      <tr><td>Pi-Zero</td><td class="mono">200ms</td><td class="mono">225ms</td><td class="mono" style="color:var(--green);">+12%</td></tr>
-      <tr><td>Fast-WAM LIBERO</td><td>—</td><td class="mono">94.5% (paper 93.7%)</td><td class="mono" style="color:var(--green);">match</td></tr>
-    </tbody>
-  </table>
-  <div style="position:absolute;bottom:16px;left:72px;right:72px;font-size:9px;font-family:var(--font-mono);color:var(--text-tertiary);opacity:0.5;line-height:1.5;">
-    Internal experiments
-  </div>
-</div>
-</div>
-
-<!-- S12: Backup EPDA -->
-<div class="slide">
-<div class="slide-inner">
-  <div class="section-rule"></div>
-  <h3>Backup</h3>
-  <h2>EPDA Interference</h2>
-  <p class="mono">inflation(X|Y) = 1 + v·a, R²=0.94</p>
-  <p class="small muted">{E,A} safe to co-locate. {P,D} must be separated.</p>
-  <div style="position:absolute;bottom:16px;left:72px;right:72px;font-size:9px;font-family:var(--font-mono);color:var(--text-tertiary);opacity:0.5;line-height:1.5;">
-    Internal experiments
-  </div>
-</div>
-</div>
-
-<!-- S13: Takeaway -->
-<div class="slide">
-<div class="slide-inner" style="align-items:center;text-align:center;gap:16px;">
-  <div class="section-rule" style="margin:0 auto;"></div>
-  <h2>Takeaway</h2>
-  <div class="card" style="text-align:left;max-width:600px;margin:0 auto;">
-    <ul class="clean">
-      <li>9 models × 11 experiments</li>
-      <li>Action DiT = 80-94% latency</li>
-      <li>OFT flips the bottleneck → backbone</li>
-      <li>VLA ~5Hz vs WAM ~0.4Hz</li>
-      <li>VLM pruning ≠ VLA pruning</li>
-      <li><strong>Fast VLA first</strong></li>
-    </ul>
-  </div>
-  <p class="muted small">Y<span style="color:var(--accent);">.</span> · Yuanbo Yang · UCSD Hao AI Lab · 2026</p>
-</div>
-</div>
-
 <!-- S14: Three Directions -->
 <div class="slide">
 <div class="slide-inner" style="gap:14px;">
@@ -586,7 +505,7 @@ ul.clean li strong { color: var(--text); font-weight: 600; }
 
 </div><!-- end .deck -->
 
-<div class="counter"><span id="current">1</span> / <span id="total">17</span></div>
+<div class="counter"><span id="current">1</span> / <span id="total">14</span></div>
 <button class="theme-toggle" onclick="toggleTheme()">light/dark</button>
 
 <script>
