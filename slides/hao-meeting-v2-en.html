@@ -424,6 +424,31 @@ ul.clean li strong { color: var(--text); font-weight: 600; }
 </div>
 </div>
 
+<!-- Model → System: Bubbles Are Inevitable -->
+<div class="slide">
+<div class="slide-inner" style="gap:20px;">
+  <div class="section-rule"></div>
+  <h3>Key Observation</h3>
+  <h2>Model → System: Bubbles Are Inevitable</h2>
+  <p>Robotics foundation models are evolving into multi-component pipelines. Pipelines have scheduling bubbles.</p>
+  <table style="font-size:12px;">
+    <thead><tr><th>System</th><th>Components</th><th>Pipeline Bubble</th></tr></thead>
+    <tbody>
+      <tr><td><strong>π0.7</strong></td><td>High-Level Policy → World Model → VLA → Action Expert</td><td>4 serial stages, subgoal image transfer</td></tr>
+      <tr><td><strong>GEN-1</strong></td><td>"system-level components across inference and model harnessing"</td><td>Inference-time techniques (undisclosed)</td></tr>
+      <tr><td><strong>Rhoda DVA</strong></td><td>Video Model → IDM → Execution</td><td>Leapfrog Inference: overlap video gen ∥ action exec</td></tr>
+      <tr><td><strong>LingBot-VA</strong></td><td>VAE → Video DiT → Action DiT → KV Cache Update</td><td>E→V→A serial + compute_kv_cache per chunk</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">
+    <strong>Thesis:</strong> As models become systems, the gap between "model latency" and "system throughput" widens. Profiling the pipeline — not just the model — is where the next 2-5x lives.
+  </div>
+  <div style="position:absolute;bottom:16px;left:72px;right:72px;font-size:9px;font-family:var(--font-mono);color:var(--text-tertiary);opacity:0.5;line-height:1.5;">
+    <a href="https://www.physicalintelligence.company/blog/pi0-7" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">π0.7 PI 2026-04</a><br><a href="https://generalistai.com/blog/apr-02-2026-GEN-1" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">GEN-1 Generalist AI 2026-04: "GEN-1 is a system"</a><br><a href="https://www.rhoda.ai/research/direct-video-action" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">Rhoda DVA: Leapfrog Inference 2026-03</a><br><a href="https://arxiv.org/abs/2401.09670" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">DistServe OSDI 2024 (PD disaggregation analogy)</a>
+  </div>
+</div>
+</div>
+
 <!-- S16: WAM Roadmap Coverage -->
 <div class="slide">
 <div class="slide-inner" style="gap:12px;">
@@ -493,7 +518,7 @@ ul.clean li strong { color: var(--text); font-weight: 600; }
 
 </div><!-- end .deck -->
 
-<div class="counter"><span id="current">1</span> / <span id="total">13</span></div>
+<div class="counter"><span id="current">1</span> / <span id="total">14</span></div>
 <button class="theme-toggle" onclick="toggleTheme()">light/dark</button>
 
 <script>
