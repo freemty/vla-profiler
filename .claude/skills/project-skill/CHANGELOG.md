@@ -59,3 +59,14 @@ Initial bootstrap — auto-generated from existing codebase.
 Scanned: CLAUDE.md, 4 survey documents (2856 lines total), notes/survey-plan.md, git history (3 commits), exp/ (empty).
 
 Generated 7 sections: Project Overview, Architecture, System Cognition (3 strategic judgments + 8 research entries), Technical Archive (4 paradigms + maturity matrix + migration matrix), Experiment History (empty + 5 planned), Engineering Lessons, Quick Reference.
+
+## v9 — 2026-05-14
+
+- exp09a Cosmos Policy profiling (659ms/1.5Hz, per-step 76.8ms)
+- exp11a OpenVLA-OFT (109ms/9.2Hz) + exp11b StarVLA-OFT (63ms/15.8Hz)
+- Cosmos LIBERO eval 97.4% + Fast-WAM 94.5% baselines
+- exp04d running, exp03b/07c shelved status
+- OFT bottleneck flip discovery (Action → Backbone)
+- 8 new engineering lessons (#59-71): cuDNN fix, LossKwargs shim, lerobot_stub, LIBERO env API, 4-GPU parallel eval
+- LIBERO Quality Baselines table (Section 4.3)
+- Prediction calibration for exp09a, exp11a/b, LIBERO
