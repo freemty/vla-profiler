@@ -408,7 +408,37 @@ ul.clean li strong { color: var(--text); }
 </div>
 </div>
 
-<!-- S13: References -->
+<!-- S13: Recent Industry Progress -->
+<div class="slide">
+<div class="slide-inner">
+  <div class="section-rule"></div>
+  <h3>2026 Q1-Q2</h3>
+  <h2>Recent Industry Progress</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:4px;">
+    <div class="card accent-left">
+      <div style="margin-bottom:6px;"><strong>π0.7</strong> <span class="badge red">PI · 2026-04</span></div>
+      <p style="font-size:12px;">从 "model" 变 "pipeline system"。4 组件: High-Level Policy + World Model (subgoal image) + VLA 主干 + Action Expert。Compositional generalization 首现。<br><strong>信号:</strong> model 是 system 的一部分，不是全部。</p>
+    </div>
+    <div class="card accent-left">
+      <div style="margin-bottom:6px;"><strong>GEN-1</strong> <span class="badge red">Generalist AI · 2026-04</span></div>
+      <p style="font-size:12px;">99% params from scratch (非 VLM finetune)。500K+ hr 穿戴 pretrain + 1hr task data → 99% 成功率 + 3x faster。<br>Pete Florence blog: <em>"GEN-1 is a system. Beyond World Models & VLAs."</em></p>
+    </div>
+    <div class="card blue-left">
+      <div style="margin-bottom:6px;"><strong>GENE-26.5</strong> <span class="badge blue">Genesis AI · 2026-05</span></div>
+      <p style="font-size:12px;">Flow matching + 自研 20-DoF dexterous hand + $105M seed。3ms control loop。<br><strong>赌注:</strong> 硬件精度 (hand) > 数据规模。</p>
+    </div>
+    <div class="card blue-left">
+      <div style="margin-bottom:6px;"><strong>Rhoda DVA</strong> <span class="badge blue">Rhoda AI · 2026-03</span></div>
+      <p style="font-size:12px;">Direct Video Action: causal video from scratch → IDM (inverse dynamics) 提取 action。Leapfrog Inference 隐藏 video gen 延迟。$450M Series A, $1.7B val。<br><strong>赌注:</strong> 物理理解在 video 里，不需要显式 policy。</p>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:12px;">
+    <strong>共识:</strong> 四家都不报 inference Hz。Model ≠ System。<strong>Profiling gap 横跨整个行业。</strong>
+  </div>
+</div>
+</div>
+
+<!-- S14: References -->
 <div class="slide">
 <div class="slide-inner" style="overflow-y:auto;">
   <div class="section-rule"></div>
@@ -441,7 +471,7 @@ ul.clean li strong { color: var(--text); }
 
 </div><!-- end .deck -->
 
-<div class="counter"><span id="current">1</span> / <span id="total">14</span></div>
+<div class="counter"><span id="current">1</span> / <span id="total">15</span></div>
 <button class="theme-toggle" onclick="toggleTheme()">light/dark</button>
 
 <script>
