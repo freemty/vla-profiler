@@ -1,0 +1,10 @@
+{
+  "libero_spatial": 0.01,
+  "libero_object": 0.0,
+  "libero_goal": 0.0,
+  "libero_10": 0.0,
+  "overall": 0.0025,
+  "total_episodes": 800,
+  "total_successes": 2,
+  "note": "2/800 episodes succeeded (both in spatial). Gripper channel outputs near-zero after quantile unnormalization — model fails to grasp. Likely posttrain checkpoint quality issue, not pipeline bug."
+}

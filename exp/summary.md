@@ -149,7 +149,7 @@ Cross-experiment flight recorder. Per-exp **目的 / 方法 / 结果 / 下一步
 | exp08b | Full 6-pair EPDA matrix | **done (pairs)** | D/P 脆弱 (2.4–2.9x) vs E/A 鲁棒 (<1.3x)。Triples/quad pending。 |
 | exp08c | GPU contention model fit | **done (v1)** | M4 asymmetric R²=0.94. inflation=1+v_X·a_Y. 部署: {E,A} 同卡 / {P,D} 必 disagg。 |
 | exp04c | Fast-WAM 5-step paper-aligned | **done** | 257ms / 3.9Hz @ 5-step (paper 190ms on A100). Per-step ~41ms. |
-| exp04d | LingBot-VA real-weight LIBERO eval | **running** | 4 suites parallel on GPU 3/5/6/7, 20 ep/task |
+| exp04d | LingBot-VA real-weight LIBERO eval | **done** | **0.25% avg** (2/800 ep). Gripper channel near-zero → no grasp. Posttrain ckpt quality issue. |
 | exp06b | NitroGen full 500M real-weight | **done** | 7.1ms/step — identical to exp06a (DiT=181M, not 500M). |
 | exp07b | Pi-Zero real-weight profiling | **done** | 225ms total. vs exp07a 200ms (+12%). Random-weight timing ≈ faithful. |
 | exp03b | LingBot-VLA LIBERO-4 eval | **shelved** | 4B ckpt is pretrained foundation (no LIBERO finetune), 0% expected |

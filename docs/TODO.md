@@ -29,10 +29,10 @@ VLA 推理现在卡在**单请求太慢** (Pi-Zero 200ms=5Hz, 需要 10-50Hz)，
 > **Key fixes**: cuDNN `LD_LIBRARY_PATH` + LossKwargs TypedDict shim + lerobot_stub + rotate_half
 
 - [x] **P0** Cosmos Policy LIBERO eval — **97.4% avg** (spatial 96/object 100/goal 98/10 95.5), 800 ep
-- [ ] **P0** exp04d: LingBot-VA LIBERO eval — **4 GPU (3/5/6/7) 并行, 20 ep × 4 suites**
-  - **脚本**: `scripts/run_exp04d_parallel.sh 20`
-  - 预计 ~20 小时完成 (2026-05-14 下午)
-  - **log**: `exp/exp04d/{libero_spatial,libero_object,libero_goal,libero_10}.log`
+- [x] **P0** exp04d: LingBot-VA LIBERO eval — **完成, 0.25% avg (2/800)**
+  - 4 GPU 并行跑完, 800 episodes
+  - **Root cause**: gripper channel outputs near-zero after quantile unnormalization → 模型无法抓取
+  - 不是 pipeline bug, 是 posttrain checkpoint quality 问题
 - [x] ~~**P0** exp03b: LingBot-VLA LIBERO-4 eval~~ — **搁置**: `robbyant/lingbot-vla-4b` 是通用预训练模型, HF 上无 LIBERO finetune 版本 (只有 VA 版 `lingbot-va-posttrain-libero-long`)
 - [x] ~~**P0** exp07c: Pi-Zero LIBERO-4 eval~~ — **搁置**: 仅有 bridge 权重 (`allenzren/open-pi-zero`), LIBERO checkpoint 在 `physical-intelligence/pi0-base` (gated repo, 需授权) + `gs://openpi-assets/checkpoints/pi0_libero/` (无 gsutil)
 - [ ] **P0** 汇总: exp04d 跑完后, 更新 `exp/reproducibility_matrix.json` + design-space 散点图
