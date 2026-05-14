@@ -33,8 +33,8 @@ VLA 推理现在卡在**单请求太慢** (Pi-Zero 200ms=5Hz, 需要 10-50Hz)，
   - **脚本**: `scripts/run_exp04d_parallel.sh 20`
   - 预计 ~20 小时完成 (2026-05-14 下午)
   - **log**: `exp/exp04d/{libero_spatial,libero_object,libero_goal,libero_10}.log`
-- [x] ~~**P0** exp03b: LingBot-VLA LIBERO-4 eval~~ — **搁置**: pretrained foundation model, 无 LIBERO finetune
-- [x] ~~**P0** exp07c: Pi-Zero LIBERO-4 eval~~ — **搁置**: 仅 bridge 权重, 无 LIBERO checkpoint
+- [x] ~~**P0** exp03b: LingBot-VLA LIBERO-4 eval~~ — **搁置**: `robbyant/lingbot-vla-4b` 是通用预训练模型, HF 上无 LIBERO finetune 版本 (只有 VA 版 `lingbot-va-posttrain-libero-long`)
+- [x] ~~**P0** exp07c: Pi-Zero LIBERO-4 eval~~ — **搁置**: 仅有 bridge 权重 (`allenzren/open-pi-zero`), LIBERO checkpoint 在 `physical-intelligence/pi0-base` (gated repo, 需授权) + `gs://openpi-assets/checkpoints/pi0_libero/` (无 gsutil)
 - [ ] **P0** 汇总: exp04d 跑完后, 更新 `exp/reproducibility_matrix.json` + design-space 散点图
 
 ## P0 — 实验补强 (补 depth)
