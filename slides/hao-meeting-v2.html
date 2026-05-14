@@ -42,38 +42,41 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--font-body); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+::selection { background: rgba(183, 28, 28, 0.12); color: var(--text); }
 
 .deck { width: 100vw; height: 100vh; position: relative; }
 .slide { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 48px 72px; overflow: hidden; }
 .slide.active { display: flex; }
-.slide-inner { width: 100%; max-width: 1100px; display: flex; flex-direction: column; gap: 20px; }
+.slide-inner { width: 100%; max-width: 1100px; display: flex; flex-direction: column; gap: 28px; }
 
-.counter { position: fixed; bottom: 20px; right: 28px; font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary); z-index: 100; }
-.theme-toggle { position: fixed; top: 16px; right: 24px; font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary); background: none; border: 1px solid var(--border); border-radius: 4px; padding: 4px 10px; cursor: pointer; z-index: 100; }
+.counter { position: fixed; bottom: 20px; right: 28px; font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary); z-index: 100; transition: color 0.2s ease; }
+.theme-toggle { position: fixed; top: 16px; right: 24px; font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary); background: none; border: 1px solid var(--border); border-radius: 4px; padding: 4px 10px; cursor: pointer; z-index: 100; transition: all 0.2s ease; }
 .theme-toggle:hover { color: var(--accent); border-color: var(--accent); }
 
-h1 { font-family: var(--font-display); font-size: 42px; font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; }
-h2 { font-family: var(--font-display); font-size: 28px; font-weight: 600; line-height: 1.25; }
-h3 { font-family: var(--font-body); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-tertiary); }
-p { font-size: 15px; line-height: 1.65; color: var(--text-secondary); }
+h1 { font-family: var(--font-display); font-size: 42px; font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; }
+h2 { font-family: var(--font-display); font-size: 28px; font-weight: 600; line-height: 1.25; letter-spacing: -0.01em; }
+h3 { font-family: var(--font-body); font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); }
+p { font-size: 15px; line-height: 1.65; color: var(--text-secondary); font-weight: 400; }
 
 .accent { color: var(--accent); }
 .section-rule { width: 24px; height: 2px; background: var(--accent); margin-bottom: 8px; }
 
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 16px 20px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 18px 22px; transition: border-color 0.2s ease; }
+.card:hover { border-color: color-mix(in srgb, var(--border) 50%, var(--text-tertiary)); }
 .card.accent-left { border-left: 3px solid var(--accent); }
 .card.blue-left { border-left: 3px solid var(--blue); }
 .card.green-left { border-left: 3px solid var(--green); }
 
-.badge { display: inline-block; font-family: var(--font-mono); font-size: 11px; padding: 2px 8px; border-radius: 3px; }
+.badge { display: inline-block; font-family: var(--font-mono); font-size: 11px; padding: 2px 8px; border-radius: 3px; transition: opacity 0.2s ease; }
+.badge:hover { opacity: 0.8; }
 .badge.red { border: 1px solid var(--accent); color: var(--accent); background: transparent; }
 .badge.blue { border: 1px solid var(--blue); color: var(--blue); background: transparent; }
 .badge.green { border: 1px solid var(--green); color: var(--green); background: transparent; }
 .badge.muted { background: var(--border); color: var(--text-secondary); }
 
-.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
 
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th { font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
@@ -92,18 +95,22 @@ tr:last-child td { border-bottom: none; }
 .scatter-line { position: absolute; border-top: 1px dashed var(--border); width: 100%; }
 .scatter-line-label { position: absolute; right: 8px; font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); }
 
-.callout { border-left: 3px solid var(--accent); padding: 12px 18px; font-size: 14px; color: var(--text-secondary); background: var(--surface); border-radius: 0 4px 4px 0; }
+.callout { border-left: 3px solid var(--accent); padding: 14px 20px; font-size: 14px; color: var(--text-secondary); background: var(--surface); border-radius: 0 4px 4px 0; }
 .callout strong { color: var(--text); }
 
 ul.clean { list-style: none; }
-ul.clean li { padding: 4px 0 4px 14px; position: relative; font-size: 14px; color: var(--text-secondary); }
-ul.clean li::before { content: ""; position: absolute; left: 0; top: 11px; width: 6px; height: 6px; border-radius: 1px; background: var(--border); }
-ul.clean li strong { color: var(--text); }
+ul.clean li { padding: 6px 0 6px 16px; position: relative; font-size: 14px; color: var(--text-secondary); letter-spacing: 0.01em; }
+ul.clean li::before { content: ""; position: absolute; left: 0; top: 13px; width: 5px; height: 5px; border-radius: 1px; background: var(--border); }
+ul.clean li strong { color: var(--text); font-weight: 600; }
 
 .mono { font-family: var(--font-mono); }
 .small { font-size: 12px; }
 .muted { color: var(--text-tertiary); }
-.key-number { font-family: var(--font-mono); font-size: 18px; font-weight: 600; color: var(--text); }
+.key-number { font-family: var(--font-mono); font-size: 18px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+
+td strong { font-weight: 600; }
+.scatter-dot { transition: transform 0.15s ease; }
+.scatter-dot:hover { transform: scale(1.2); z-index: 10; }
 </style>
 </head>
 <body>
