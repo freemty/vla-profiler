@@ -49,6 +49,7 @@ slides/*.html
 !slides/epda-roofline-motivation.html
 !slides/hao-meeting-2026-04-28.html
 !slides/hao-meeting-v2.html
+!slides/hao-meeting-v2-en.html
 
 # Instance-specific: experiment plans & progress
 docs/plans/
