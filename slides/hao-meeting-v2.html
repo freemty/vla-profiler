@@ -153,17 +153,18 @@ ul.clean li strong { color: var(--text); }
 <div class="slide">
 <div class="slide-inner">
   <div class="section-rule"></div>
-  <h2>七个系统</h2>
-  <table style="font-size:14px;">
+  <h2>八个系统</h2>
+  <table style="font-size:13px;">
     <thead><tr><th>系统</th><th>一句话</th><th>我们的数据</th></tr></thead>
     <tbody>
-      <tr><td><strong>π0.7</strong></td><td>4 组件 pipeline，300M Action Expert</td><td class="mono">200ms / 5Hz</td></tr>
-      <tr><td><strong>GEN-1</strong></td><td>黑箱，500K hr 穿戴数据 pretrain</td><td class="muted">无</td></tr>
-      <tr><td><strong>GENE-26.5</strong></td><td>20-DoF 灵巧手 + sensor glove + sim</td><td class="muted">无</td></tr>
-      <tr><td><strong>Cosmos Policy</strong></td><td>2B DiT，action = latent frame</td><td class="mono">659ms / 1.5Hz</td></tr>
-      <tr><td><strong>DreamZero</strong></td><td>14B video WM → 蒸馏 policy</td><td class="muted">无</td></tr>
-      <tr><td><strong>LingBot-VA</strong></td><td>加 video gen → 慢 34x</td><td class="mono">2518ms / 0.4Hz</td></tr>
-      <tr><td><strong>Rhoda</strong></td><td>"Direct Video Action"，零技术披露</td><td class="muted">无</td></tr>
+      <tr><td><strong>π0.7</strong></td><td>Cascaded WAM: planner → WM (goal image) → VLA → Action Expert</td><td class="mono">200ms / 5Hz</td></tr>
+      <tr><td><strong>GEN-1</strong></td><td>99% from scratch, 500K hr 穿戴数据, 1hr→99% 成功率</td><td class="muted">无</td></tr>
+      <tr><td><strong>GENE-26.5</strong></td><td>Flow matching + 自研 20-DoF hand, 3ms control</td><td class="muted">无</td></tr>
+      <tr><td><strong>Skild Brain</strong></td><td>100K morphology sim pretrain, hierarchical hi/lo freq</td><td class="muted">无</td></tr>
+      <tr><td><strong>Cosmos Policy</strong></td><td>Joint WAM: 2B DiT, action = latent frame</td><td class="mono">659ms / 1.5Hz</td></tr>
+      <tr><td><strong>DreamZero</strong></td><td>Joint WAM: 14B video DiT, zero-shot policy</td><td class="muted">无</td></tr>
+      <tr><td><strong>LingBot-VA</strong></td><td>Joint WAM: video + action DiT cross-attn, 慢 34x</td><td class="mono">2518ms / 0.4Hz</td></tr>
+      <tr><td><strong>Rhoda DVA</strong></td><td>Cascaded WAM: causal video → IDM, Leapfrog Inference</td><td class="muted">无</td></tr>
     </tbody>
   </table>
 </div>

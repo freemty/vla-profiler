@@ -13,6 +13,7 @@ PhD research @ UCSD Hao AI Lab (advisor: Hao Zhang — vLLM / FastVideo / Chatbo
 | VLM + OFT MLP | StarVLA-OFT (3B) | 63ms | 16 | E+C 99.8% |
 | VLM + OFT MLP | OpenVLA-OFT (7B) | 109ms | 9 | C (7B prefill) 84% |
 | Dual-stream flow | Pi-Zero (2.7B) | 200ms | 5 | Action Expert 82% |
+| Pure DiT (VA) | NitroGen (174M) | 7.2ms/step | 56 @k=1 | Linear in params |
 | WAM skip-imagination | Fast-WAM (5B) | 407ms | 2.5 | Action DiT 89% |
 | Monolithic DiT | Cosmos Policy (2B) | 659ms | 1.5 | DiT denoise 90%+ |
 | Full WAM | LingBot-VA (5B) | 2518ms | 0.4 | Video+Action 93% |
@@ -96,4 +97,4 @@ See `CLAUDE.md` for full index. Key docs:
 - `exp/summary.md` — experiment flight recorder
 - `docs/TODO.md` — prioritized task backlog
 - `docs/hao-meeting-prep-v2.md` — meeting outline
-- `survey/papers/` — 20+ deep-dive survey notes
+- `survey/papers/` — 25+ deep-dive survey notes
