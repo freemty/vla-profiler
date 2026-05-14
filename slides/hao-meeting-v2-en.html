@@ -214,34 +214,43 @@ ul.clean li strong { color: var(--text); font-weight: 600; }
 </div>
 </div>
 
-<!-- S5: OFT bottleneck flip -->
+<!-- S5: Five Leaps + OFT Bottleneck -->
 <div class="slide">
-<div class="slide-inner">
+<div class="slide-inner" style="gap:16px;">
   <div class="section-rule"></div>
-  <h2>OFT: Action 165ms → 0.13ms</h2>
-  <p>Bottleneck shifts from action to backbone.</p>
-  <div class="three-col">
-    <div class="card">
-      <div class="mono small muted" style="margin-bottom:6px;">Pi-Zero (flow)</div>
-      <div class="phase-bar" style="margin-bottom:6px;">
+  <h2>Five Leaps</h2>
+  <table style="font-size:12px;">
+    <thead><tr><th></th><th>Paradigm</th><th>Representative</th><th>Latency</th><th>Hz</th><th>Eval Bench</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge muted">1</span></td><td>Single forward</td><td>ACT</td><td class="mono">3ms</td><td class="mono">300</td><td class="muted">ALOHA sim</td></tr>
+      <tr><td><span class="badge muted">2</span></td><td>VLM + flow head</td><td>LingBot-VLA</td><td class="mono">74ms</td><td class="mono">13</td><td class="muted">LIBERO (no ckpt)</td></tr>
+      <tr><td><span class="badge muted">3</span></td><td>Action DiT</td><td>Pi-Zero / Fast-WAM</td><td class="mono">200-407ms</td><td class="mono">2.5-5</td><td>LIBERO <span class="mono" style="color:var(--green);">94.5%</span></td></tr>
+      <tr><td><span class="badge muted">4</span></td><td>Full WAM</td><td>LingBot-VA / Cosmos</td><td class="mono">659-2518ms</td><td class="mono">0.4-1.5</td><td>LIBERO <span class="mono" style="color:var(--green);">97.4%</span></td></tr>
+      <tr style="background:var(--surface);"><td><span class="badge green">5</span></td><td><strong>OFT</strong></td><td>OpenVLA / StarVLA</td><td class="mono"><strong>63-109ms</strong></td><td class="mono"><strong>9-16</strong></td><td><strong>LIBERO 97.1%</strong> (paper)</td></tr>
+    </tbody>
+  </table>
+  <div class="three-col" style="margin-top:0;">
+    <div class="card" style="padding:10px 14px;">
+      <div class="mono small muted" style="margin-bottom:4px;">Pi-Zero (flow) — Leap 3</div>
+      <div class="phase-bar" style="margin-bottom:4px;">
         <div class="seg seg-e" style="width:5%;"></div>
         <div class="seg seg-c" style="width:13%;"></div>
         <div class="seg seg-a" style="width:82%;">A 82%</div>
       </div>
       <div class="mono small">200ms · 5Hz</div>
     </div>
-    <div class="card">
-      <div class="mono small muted" style="margin-bottom:6px;">OpenVLA-OFT (7B)</div>
-      <div class="phase-bar" style="margin-bottom:6px;">
+    <div class="card" style="padding:10px 14px;">
+      <div class="mono small muted" style="margin-bottom:4px;">OpenVLA-OFT (7B) — Leap 5</div>
+      <div class="phase-bar" style="margin-bottom:4px;">
         <div class="seg seg-e" style="width:15%;"></div>
         <div class="seg seg-c" style="width:84%;">C 84%</div>
         <div class="seg seg-a" style="width:1%;"></div>
       </div>
       <div class="mono small">109ms · 9Hz</div>
     </div>
-    <div class="card green-left">
-      <div class="mono small muted" style="margin-bottom:6px;">StarVLA-OFT (3B)</div>
-      <div class="phase-bar" style="margin-bottom:6px;">
+    <div class="card green-left" style="padding:10px 14px;">
+      <div class="mono small muted" style="margin-bottom:4px;">StarVLA-OFT (3B) — Leap 5</div>
+      <div class="phase-bar" style="margin-bottom:4px;">
         <div class="seg seg-e" style="width:55%;">E 55%</div>
         <div class="seg seg-c" style="width:44%;">C 45%</div>
         <div class="seg seg-a" style="width:1%;"></div>
@@ -249,30 +258,9 @@ ul.clean li strong { color: var(--text); font-weight: 600; }
       <div class="mono small">63ms · <strong>16Hz</strong></div>
     </div>
   </div>
+  <p class="small muted">OFT replaces iterative denoise with single MLP: Action 165ms → 0.13ms. Bottleneck shifts to backbone.</p>
   <div style="position:absolute;bottom:16px;left:72px;right:72px;font-size:9px;font-family:var(--font-mono);color:var(--text-tertiary);opacity:0.5;line-height:1.5;">
-    <a href="https://arxiv.org/abs/2502.19645" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">OpenVLA-OFT: arXiv:2502.19645</a><br><a href="https://arxiv.org/abs/2604.05014" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">StarVLA: arXiv:2604.05014</a><br><a href="https://arxiv.org/abs/2410.24164" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">π0: Black et al. 2024</a>
-  </div>
-</div>
-</div>
-
-<!-- S6: Five Leaps -->
-<div class="slide">
-<div class="slide-inner">
-  <div class="section-rule"></div>
-  <h2>Five Leaps</h2>
-  <table style="font-size:13px;">
-    <thead><tr><th></th><th>Paradigm</th><th>Representative</th><th>Latency</th><th>Hz</th><th>Eval Bench</th></tr></thead>
-    <tbody>
-      <tr><td><span class="badge muted">1</span></td><td>Single forward</td><td>ACT</td><td class="mono">3ms</td><td class="mono">300</td><td class="muted">ALOHA sim</td></tr>
-      <tr><td><span class="badge muted">2</span></td><td>VLM + flow head</td><td>LingBot-VLA</td><td class="mono">74ms</td><td class="mono">13</td><td class="muted">LIBERO (no finetune ckpt)</td></tr>
-      <tr><td><span class="badge muted">3</span></td><td>Action DiT</td><td>Pi-Zero / Fast-WAM</td><td class="mono">200-407ms</td><td class="mono">2.5-5</td><td>LIBERO <span class="mono" style="color:var(--green);">94.5%</span></td></tr>
-      <tr><td><span class="badge muted">4</span></td><td>Full WAM</td><td>LingBot-VA / Cosmos</td><td class="mono">659-2518ms</td><td class="mono">0.4-1.5</td><td>LIBERO <span class="mono" style="color:var(--green);">97.4%</span></td></tr>
-      <tr style="background:var(--surface);"><td><span class="badge green">5</span></td><td><strong>OFT</strong></td><td>OpenVLA / StarVLA</td><td class="mono"><strong>63-109ms</strong></td><td class="mono"><strong>9-16</strong></td><td><strong>LIBERO 97.1%</strong> (paper)</td></tr>
-    </tbody>
-  </table>
-  <p class="small muted" style="margin-top:8px;">Leap 3 costs most. Leap 5 trades iterations for speed. All LIBERO data = closed-loop simulation, 800 episodes.</p>
-  <div style="position:absolute;bottom:16px;left:72px;right:72px;font-size:9px;font-family:var(--font-mono);color:var(--text-tertiary);opacity:0.5;line-height:1.5;">
-    <a href="https://tonyzhaozh.github.io/aloha/" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">ACT: Zhao et al. RSS 2023</a><br><a href="https://arxiv.org/abs/2502.19645" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">OpenVLA-OFT: arXiv:2502.19645</a><br><a href="https://arxiv.org/abs/2604.05014" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">StarVLA: arXiv:2604.05014</a><br><a href="https://arxiv.org/abs/2410.24164" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">π0: Black et al. 2024</a><br><a href="https://arxiv.org/abs/2603.16666" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">Fast-WAM: arXiv:2603.16666</a><br>Cosmos: arXiv:2601.16163<br><a href="https://huggingface.co/robbyant/lingbot-vla-4b" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">LingBot: robbyant/lingbot-vla</a>
+    <a href="https://tonyzhaozh.github.io/aloha/" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">ACT: Zhao et al. RSS 2023</a><br><a href="https://arxiv.org/abs/2502.19645" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">OpenVLA-OFT: arXiv:2502.19645</a><br><a href="https://arxiv.org/abs/2604.05014" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">StarVLA: arXiv:2604.05014</a><br><a href="https://arxiv.org/abs/2410.24164" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">π0: Black et al. 2024</a><br><a href="https://arxiv.org/abs/2603.16666" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">Fast-WAM: arXiv:2603.16666</a><br><a href="https://arxiv.org/abs/2601.16163" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">Cosmos: arXiv:2601.16163</a>
   </div>
 </div>
 </div>
@@ -505,7 +493,7 @@ ul.clean li strong { color: var(--text); font-weight: 600; }
 
 </div><!-- end .deck -->
 
-<div class="counter"><span id="current">1</span> / <span id="total">14</span></div>
+<div class="counter"><span id="current">1</span> / <span id="total">13</span></div>
 <button class="theme-toggle" onclick="toggleTheme()">light/dark</button>
 
 <script>
