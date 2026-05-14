@@ -1,5 +1,30 @@
 # Changelog
 
+## v0.11.0 @freemty — 2026-05-13/14
+
+### 新增 (LIBERO eval pipeline + Cosmos 97.4%)
+- **Cosmos Policy LIBERO eval**: **97.4% avg** (spatial 96.0 / object 100 / goal 98.0 / 10 95.5), 800 ep. 论文 98.5%, 差 1.1pp (RTX 5880 vs A100 + seed)
+- **exp04d LingBot-VA LIBERO eval**: 4-GPU 并行 (GPU 3/5/6/7), server-client 模式, 20 ep × 4 suites (运行中)
+- **lerobot_stub**: 最小 PI0Config + PreTrainedPolicy stub, 避免 lerobot 0.5.1 与 transformers 4.51 版本冲突 (`scripts/lerobot_stub/`)
+- **LIBERO eval 脚本**: `run_exp03b_libero.py` / `run_exp07c_libero.py` / `run_exp04d_libero.sh` / `run_exp04d_parallel.sh` / `run_cosmos_libero.py`
+- **knowhow**: cuDNN 版本冲突修复, LIBERO OffScreenRenderEnv API, lingbotvla transformers 4.57 兼容 7 处 patch
+
+### 修复
+- **cuDNN 9.1 → 9.10**: `LD_LIBRARY_PATH` 前置 pip cuDNN lib, 解除所有 DiT 模型 (Cosmos/LingBot-VA) 的 core dump
+- **LossKwargs TypedDict shim**: transformers 4.57 移除了 LossKwargs, 用 TypedDict stub 注入
+- **lingbotvla 7 处 patch**: apply_rotary_emb shim / TypedDict 继承冲突 / use_flash_attention_2 废弃 / sdpa→eager / rotate_half 定义 / expert 直接构造 / vision attn_implementation
+- **LIBERO env 创建**: `OffScreenRenderEnv` + `set_init_state` 替代不存在的 `bench.get_env()`
+- **Cosmos vendor 5 处 bug**: EvalCfg scoping / get_model tuple unpack / load_dataset_stats string arg / get_image_resize_size / norm_stats guard
+
+### 变更
+- **run_libero_all.sh**: 从 3 模型扩展到 5 模型并行 (GPU 0-4), 含 cuDNN LD_LIBRARY_PATH
+- **exp03b/07c 搁置**: VLA 无 LIBERO finetune checkpoint, Pi-Zero checkpoint 需 Physical Intelligence gated 授权
+
+### 关键发现
+- **Cosmos Policy 97.4%**: 首次在 RTX 5880 上复现, 与论文 98.5% 接近
+- **exp03b 0% 预期**: lingbot-vla-4b 是 pretrained foundation model, 非 LIBERO finetune
+- **cuDNN 是 DiT 统一 blocker**: 系统 9.1.1 vs torch 需 9.10, pip 包已有但 LD_LIBRARY_PATH 未设
+
 ## v0.10.0 @freemty — 2026-05-11/12
 
 ### 新增
