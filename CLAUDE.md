@@ -56,6 +56,7 @@ slides/                # 演示文稿
 - **Framework design spec**: `docs/superpowers/specs/2026-04-14-vlm-profiling-framework-design.md`
 - **Implementation plan**: `docs/superpowers/plans/2026-04-14-vlm-profiling-framework.md`
 - **EPDA Disaggregation Spec (exp08)**: `docs/specs/2026-04-26-epda-disaggregation-spec.md` — 四阶段干扰量化, L1→L2 跨越, DistServe-style motivation
+- **LIBERO Eval 推理流程对比**: `docs/specs/libero-eval-inference-flows.md` — Fast-WAM / LingBot-VA / Cosmos Policy 三模型闭环推理流程、反馈注入机制、replan 策略对比
 - **Reproducibility Spec (v0.9.0)**: `docs/specs/2026-04-28-reproducibility-spec.md` — 7 模型官方配置合约, 已知偏差文档化
 - **Reproducibility Plan**: `docs/superpowers/plans/2026-04-28-full-reproducibility-libero.md` — 18 tasks, 5 phases
 - **Reproducibility Dashboard**: `viewer/static/reproducibility.html` — latency old-vs-new + LIBERO-4 success heatmap
