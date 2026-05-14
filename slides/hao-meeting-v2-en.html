@@ -118,8 +118,8 @@ ul.clean li strong { color: var(--text); font-weight: 600; }
 <div class="slide-inner" style="align-items:center;text-align:center;gap:28px;">
   <div class="section-rule" style="margin:0 auto;"></div>
   <h1>From 3ms to 2.5s</h1>
-  <p style="font-size:18px;"><strong>9 models · 11 experiments · 10 companies</strong></p>
-  <span class="mono small muted">Yuanbo Yang · UCSD · Hao AI Lab · 2026-05</span>
+  <p style="font-size:18px;"><strong>Profiling SOTA WAM/VLA Systems</strong></p>
+  <span class="mono small muted">10 models · 5 paradigms · 3 LIBERO evals · 2026-05</span>
 </div>
 </div>
 
@@ -193,7 +193,8 @@ ul.clean li strong { color: var(--text); font-weight: 600; }
       <tr><td class="mono small muted">Statistics</td><td>warmup=15, iter=20, report median</td></tr>
       <tr><td class="mono small muted">Timing</td><td>CUDA event (torch.cuda.Event, enable_timing=True)</td></tr>
       <tr><td class="mono small muted">Phases</td><td>E (vision encode) / C (LLM prefill) / A (action head)</td></tr>
-      <tr><td class="mono small muted">Weights</td><td>real: Pi-Zero, Cosmos, OpenVLA-OFT<br>random: remaining 6 (validated Δ&lt;12%, exp07b)</td></tr>
+      <tr><td class="mono small muted">Models</td><td>10 (ACT / LingBot-VLA / Pi-Zero / Fast-WAM / LingBot-VA / NitroGen / Cosmos / OpenVLA-OFT / StarVLA-OFT / Qwen2.5-VL)</td></tr>
+      <tr><td class="mono small muted">Weights</td><td>real: Pi-Zero, Cosmos, OpenVLA-OFT, Fast-WAM, LingBot-VA<br>random: remaining 5 (validated Δ&lt;12%, exp07b)</td></tr>
     </tbody>
   </table>
   <p class="small muted" style="margin-top:12px;">warmup=15: first 12 iterations show bimodal distribution due to GPU power ramp-up (1.25x).</p>

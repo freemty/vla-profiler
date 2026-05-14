@@ -121,8 +121,8 @@ td strong { font-weight: 600; }
 <div class="slide-inner" style="align-items:center;text-align:center;gap:28px;">
   <div class="section-rule" style="margin:0 auto;"></div>
   <h1>From 3ms to 2.5s</h1>
-  <p style="font-size:18px;"><strong>9 模型 · 11 实验 · 10 家公司</strong></p>
-  <span class="mono small muted">Yuanbo Yang · UCSD · Hao AI Lab · 2026-05</span>
+  <p style="font-size:18px;"><strong>初步测试 SOTA WAM/VLA 系统</strong></p>
+  <span class="mono small muted">10 模型 · 5 范式 · 3 LIBERO evals · 2026-05</span>
 </div>
 </div>
 
@@ -190,7 +190,8 @@ td strong { font-weight: 600; }
       <tr><td class="mono small muted">统计</td><td>warmup=15, iter=20, 报 median</td></tr>
       <tr><td class="mono small muted">计时</td><td>CUDA event (torch.cuda.Event, enable_timing=True)</td></tr>
       <tr><td class="mono small muted">阶段</td><td>E (vision encode) / C (LLM prefill) / A (action head)</td></tr>
-      <tr><td class="mono small muted">权重</td><td>real: Pi-Zero, Cosmos, OpenVLA-OFT<br>random: 其余 6 个 (验证 Δ&lt;12%, exp07b)</td></tr>
+      <tr><td class="mono small muted">模型</td><td>10 个 (ACT / LingBot-VLA / Pi-Zero / Fast-WAM / LingBot-VA / NitroGen / Cosmos / OpenVLA-OFT / StarVLA-OFT / Qwen2.5-VL)</td></tr>
+      <tr><td class="mono small muted">权重</td><td>real: Pi-Zero, Cosmos, OpenVLA-OFT, Fast-WAM, LingBot-VA<br>random: 其余 5 个 (验证 Δ&lt;12%, exp07b)</td></tr>
     </tbody>
   </table>
   <p class="small muted" style="margin-top:12px;">warmup=15: 前 12 次 GPU 功率爬坡致 bimodal (1.25x)。</p>
