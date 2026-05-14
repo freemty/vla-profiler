@@ -152,6 +152,77 @@ ul.clean li strong { color: var(--text); font-weight: 600; }
 </div>
 </div>
 
+<!-- S15: Recent Industry Progress -->
+<div class="slide">
+<div class="slide-inner">
+  <div class="section-rule"></div>
+  <h3>2026 Q1-Q2</h3>
+  <h2>Recent Industry Progress</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:4px;">
+    <div class="card accent-left">
+      <div style="margin-bottom:6px;"><strong>π0.7</strong> <span class="badge red">PI · 2026-04</span></div>
+      <p style="font-size:12px;">4-component pipeline: High-Level Policy + World Model + VLA + Action Expert.<br><strong>Signal:</strong> the model is part of the system.</p>
+    </div>
+    <div class="card accent-left">
+      <div style="margin-bottom:6px;"><strong>GEN-1</strong> <span class="badge red">Generalist AI · 2026-04</span></div>
+      <p style="font-size:12px;">99% params from scratch. 500K+ hr pretrain + 1hr task data → 99% success, 3x faster.<br>Pete Florence: <em>"GEN-1 is a system."</em></p>
+    </div>
+    <div class="card blue-left">
+      <div style="margin-bottom:6px;"><strong>GENE-26.5</strong> <span class="badge blue">Genesis AI · 2026-05</span></div>
+      <p style="font-size:12px;">Flow matching + custom 20-DoF hand. $105M seed. 3ms control.<br><strong>Bet:</strong> hardware precision > data scale.</p>
+    </div>
+    <div class="card blue-left">
+      <div style="margin-bottom:6px;"><strong>Rhoda DVA</strong> <span class="badge blue">Rhoda AI · 2026-03</span></div>
+      <p style="font-size:12px;">Causal video → IDM extracts action. Leapfrog Inference hides video gen latency. $450M / $1.7B.<br><strong>Bet:</strong> physics understanding lives in video.</p>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:12px;">
+    <strong>Consensus:</strong> None of the four report inference Hz. Model ≠ System. <strong>Profiling gap spans the entire industry.</strong>
+  </div>
+  <div style="position:absolute;bottom:16px;left:72px;right:72px;font-size:9px;font-family:var(--font-mono);color:var(--text-tertiary);opacity:0.5;line-height:1.5;">
+    <a href="https://arxiv.org/abs/2410.24164" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">π0.7 PI 2026-04</a><br><a href="https://generalistai.com/blog/apr-02-2026-GEN-1" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">GEN-1 Generalist AI 2026-04</a><br><a href="https://genesis-embodied-ai.github.io" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">GENE-26.5 Genesis AI 2026-05</a><br><a href="https://www.rhoda.ai/research/direct-video-action" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">Rhoda AI 2026-03</a>
+  </div>
+</div>
+</div>
+
+
+<!-- S16: WAM Roadmap Coverage -->
+<div class="slide">
+<div class="slide-inner" style="gap:12px;">
+  <div class="section-rule"></div>
+  <h3>Awesome-WAM Survey (Fudan OpenMOSS, arXiv:2605.12090)</h3>
+  <h2>WAM Roadmap — What We Cover</h2>
+  <div style="text-align:center;margin:4px 0;">
+    <img src="https://openmoss.github.io/Awesome-WAM/figs/roadmap.svg" style="max-width:100%;max-height:280px;border:1px solid var(--border);border-radius:4px;background:#fff;" alt="WAM Roadmap">
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div class="card green-left" style="padding:10px 14px;">
+      <div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:4px;">Covered (4/6 categories)</div>
+      <div style="font-size:11px;color:var(--text-secondary);line-height:1.7;">
+        <strong>Cascaded/Explicit pixel</strong> — Fast-WAM (skip-imagination)<br>
+        <strong>Joint/Single-DiT</strong> — LingBot-VA, Cosmos Policy<br>
+        <strong>Joint/AR</strong> — (π0 series flow matching variants)<br>
+        <strong>Decoupled VLA</strong> — Pi-Zero, OpenVLA-OFT, StarVLA-OFT
+      </div>
+    </div>
+    <div class="card accent-left" style="padding:10px 14px;">
+      <div style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:4px;">Not covered (2/6 categories)</div>
+      <div style="font-size:11px;color:var(--text-secondary);line-height:1.7;">
+        <strong>Cascaded/Implicit latent</strong> — UVA, Dreamforce, etc.<br>
+        <strong>Joint/Multi-DiT</strong> — DreamZero (14B Wan2.1-I2V)<br>
+        <br>
+        <span class="muted">Challenge #5 "inference latency too slow" = our core direction</span>
+      </div>
+    </div>
+  </div>
+  <p class="small muted" style="text-align:center;">64 papers, no latency benchmark. Profiling gap confirmed by academic survey.</p>
+  <div style="position:absolute;bottom:16px;left:72px;right:72px;font-size:9px;font-family:var(--font-mono);color:var(--text-tertiary);opacity:0.5;line-height:1.5;">
+    <a href="https://arxiv.org/abs/2605.12090" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">Awesome-WAM: arXiv:2605.12090</a>
+  </div>
+</div>
+</div>
+
+
 <!-- S3: Experimental Setup -->
 <div class="slide">
 <div class="slide-inner">
@@ -170,47 +241,6 @@ ul.clean li strong { color: var(--text); font-weight: 600; }
     </tbody>
   </table>
   <p class="small muted" style="margin-top:12px;">warmup=15: first 12 iterations show bimodal distribution due to GPU power ramp-up (1.25x).</p>
-</div>
-</div>
-
-<!-- S4: Scatter plot -->
-<div class="slide">
-<div class="slide-inner">
-  <div class="section-rule"></div>
-  <h2>Latency × Complexity</h2>
-  <div class="scatter-container" style="position:relative;">
-    <span class="scatter-label" style="left:2px;bottom:15%;writing-mode:vertical-rl;transform:rotate(180deg);">Simple</span>
-    <span class="scatter-label" style="left:2px;top:8%;writing-mode:vertical-rl;transform:rotate(180deg);">Complex</span>
-    <span class="scatter-label" style="bottom:2px;left:8%;">1ms</span>
-    <div style="position:absolute;left:8%;top:6%;width:1px;height:88%;border-left:1px dotted var(--border);opacity:0.3;"></div>
-    <span class="scatter-label" style="bottom:2px;left:31.5%;">10ms</span>
-    <div style="position:absolute;left:31.5%;top:6%;width:1px;height:88%;border-left:1px dotted var(--border);opacity:0.3;"></div>
-    <span class="scatter-label" style="bottom:2px;left:55%;">100ms</span>
-    <div style="position:absolute;left:55%;top:6%;width:1px;height:88%;border-left:1px dotted var(--border);opacity:0.3;"></div>
-    <span class="scatter-label" style="bottom:2px;left:78.5%;">1000ms</span>
-    <div style="position:absolute;left:78.5%;top:6%;width:1px;height:88%;border-left:1px dotted var(--border);opacity:0.3;"></div>
-    <div style="position:absolute;left:55%;top:0;width:1px;height:100%;border-left:2px dashed var(--accent);"></div>
-    <span class="scatter-line-label" style="left:56%;top:6px;color:var(--accent);">10Hz</span>
-    <div style="position:absolute;left:62%;top:0;width:1px;height:100%;border-left:1px dashed var(--border);"></div>
-    <span class="scatter-line-label" style="left:63%;top:6px;">5Hz</span>
-    <div class="scatter-dot" style="left:19%;top:80%;width:18px;height:18px;background:var(--green);" title="ACT 3ms">A</div>
-    <div class="scatter-dot" style="left:50%;top:72%;width:26px;height:26px;background:var(--green);" title="StarVLA-OFT 63ms">S</div>
-    <div class="scatter-dot" style="left:56%;top:74%;width:34px;height:34px;background:var(--green);" title="OpenVLA-OFT 109ms">O</div>
-    <div class="scatter-dot" style="left:52%;top:56%;width:26px;height:26px;background:var(--blue);" title="LingBot-VLA 75ms">L</div>
-    <div class="scatter-dot" style="left:62%;top:44%;width:30px;height:30px;background:var(--blue);" title="Pi-Zero 200ms">P</div>
-    <div class="scatter-dot" style="left:69%;top:40%;width:34px;height:34px;background:var(--blue);" title="Fast-WAM 407ms">F</div>
-    <div class="scatter-dot" style="left:74%;top:30%;width:30px;height:30px;background:var(--accent);" title="Cosmos 659ms">C</div>
-    <div class="scatter-dot" style="left:87%;top:17%;width:34px;height:34px;background:var(--accent);" title="LingBot-VA 2518ms">V</div>
-    <div style="position:absolute;bottom:8px;right:12px;display:flex;gap:12px;font-size:10px;font-family:var(--font-mono);color:var(--text-tertiary);">
-      <span><span style="color:var(--green);">&#9679;</span> OFT/MLP</span>
-      <span><span style="color:var(--blue);">&#9679;</span> Flow/DiT</span>
-      <span><span style="color:var(--accent);">&#9679;</span> WAM</span>
-    </div>
-  </div>
-  <p class="mono small muted" style="text-align:center;"><span style="color:var(--accent);">Red line = 10Hz.</span> Only OFT crosses it.</p>
-  <div style="position:absolute;bottom:16px;left:72px;right:72px;font-size:9px;font-family:var(--font-mono);color:var(--text-tertiary);opacity:0.5;line-height:1.5;">
-    <a href="https://tonyzhaozh.github.io/aloha/" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">ACT: Zhao et al. RSS 2023</a><br><a href="https://arxiv.org/abs/2502.19645" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">OpenVLA-OFT: arXiv:2502.19645</a><br><a href="https://arxiv.org/abs/2604.05014" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">StarVLA: arXiv:2604.05014</a><br><a href="https://arxiv.org/abs/2410.24164" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">π0: Black et al. 2024</a><br><a href="https://arxiv.org/abs/2603.16666" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">Fast-WAM: arXiv:2603.16666</a><br>Cosmos: arXiv:2601.16163<br><a href="https://huggingface.co/robbyant/lingbot-vla-4b" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">LingBot: robbyant/lingbot-vla</a>
-  </div>
 </div>
 </div>
 
@@ -335,20 +365,31 @@ ul.clean li strong { color: var(--text); font-weight: 600; }
 </div>
 </div>
 
-<!-- S10: Questions for Hao -->
+<!-- Model → System: Bubbles Are Inevitable -->
 <div class="slide">
-<div class="slide-inner">
+<div class="slide-inner" style="gap:20px;">
   <div class="section-rule"></div>
-  <h2>Questions for Hao</h2>
-  <div style="display:flex;flex-direction:column;gap:10px;">
-    <div class="card" style="display:flex;gap:12px;align-items:baseline;"><span class="badge muted">1</span><span>VLA vs VA — which direction do you favor?</span></div>
-    <div class="card" style="display:flex;gap:12px;align-items:baseline;"><span class="badge muted">2</span><span>OFT turns it into a backbone problem — what's the connection to vLLM / FastVideo?</span></div>
-    <div class="card" style="display:flex;gap:12px;align-items:baseline;"><span class="badge muted">3</span><span>Can FastVideo STA / distillation transfer to VLA DiT?</span></div>
-    <div class="card" style="display:flex;gap:12px;align-items:baseline;"><span class="badge muted">4</span><span>Start with Path A or A'?</span></div>
-    <div class="card" style="display:flex;gap:12px;align-items:baseline;"><span class="badge muted">5</span><span>Who in the lab is working on related topics?</span></div>
+  <h3>Key Observation</h3>
+  <h2>Model → System: Bubbles Are Inevitable</h2>
+  <p>Robotics foundation models are evolving into multi-component pipelines. Pipelines have scheduling bubbles.</p>
+  <table style="font-size:12px;">
+    <thead><tr><th>System</th><th>Components</th><th>Pipeline Bubble</th></tr></thead>
+    <tbody>
+      <tr><td><strong>π0.7</strong></td><td>High-Level Policy → World Model → VLA → Action Expert</td><td>4 serial stages, subgoal image transfer</td></tr>
+      <tr><td><strong>GEN-1</strong></td><td>"system-level components across inference and model harnessing"</td><td>Inference-time techniques (undisclosed)</td></tr>
+      <tr><td><strong>Rhoda DVA</strong></td><td>Video Model → IDM → Execution</td><td>Leapfrog Inference: overlap video gen ∥ action exec</td></tr>
+      <tr><td><strong>LingBot-VA</strong></td><td>VAE → Video DiT → Action DiT → KV Cache Update</td><td>E→V→A serial + compute_kv_cache per chunk</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">
+    <strong>Thesis:</strong> As models become systems, the gap between "model latency" and "system throughput" widens. Profiling the pipeline — not just the model — is where the next 2-5x lives.
+  </div>
+  <div style="position:absolute;bottom:16px;left:72px;right:72px;font-size:9px;font-family:var(--font-mono);color:var(--text-tertiary);opacity:0.5;line-height:1.5;">
+    <a href="https://www.physicalintelligence.company/blog/pi0-7" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">π0.7 PI 2026-04</a><br><a href="https://generalistai.com/blog/apr-02-2026-GEN-1" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">GEN-1 Generalist AI 2026-04: "GEN-1 is a system"</a><br><a href="https://www.rhoda.ai/research/direct-video-action" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">Rhoda DVA: Leapfrog Inference 2026-03</a><br><a href="https://arxiv.org/abs/2401.09670" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">DistServe OSDI 2024 (PD disaggregation analogy)</a>
   </div>
 </div>
 </div>
+
 
 <!-- S14: Three Directions -->
 <div class="slide">
@@ -391,99 +432,21 @@ ul.clean li strong { color: var(--text); font-weight: 600; }
 </div>
 </div>
 
-<!-- S15: Recent Industry Progress -->
+<!-- S10: Open Questions -->
 <div class="slide">
 <div class="slide-inner">
   <div class="section-rule"></div>
-  <h3>2026 Q1-Q2</h3>
-  <h2>Recent Industry Progress</h2>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:4px;">
-    <div class="card accent-left">
-      <div style="margin-bottom:6px;"><strong>π0.7</strong> <span class="badge red">PI · 2026-04</span></div>
-      <p style="font-size:12px;">4-component pipeline: High-Level Policy + World Model + VLA + Action Expert.<br><strong>Signal:</strong> the model is part of the system.</p>
-    </div>
-    <div class="card accent-left">
-      <div style="margin-bottom:6px;"><strong>GEN-1</strong> <span class="badge red">Generalist AI · 2026-04</span></div>
-      <p style="font-size:12px;">99% params from scratch. 500K+ hr pretrain + 1hr task data → 99% success, 3x faster.<br>Pete Florence: <em>"GEN-1 is a system."</em></p>
-    </div>
-    <div class="card blue-left">
-      <div style="margin-bottom:6px;"><strong>GENE-26.5</strong> <span class="badge blue">Genesis AI · 2026-05</span></div>
-      <p style="font-size:12px;">Flow matching + custom 20-DoF hand. $105M seed. 3ms control.<br><strong>Bet:</strong> hardware precision > data scale.</p>
-    </div>
-    <div class="card blue-left">
-      <div style="margin-bottom:6px;"><strong>Rhoda DVA</strong> <span class="badge blue">Rhoda AI · 2026-03</span></div>
-      <p style="font-size:12px;">Causal video → IDM extracts action. Leapfrog Inference hides video gen latency. $450M / $1.7B.<br><strong>Bet:</strong> physics understanding lives in video.</p>
-    </div>
-  </div>
-  <div class="callout" style="margin-top:12px;">
-    <strong>Consensus:</strong> None of the four report inference Hz. Model ≠ System. <strong>Profiling gap spans the entire industry.</strong>
-  </div>
-  <div style="position:absolute;bottom:16px;left:72px;right:72px;font-size:9px;font-family:var(--font-mono);color:var(--text-tertiary);opacity:0.5;line-height:1.5;">
-    <a href="https://arxiv.org/abs/2410.24164" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">π0.7 PI 2026-04</a><br><a href="https://generalistai.com/blog/apr-02-2026-GEN-1" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">GEN-1 Generalist AI 2026-04</a><br><a href="https://genesis-embodied-ai.github.io" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">GENE-26.5 Genesis AI 2026-05</a><br><a href="https://www.rhoda.ai/research/direct-video-action" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">Rhoda AI 2026-03</a>
+  <h2>Open Questions</h2>
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    <div class="card" style="display:flex;gap:12px;align-items:baseline;"><span class="badge muted">1</span><span>VLA vs VA — which direction do you favor?</span></div>
+    <div class="card" style="display:flex;gap:12px;align-items:baseline;"><span class="badge muted">2</span><span>OFT turns it into a backbone problem — what's the connection to vLLM / FastVideo?</span></div>
+    <div class="card" style="display:flex;gap:12px;align-items:baseline;"><span class="badge muted">3</span><span>Can FastVideo STA / distillation transfer to VLA DiT?</span></div>
+    <div class="card" style="display:flex;gap:12px;align-items:baseline;"><span class="badge muted">4</span><span>Start with Path A or A'?</span></div>
+    <div class="card" style="display:flex;gap:12px;align-items:baseline;"><span class="badge muted">5</span><span>Who in the lab is working on related topics?</span></div>
   </div>
 </div>
 </div>
 
-<!-- Model → System: Bubbles Are Inevitable -->
-<div class="slide">
-<div class="slide-inner" style="gap:20px;">
-  <div class="section-rule"></div>
-  <h3>Key Observation</h3>
-  <h2>Model → System: Bubbles Are Inevitable</h2>
-  <p>Robotics foundation models are evolving into multi-component pipelines. Pipelines have scheduling bubbles.</p>
-  <table style="font-size:12px;">
-    <thead><tr><th>System</th><th>Components</th><th>Pipeline Bubble</th></tr></thead>
-    <tbody>
-      <tr><td><strong>π0.7</strong></td><td>High-Level Policy → World Model → VLA → Action Expert</td><td>4 serial stages, subgoal image transfer</td></tr>
-      <tr><td><strong>GEN-1</strong></td><td>"system-level components across inference and model harnessing"</td><td>Inference-time techniques (undisclosed)</td></tr>
-      <tr><td><strong>Rhoda DVA</strong></td><td>Video Model → IDM → Execution</td><td>Leapfrog Inference: overlap video gen ∥ action exec</td></tr>
-      <tr><td><strong>LingBot-VA</strong></td><td>VAE → Video DiT → Action DiT → KV Cache Update</td><td>E→V→A serial + compute_kv_cache per chunk</td></tr>
-    </tbody>
-  </table>
-  <div class="callout">
-    <strong>Thesis:</strong> As models become systems, the gap between "model latency" and "system throughput" widens. Profiling the pipeline — not just the model — is where the next 2-5x lives.
-  </div>
-  <div style="position:absolute;bottom:16px;left:72px;right:72px;font-size:9px;font-family:var(--font-mono);color:var(--text-tertiary);opacity:0.5;line-height:1.5;">
-    <a href="https://www.physicalintelligence.company/blog/pi0-7" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">π0.7 PI 2026-04</a><br><a href="https://generalistai.com/blog/apr-02-2026-GEN-1" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">GEN-1 Generalist AI 2026-04: "GEN-1 is a system"</a><br><a href="https://www.rhoda.ai/research/direct-video-action" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">Rhoda DVA: Leapfrog Inference 2026-03</a><br><a href="https://arxiv.org/abs/2401.09670" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">DistServe OSDI 2024 (PD disaggregation analogy)</a>
-  </div>
-</div>
-</div>
-
-<!-- S16: WAM Roadmap Coverage -->
-<div class="slide">
-<div class="slide-inner" style="gap:12px;">
-  <div class="section-rule"></div>
-  <h3>Awesome-WAM Survey (Fudan OpenMOSS, arXiv:2605.12090)</h3>
-  <h2>WAM Roadmap — What We Cover</h2>
-  <div style="text-align:center;margin:4px 0;">
-    <img src="https://openmoss.github.io/Awesome-WAM/figs/roadmap.svg" style="max-width:100%;max-height:280px;border:1px solid var(--border);border-radius:4px;background:#fff;" alt="WAM Roadmap">
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-    <div class="card green-left" style="padding:10px 14px;">
-      <div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:4px;">Covered (4/6 categories)</div>
-      <div style="font-size:11px;color:var(--text-secondary);line-height:1.7;">
-        <strong>Cascaded/Explicit pixel</strong> — Fast-WAM (skip-imagination)<br>
-        <strong>Joint/Single-DiT</strong> — LingBot-VA, Cosmos Policy<br>
-        <strong>Joint/AR</strong> — (π0 series flow matching variants)<br>
-        <strong>Decoupled VLA</strong> — Pi-Zero, OpenVLA-OFT, StarVLA-OFT
-      </div>
-    </div>
-    <div class="card accent-left" style="padding:10px 14px;">
-      <div style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:4px;">Not covered (2/6 categories)</div>
-      <div style="font-size:11px;color:var(--text-secondary);line-height:1.7;">
-        <strong>Cascaded/Implicit latent</strong> — UVA, Dreamforce, etc.<br>
-        <strong>Joint/Multi-DiT</strong> — DreamZero (14B Wan2.1-I2V)<br>
-        <br>
-        <span class="muted">Challenge #5 "inference latency too slow" = our core direction</span>
-      </div>
-    </div>
-  </div>
-  <p class="small muted" style="text-align:center;">64 papers, no latency benchmark. Profiling gap confirmed by academic survey.</p>
-  <div style="position:absolute;bottom:16px;left:72px;right:72px;font-size:9px;font-family:var(--font-mono);color:var(--text-tertiary);opacity:0.5;line-height:1.5;">
-    <a href="https://arxiv.org/abs/2605.12090" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-tertiary);">Awesome-WAM: arXiv:2605.12090</a>
-  </div>
-</div>
-</div>
 
 <!-- S17: References -->
 <div class="slide">
@@ -518,7 +481,7 @@ ul.clean li strong { color: var(--text); font-weight: 600; }
 
 </div><!-- end .deck -->
 
-<div class="counter"><span id="current">1</span> / <span id="total">14</span></div>
+<div class="counter"><span id="current">1</span> / <span id="total">13</span></div>
 <button class="theme-toggle" onclick="toggleTheme()">light/dark</button>
 
 <script>
