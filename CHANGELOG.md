@@ -1,10 +1,10 @@
 # Changelog
 
-## v0.11.0 @freemty — 2026-05-13/14
+## v0.11.0 @freemty — 2026-05-13/15
 
 ### 新增 (LIBERO eval pipeline + Cosmos 97.4%)
 - **Cosmos Policy LIBERO eval**: **97.4% avg** (spatial 96.0 / object 100 / goal 98.0 / 10 95.5), 800 ep. 论文 98.5%, 差 1.1pp (RTX 5880 vs A100 + seed)
-- **exp04d LingBot-VA LIBERO eval**: 4-GPU 并行 (GPU 3/5/6/7), server-client 模式, 20 ep × 4 suites (运行中)
+- **exp04d LingBot-VA LIBERO eval**: **0.25% avg** (2/800 ep). 4-GPU 并行完成. Gripper channel near-zero after quantile unnorm → 无法抓取. Posttrain ckpt quality issue, not pipeline bug.
 - **lerobot_stub**: 最小 PI0Config + PreTrainedPolicy stub, 避免 lerobot 0.5.1 与 transformers 4.51 版本冲突 (`scripts/lerobot_stub/`)
 - **LIBERO eval 脚本**: `run_exp03b_libero.py` / `run_exp07c_libero.py` / `run_exp04d_libero.sh` / `run_exp04d_parallel.sh` / `run_cosmos_libero.py`
 - **knowhow**: cuDNN 版本冲突修复, LIBERO OffScreenRenderEnv API, lingbotvla transformers 4.57 兼容 7 处 patch
